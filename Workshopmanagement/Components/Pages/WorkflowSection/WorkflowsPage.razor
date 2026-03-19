@@ -17,7 +17,7 @@
         <MudGrid>
             <MudItem xs="6" Style="text-align: left;">
                 <MudButton OnClick="@(() => OpenCreateWorkflowDialogAsync() )" Variant="Variant.Filled" Color="Color.Info">
-                    <MudIcon Icon="@Icons.Material.Filled.Add"/>
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Style="margin-right:2px;"/>
                     <MudIcon Icon="@Icons.Material.Filled.Workspaces"/>
                     <MudText Style="margin-left: 15px">@languageContainer.Keys["StartNewWorkflow"]</MudText>                       
                 </MudButton>
@@ -39,7 +39,7 @@
                 <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Veichle.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).fiscalcodeOrVat" Title="@languageContainer.Keys["FiscalCodeOrVatNumber"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <TemplateColumn Title="@languageContainer.Keys["OpenWorkflow"]" Sortable="false">
+                <TemplateColumn Title="@languageContainer.Keys["OpenWorkflow"]" Sortable="false" CellClass="d-flex align-center">
                     <CellTemplate>
                         @{
                             var wfInfo = GetWorkflowInfoFull(context.Item.Entry.WorkflowId);

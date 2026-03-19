@@ -16,19 +16,19 @@
     </MudItem>
     <MudItem xs ="6">
         <MudButton OnClick="OpenCreateWorkflowDialogAsync"
-            StartIcon="@Icons.Material.Filled.Workspaces" Color="Color.Primary" Variant="Variant.Filled" Style="width: 100%; height: 600%">
+            StartIcon="@Icons.Material.Filled.Workspaces" Color="Color.Primary" Variant="Variant.Filled" Style="width: 100%; min-height: 120px; font-size: 1.1rem;">
             @languageContainer.Keys["HomeStartNewFlow"]
         </MudButton>
     </MudItem>
     <MudItem xs="6">
         <MudButton OnClick="HomeResumeWorkflow" 
-            StartIcon="@Icons.Material.Filled.Start" Color="Color.Secondary" Variant="Variant.Filled" Style="width: 100%; height: 600%">
+            StartIcon="@Icons.Material.Filled.Start" Color="Color.Secondary" Variant="Variant.Filled" Style="width: 100%; min-height: 120px; font-size: 1.1rem;">
             @languageContainer.Keys["HomeResumeFlow"]
         </MudButton>
     </MudItem>
 </MudGrid>
 
-<MudMessageBox @ref="mudMessageBoxCustomer" Title="@languageContainer.Keys["HomeSelectCustomer"]" CancelText="Cancel">
+<MudMessageBox @ref="mudMessageBoxCustomer" Title="@languageContainer.Keys["HomeSelectCustomer"]" CancelText="@languageContainer.Keys["HomeSelectVeichleCancel"]">
     <MessageContent>
        <MudGrid>
            <MudItem xs="12">
@@ -48,7 +48,7 @@
     </YesButton>
 </MudMessageBox>
 
-<MudMessageBox @ref="mudMessageBoxVeichle" Title="@languageContainer.Keys["HomeSelectVeichle"]" CancelText="Cancel">
+<MudMessageBox @ref="mudMessageBoxVeichle" Title="@languageContainer.Keys["HomeSelectVeichle"]" CancelText="@languageContainer.Keys["HomeSelectVeichleCancel"]">
     <MessageContent>
        <MudGrid>
            <MudItem xs="12">
@@ -68,7 +68,7 @@
     </YesButton>
 </MudMessageBox>
 
-<MudMessageBox @ref="mudMessageBoxFlow" Title="@languageContainer.Keys["HomeSelectFlow"]" CancelText="Cancel">
+<MudMessageBox @ref="mudMessageBoxFlow" Title="@languageContainer.Keys["HomeSelectFlow"]" CancelText="@languageContainer.Keys["HomeSelectVeichleCancel"]">
     <MessageContent>
        <MudGrid>
            <MudItem xs="12">
@@ -76,8 +76,10 @@
                     @foreach (var item in resumeItems)
                     {
                         <MudListItem Value="item" Icon="@Icons.Material.Filled.Workspaces">
-                            <MudChip T="string" Style="@($"background-color:{item.WorkflowColor}; color:white;")" Size="Size.Small">@item.WorkflowTitle</MudChip>
-                            <MudText Typo="Typo.body2" Class="ml-2" Style="display:inline">@item.WorkflowTaskTitle</MudText>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <MudChip T="string" Style="@($"background-color:{item.WorkflowColor}; color:white;")" Size="Size.Small">@item.WorkflowTitle</MudChip>
+                                <span style="font-size:0.875rem;">@item.WorkflowTaskTitle</span>
+                            </div>
                         </MudListItem>
                     }
                 </MudList>
