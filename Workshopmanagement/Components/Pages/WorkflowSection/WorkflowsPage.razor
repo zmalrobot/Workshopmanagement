@@ -39,7 +39,14 @@
                 <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Veichle.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).fiscalcodeOrVat" Title="@languageContainer.Keys["FiscalCodeOrVatNumber"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <PropertyColumn Property="x => GetWorkflowInfo(x.Entry.WorkflowId)" Title="@languageContainer.Keys["OpenWorkflow"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <TemplateColumn Title="@languageContainer.Keys["OpenWorkflow"]" Sortable="false">
+                    <CellTemplate>
+                        @{
+                            var wfInfo = GetWorkflowInfoFull(context.Item.Entry.WorkflowId);
+                        }
+                        <MudChip T="string" Style="@($"background-color:{wfInfo.color}; color:white;")" Size="Size.Small">@wfInfo.title</MudChip>
+                    </CellTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => GetWorkflowTaskInfo(x.Entry.WorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]" CellClass="d-flex justify-center">
                     <CellTemplate>
@@ -194,6 +201,18 @@
         var item = workflows.FirstOrDefault(x => x.Id.Equals(workflowId)) ?? new Workflow();
 
         return item.Title;
+    }
+
+    private (string title, string color) GetWorkflowInfoFull(string? workflowId)
+    {
+        if (String.IsNullOrEmpty(workflowId))
+            return ("", "#607D8B");
+
+        var item = workflows.FirstOrDefault(x => x.Id.Equals(workflowId));
+        if (item == null)
+            return ("", "#607D8B");
+
+        return (item.Title, string.IsNullOrEmpty(item.Color) ? "#607D8B" : item.Color);
     }
 
     private string GetWorkflowTaskInfo(string? workflowTask)

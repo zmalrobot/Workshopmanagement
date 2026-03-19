@@ -141,6 +141,12 @@ HomeSelectVeichle: Per quale veicolo continuare il flusso?
 HomeSelectVeichleProceed: Procedi
 HomeSelectVeichleCancel: Annulla
 HomeNoVeichleSelected: Devi selezionare un veicolo per procedere
+HomeSelectCustomer: Seleziona il cliente
+HomeNoCustomerSelected: Devi selezionare un cliente per procedere
+HomeSelectFlow: Quale flusso vuoi riprendere?
+HomeNoFlowSelected: Devi selezionare un flusso per procedere
+HomeNoOpenFlows: Nessun flusso aperto per questo veicolo
+HomeNoVeichlesForCustomer: Nessun veicolo con flussi aperti per questo cliente
 ReportTitle: Resoconto lavorativo
 ReportCustomerInformationTitle: Informazioni sul cliente
 ReportCustomerInformationNameTitle: Nome e Cognome

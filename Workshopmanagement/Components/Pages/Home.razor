@@ -28,14 +28,57 @@
     </MudItem>
 </MudGrid>
 
-<MudMessageBox @ref="mudMessageBox" Title="@languageContainer.Keys["HomeSelectVeichle"]" CancelText="Cancel">
+<MudMessageBox @ref="mudMessageBoxCustomer" Title="@languageContainer.Keys["HomeSelectCustomer"]" CancelText="Cancel">
+    <MessageContent>
+       <MudGrid>
+           <MudItem xs="12">
+                <MudList @bind-SelectedValue="selectedResumeCustomer" T="Customer" SelectionMode="SelectionMode.SingleSelection">
+                    @foreach (var customer in resumeCustomers)
+                    {
+                        <MudListItem Text="@($"{customer.Name} {customer.Surname}{(customer.IsCompany && !string.IsNullOrEmpty(customer.BusinessName) ? $" - {customer.BusinessName}" : "")}")" Value="customer" Icon="@Icons.Material.Filled.Person" />
+                    }
+                </MudList>
+           </MudItem>
+       </MudGrid>
+    </MessageContent>
+    <YesButton>
+        <MudButton OnClick="OnCustomerSelected" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+            @languageContainer.Keys["HomeSelectVeichleProceed"]
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="mudMessageBoxVeichle" Title="@languageContainer.Keys["HomeSelectVeichle"]" CancelText="Cancel">
+    <MessageContent>
+       <MudGrid>
+           <MudItem xs="12">
+                <MudList @bind-SelectedValue="selectedResumeVeichle" T="Veichle" SelectionMode="SelectionMode.SingleSelection">
+                    @foreach (var veichle in resumeVeichles)
+                    {
+                        <MudListItem Text="@($"{veichle.LicensePlate} - {veichle.Brand} {veichle.Model}")" Value="veichle" Icon="@Icons.Material.Filled.CarRepair" />
+                    }
+                </MudList>
+           </MudItem>
+       </MudGrid>
+    </MessageContent>
+    <YesButton>
+        <MudButton OnClick="OnVeichleSelected" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+            @languageContainer.Keys["HomeSelectVeichleProceed"]
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+<MudMessageBox @ref="mudMessageBoxFlow" Title="@languageContainer.Keys["HomeSelectFlow"]" CancelText="Cancel">
     <MessageContent>
        <MudGrid>
            <MudItem xs="12">
                 <MudList @bind-SelectedValue="selectedResumeItem" T="ResumeWorkflowItem" SelectionMode="SelectionMode.SingleSelection">
                     @foreach (var item in resumeItems)
                     {
-                        <MudListItem Text="@($"{item.Veichle.LicensePlate} - {item.WorkflowTitle}")" Value="item" Icon="@Icons.Material.Filled.CarRepair" />
+                        <MudListItem Value="item" Icon="@Icons.Material.Filled.Workspaces">
+                            <MudChip T="string" Style="@($"background-color:{item.WorkflowColor}; color:white;")" Size="Size.Small">@item.WorkflowTitle</MudChip>
+                            <MudText Typo="Typo.body2" Class="ml-2" Style="display:inline">@item.WorkflowTaskTitle</MudText>
+                        </MudListItem>
                     }
                 </MudList>
            </MudItem>
@@ -56,10 +99,23 @@
             CloseButton = true,
             CloseOnEscapeKey = true
         };
-    private MudMessageBox mudMessageBox;
+    private MudMessageBox mudMessageBoxCustomer;
+    private MudMessageBox mudMessageBoxVeichle;
+    private MudMessageBox mudMessageBoxFlow;
     private DialogOptions mudMessageBoxOption = new() { BackdropClick = false };
+
+    private List<Customer> resumeCustomers = new List<Customer>();
+    private Customer selectedResumeCustomer;
+
+    private List<Veichle> resumeVeichles = new List<Veichle>();
+    private Veichle selectedResumeVeichle;
+
     private List<ResumeWorkflowItem> resumeItems = new List<ResumeWorkflowItem>();
     private ResumeWorkflowItem selectedResumeItem;
+
+    private List<Veichle> allOpenVeichles = new List<Veichle>();
+    private List<Workflow> allWorkflows = new List<Workflow>();
+    private List<WorkflowTask> allWorkflowTasks = new List<WorkflowTask>();
 
     private bool processing = true;
 
@@ -68,6 +124,8 @@
         public Veichle Veichle { get; set; }
         public OpenWorkflowEntry Entry { get; set; }
         public string WorkflowTitle { get; set; }
+        public string WorkflowColor { get; set; }
+        public string WorkflowTaskTitle { get; set; }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -130,23 +188,24 @@
         try
         {
             processing = true;
-            var veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()
+
+            allOpenVeichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()
             {
                  HasOpenWorkflow = true
             });
-            var workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+            allWorkflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+            allWorkflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+            var customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
 
-            resumeItems = veichles
-                .Where(v => v.OpenWorkflows != null)
-                .SelectMany(v => v.OpenWorkflows.Select(entry => new ResumeWorkflowItem
-                {
-                    Veichle = v,
-                    Entry = entry,
-                    WorkflowTitle = workflows.FirstOrDefault(w => w.Id == entry.WorkflowId)?.Title ?? ""
-                }))
-                .ToList();
+            // Get distinct customer IDs from vehicles with open workflows
+            var customerIds = allOpenVeichles.Select(v => v.UserId).Distinct().ToList();
+            resumeCustomers = customers.Where(c => customerIds.Contains(c.Id)).ToList();
 
-            var result = await mudMessageBox.ShowAsync(mudMessageBoxOption);         
+            selectedResumeCustomer = null;
+            selectedResumeVeichle = null;
+            selectedResumeItem = null;
+
+            await mudMessageBoxCustomer.ShowAsync(mudMessageBoxOption);
         }
         catch (Exception ex)
         {
@@ -159,6 +218,67 @@
         }
     }
 
+    private async Task OnCustomerSelected()
+    {
+        if (selectedResumeCustomer == null || string.IsNullOrEmpty(selectedResumeCustomer.Id))
+        {
+            snackbar.Add(languageContainer.Keys["HomeNoCustomerSelected"], Severity.Warning);
+            return;
+        }
+
+        // Filter vehicles for the selected customer
+        resumeVeichles = allOpenVeichles
+            .Where(v => v.UserId == selectedResumeCustomer.Id && v.HasOpenWorkflow && v.OpenWorkflows != null && v.OpenWorkflows.Any())
+            .ToList();
+
+        if (!resumeVeichles.Any())
+        {
+            snackbar.Add(languageContainer.Keys["HomeNoVeichlesForCustomer"], Severity.Warning);
+            return;
+        }
+
+        selectedResumeVeichle = null;
+        selectedResumeItem = null;
+
+        await mudMessageBoxVeichle.ShowAsync(mudMessageBoxOption);
+    }
+
+    private async Task OnVeichleSelected()
+    {
+        if (selectedResumeVeichle == null || string.IsNullOrEmpty(selectedResumeVeichle.Id))
+        {
+            snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
+            return;
+        }
+
+        // Build flow items for the selected vehicle
+        resumeItems = selectedResumeVeichle.OpenWorkflows
+            .Select(entry =>
+            {
+                var wf = allWorkflows.FirstOrDefault(w => w.Id == entry.WorkflowId);
+                var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == entry.WorkflowTaskId);
+                return new ResumeWorkflowItem
+                {
+                    Veichle = selectedResumeVeichle,
+                    Entry = entry,
+                    WorkflowTitle = wf?.Title ?? "",
+                    WorkflowColor = wf?.Color ?? "#607D8B",
+                    WorkflowTaskTitle = wfTask?.Title ?? ""
+                };
+            })
+            .ToList();
+
+        if (!resumeItems.Any())
+        {
+            snackbar.Add(languageContainer.Keys["HomeNoOpenFlows"], Severity.Warning);
+            return;
+        }
+
+        selectedResumeItem = null;
+
+        await mudMessageBoxFlow.ShowAsync(mudMessageBoxOption);
+    }
+
     private async Task ResumeWorkflow()
     {
         try
@@ -167,7 +287,7 @@
 
             if(selectedResumeItem == null || String.IsNullOrEmpty(selectedResumeItem.Veichle?.Id))
             {
-                snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
+                snackbar.Add(languageContainer.Keys["HomeNoFlowSelected"], Severity.Warning);
                 return;
             }
 
@@ -190,7 +310,7 @@
                         veichle = selectedVeichle,
                         workflow = workflow,
                         workflowTask = workflowTask,
-                        workflowExecution = workflowExecution, //Deve esistere,
+                        workflowExecution = workflowExecution,
                         components = components
                     }
                 }
