@@ -28,7 +28,7 @@
         <MudDataGrid @ref="dataGrid" T="VeichleWorkflowView" Items="@GetDataForGrid()" ReadOnly="true" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
                         Filterable="true" Dense="false" Hover="true" SortMode="@SortMode.Single" Bordered="true">
             <Columns>
-                <TemplateColumn Hidden="false" CellClass="d-flex justify-end">
+                <TemplateColumn Hidden="false" CellClass="d-flex justify-end align-center">
                     <CellTemplate>
                         <MudIconButton OnClick="@(() => OpenResumeWorkflowDialogAsync(context.Item))"
                             Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Filled.Start" Variant="Variant.Filled"  />
@@ -48,7 +48,7 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => GetWorkflowTaskInfo(x.Entry.WorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]" CellClass="d-flex justify-center">
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]" CellClass="d-flex justify-center align-center">
                     <CellTemplate>
                         <MudProgressCircular Color="Color.Info" Size="Size.Small" 
                                                 Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowTaskId, context.Item.Entry.WorkflowId)">
