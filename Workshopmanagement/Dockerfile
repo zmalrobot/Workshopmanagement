@@ -1,12 +1,9 @@
-#See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+# https://aka.ms/customizecontainer
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-#FROM mcr.microsoft.com/dotnet/aspnet:8.0.0-rc.2-bookworm-slim-arm64v8 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
 
-#FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 COPY ["Workshopmanagement/Workshopmanagement.csproj", "Workshopmanagement/"]
@@ -21,4 +18,8 @@ RUN dotnet publish "Workshopmanagement.csproj" -c Release -o /app/publish /p:Use
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
+# Create directories for persistent data
+RUN mkdir -p /app/data/images /app/data/templates
+
 ENTRYPOINT ["dotnet", "Workshopmanagement.dll"]

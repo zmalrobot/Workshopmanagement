@@ -53,16 +53,6 @@ namespace Workshopmanagement.DatabaseManagment
         {
             var setting = new MongoClientSettings();
 
-            #region Auth
-            if (Convert.ToBoolean(Environment.GetEnvironmentVariable("MongoUseAutentication")))
-            {
-                var mechanism = Environment.GetEnvironmentVariable("MongoMechanism");
-                var identity = new MongoInternalIdentity(Environment.GetEnvironmentVariable("MongoDatabase"), Environment.GetEnvironmentVariable("MongoUsername"));
-                var evidence = new PasswordEvidence(Environment.GetEnvironmentVariable("MongoPassword"));
-                setting.Credential = new MongoCredential(mechanism, identity, evidence);
-            }
-            #endregion
-
             setting.ApplicationName = Environment.GetEnvironmentVariable("ApplicationName");
             setting.AllowInsecureTls = Convert.ToBoolean(Environment.GetEnvironmentVariable("AllowInsecureTls"));
             setting.Server = new MongoServerAddress(Environment.GetEnvironmentVariable("MongoServerAddress"), Convert.ToInt32(Environment.GetEnvironmentVariable("MongoServerPort")));

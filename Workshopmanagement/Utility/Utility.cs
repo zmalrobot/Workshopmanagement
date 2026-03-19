@@ -13,9 +13,9 @@ namespace Workshopmanagement.Utility
 {
     public static class Utility
     {
-        public static List<string> imageBasePath = ["wwwroot","images","upload"];
-        public static string templateBasePath = @"Templates";
-        public static List<string> templateSavePath = ["wwwroot","templates"];
+        public static List<string> imageBasePath = GetPathFromEnv("ImageBasePath", ["wwwroot","images","upload"]);
+        public static string templateBasePath = Environment.GetEnvironmentVariable("TemplateBasePath") ?? @"Templates";
+        public static List<string> templateSavePath = GetPathFromEnv("TemplateSavePath", ["wwwroot","templates"]);
 
         public static int[] pageSizeOptions = [10, 20, 50];
 
@@ -410,6 +410,17 @@ namespace Workshopmanagement.Utility
                 return default(T);
 
             return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj));
+        }
+
+        private static List<string> GetPathFromEnv(string envVar, List<string> defaultPath)
+        {
+            var value = Environment.GetEnvironmentVariable(envVar);
+            if (string.IsNullOrEmpty(value))
+                return defaultPath;
+
+            return value.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .ToList();
         }
 
     }
