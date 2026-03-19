@@ -8,10 +8,16 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? UserId { get; set; }
         public string? LicensePlate { get; set; }
         public bool? HasOpenWorkflow { get; set; }
-        public string? OpenWorkflowId { get; set; }
-        public string? OpenWorkflowExecutionId { get; set; }
         public DateTime? InsertDateFrom { get; set; }
         public DateTime? InsertDateTo { get; set; }
+    }
+
+    public class OpenWorkflowEntry
+    {
+        public string WorkflowId { get; set; }
+        public string WorkflowTaskId { get; set; }
+        public string WorkflowExecutionId { get; set; }
+        public string WorkflowExecutionSeriesId { get; set; }
     }
 
     public class Veichle
@@ -34,10 +40,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
 
         //WorkFlows
         public bool HasOpenWorkflow { get; set; }
-        public string? OpenWorkflowId { get; set; }
-        public string? OpenWorkflowTaskId { get; set; }
-        public string? OpenWorkflowExecutionId { get; set; }
-        public string? OpenWorkflowExecutionSeriesId { get; set; }
+        public List<OpenWorkflowEntry> OpenWorkflows { get; set; } = new List<OpenWorkflowEntry>();
         public List<string> WorkflowExecutionsCompleted { get; set; }
 
     }

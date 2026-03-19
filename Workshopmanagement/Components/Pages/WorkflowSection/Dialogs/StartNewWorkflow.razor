@@ -116,7 +116,7 @@
                             <MudDivider />
                             @foreach (var veichle in filteredVeichle)
                             {
-                                <MudListItem Disabled="@veichle.HasOpenWorkflow" Text="@Utility.GetDescriptionFromVeichle(veichle, languageContainer)" Value='veichle' Style="text-align: center;" />
+                                <MudListItem Disabled="@(veichle.OpenWorkflows?.Any(w => w.WorkflowId == selectedWorkflow.Id) == true)" Text="@Utility.GetDescriptionFromVeichle(veichle, languageContainer)" Value='veichle' Style="text-align: center;" />
                                 <MudDivider />
                             }
                         </MudList>
@@ -447,11 +447,17 @@
             tasks.Add(Task.Run(async () =>
                 {
                     //Aggiorno il veicolo
+                    if (selectedVeichle.OpenWorkflows == null)
+                        selectedVeichle.OpenWorkflows = new List<OpenWorkflowEntry>();
+
+                    selectedVeichle.OpenWorkflows.Add(new OpenWorkflowEntry
+                    {
+                        WorkflowId = selectedWorkflow.Id,
+                        WorkflowTaskId = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsStartingTask = true && x.IsSignTask == false)?.Id ?? "",
+                        WorkflowExecutionId = executionId,
+                        WorkflowExecutionSeriesId = executionSeriesID
+                    });
                     selectedVeichle.HasOpenWorkflow = true;
-                    selectedVeichle.OpenWorkflowExecutionId = executionId;
-                    selectedVeichle.OpenWorkflowExecutionSeriesId = executionSeriesID;
-                    selectedVeichle.OpenWorkflowId = selectedWorkflow.Id;
-                    selectedVeichle.OpenWorkflowTaskId = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsStartingTask = true && x.IsSignTask == false)?.Id ?? "";
 
                     await dbDependency.GetDataAccessVeichle().UpdateAsync(selectedVeichle);
                 }));

@@ -32,10 +32,10 @@
     <MessageContent>
        <MudGrid>
            <MudItem xs="12">
-                <MudList @bind-SelectedValue="selectedVeichle" T="Veichle" SelectionMode="SelectionMode.SingleSelection">
-                    @foreach (var veichle in veichles)
+                <MudList @bind-SelectedValue="selectedResumeItem" T="ResumeWorkflowItem" SelectionMode="SelectionMode.SingleSelection">
+                    @foreach (var item in resumeItems)
                     {
-                        <MudListItem Text="@veichle.LicensePlate" Value="veichle" Icon="@Icons.Material.Filled.CarRepair" />
+                        <MudListItem Text="@($"{item.Veichle.LicensePlate} - {item.WorkflowTitle}")" Value="item" Icon="@Icons.Material.Filled.CarRepair" />
                     }
                 </MudList>
            </MudItem>
@@ -58,10 +58,17 @@
         };
     private MudMessageBox mudMessageBox;
     private DialogOptions mudMessageBoxOption = new() { BackdropClick = false };
-    private Veichle selectedVeichle = new Veichle();
-    private List<Veichle> veichles = new List<Veichle>();
+    private List<ResumeWorkflowItem> resumeItems = new List<ResumeWorkflowItem>();
+    private ResumeWorkflowItem selectedResumeItem;
 
     private bool processing = true;
+
+    private class ResumeWorkflowItem
+    {
+        public Veichle Veichle { get; set; }
+        public OpenWorkflowEntry Entry { get; set; }
+        public string WorkflowTitle { get; set; }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -123,10 +130,22 @@
         try
         {
             processing = true;
-            veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()
+            var veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()
             {
                  HasOpenWorkflow = true
             });
+            var workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+
+            resumeItems = veichles
+                .Where(v => v.OpenWorkflows != null)
+                .SelectMany(v => v.OpenWorkflows.Select(entry => new ResumeWorkflowItem
+                {
+                    Veichle = v,
+                    Entry = entry,
+                    WorkflowTitle = workflows.FirstOrDefault(w => w.Id == entry.WorkflowId)?.Title ?? ""
+                }))
+                .ToList();
+
             var result = await mudMessageBox.ShowAsync(mudMessageBoxOption);         
         }
         catch (Exception ex)
@@ -146,16 +165,19 @@
         {
             processing = true;
 
-            if(String.IsNullOrEmpty(selectedVeichle?.Id))
+            if(selectedResumeItem == null || String.IsNullOrEmpty(selectedResumeItem.Veichle?.Id))
             {
                 snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
                 return;
             }
 
+            var selectedVeichle = selectedResumeItem.Veichle;
+            var entry = selectedResumeItem.Entry;
+
             var customer = await dbDependency.GetDataAccessCustomer().FindByIdAsync(selectedVeichle.UserId);
-            var workflow = await dbDependency.GetDataAccessWorkflow().FindByIdAsync(selectedVeichle.OpenWorkflowId);
-            var workflowTask = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(selectedVeichle.OpenWorkflowTaskId);
-            var workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(selectedVeichle.OpenWorkflowExecutionId);
+            var workflow = await dbDependency.GetDataAccessWorkflow().FindByIdAsync(entry.WorkflowId);
+            var workflowTask = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(entry.WorkflowTaskId);
+            var workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(entry.WorkflowExecutionId);
             var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
 
             var parameters = new DialogParameters<ResumeWorkflow> {

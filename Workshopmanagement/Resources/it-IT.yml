@@ -99,6 +99,7 @@ WorkkflowStartStepGoBack: Vai allo step precedente
 WorkkflowStartStepGoForward: Vai allo step successivo
 Search: Cerca
 VeichleHasHopenWorkflow: Un altro flusso e' aperto per questo veicolo
+VeichleOpenWorkflowCount: flusso/i aperto/i
 WorkflowTaskCompletion: Percentuale di completamento
 ResumingWorkflow: Riprendi il workflow
 WorkkflowResumeTitle: Proseguimento del flusso

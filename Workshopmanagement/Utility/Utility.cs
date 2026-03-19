@@ -158,8 +158,9 @@ namespace Workshopmanagement.Utility
             if (!String.IsNullOrEmpty(veichle.Model))
                 baseS = $"{baseS} - {veichle.Model}";
 
-            if (veichle.HasOpenWorkflow)
-                return $"{baseS} - {languageContainerService.Keys["VeichleHasHopenWorkflow"]}";
+            var openCount = veichle.OpenWorkflows?.Count ?? 0;
+            if (openCount > 0)
+                return $"{baseS} - {openCount} {languageContainerService.Keys["VeichleOpenWorkflowCount"]}";
             else
                 return $"{baseS} ";
         }

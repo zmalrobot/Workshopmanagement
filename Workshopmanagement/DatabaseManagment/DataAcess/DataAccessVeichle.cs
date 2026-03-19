@@ -29,12 +29,6 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
             if (!string.IsNullOrWhiteSpace(searcher.LicensePlate))
                 filter &= builder.Eq(x => x.LicensePlate, searcher.LicensePlate);
 
-            if (!string.IsNullOrWhiteSpace(searcher.OpenWorkflowId))
-                filter &= builder.Eq(x => x.OpenWorkflowId, searcher.OpenWorkflowId);
-
-            if (!string.IsNullOrWhiteSpace(searcher.OpenWorkflowExecutionId))
-                filter &= builder.Eq(x => x.OpenWorkflowExecutionId, searcher.OpenWorkflowExecutionId);
-
             if (searcher.HasOpenWorkflow.HasValue)
                 filter &= builder.Eq(x => x.HasOpenWorkflow, searcher.HasOpenWorkflow.Value);
 

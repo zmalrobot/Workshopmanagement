@@ -25,7 +25,7 @@
         </MudGrid>
     </MudItem>
     <MudItem xs="12">
-        <MudDataGrid @ref="dataGrid" T="Veichle" Items="@GetDatForGid()" ReadOnly="true" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+        <MudDataGrid @ref="dataGrid" T="VeichleWorkflowView" Items="@GetDataForGrid()" ReadOnly="true" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
                         Filterable="true" Dense="false" Hover="true" SortMode="@SortMode.Single" Bordered="true">
             <Columns>
                 <TemplateColumn Hidden="false" CellClass="d-flex justify-end">
@@ -35,23 +35,23 @@
                     </CellTemplate>
                 </TemplateColumn>
 
-                <PropertyColumn Property="x => x.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <PropertyColumn Property="x => GetUserInfo(x.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <PropertyColumn Property="x => GetUserInfo(x.UserId).fiscalcodeOrVat" Title="@languageContainer.Keys["FiscalCodeOrVatNumber"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <PropertyColumn Property="x => GetWorkflowInfo(x.OpenWorkflowId)" Title="@languageContainer.Keys["OpenWorkflow"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <PropertyColumn Property="x => GetWorkflowTaskInfo(x.OpenWorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => x.Veichle.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Veichle.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).fiscalcodeOrVat" Title="@languageContainer.Keys["FiscalCodeOrVatNumber"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetWorkflowInfo(x.Entry.WorkflowId)" Title="@languageContainer.Keys["OpenWorkflow"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetWorkflowTaskInfo(x.Entry.WorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]" CellClass="d-flex justify-center">
                     <CellTemplate>
                         <MudProgressCircular Color="Color.Info" Size="Size.Small" 
-                                                Value="@GetPercentageOfCompleteness(context.Item.OpenWorkflowTaskId, context.Item.OpenWorkflowId)">
+                                                Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowTaskId, context.Item.Entry.WorkflowId)">
                         </MudProgressCircular>
                     </CellTemplate>
                 </TemplateColumn>
                     
             </Columns>
             <PagerContent>
-                <MudDataGridPager T="Veichle" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+                <MudDataGridPager T="VeichleWorkflowView" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
             </PagerContent>
         </MudDataGrid>
     </MudItem>
@@ -65,7 +65,7 @@
     private List<Veichle> veichles = new List<Veichle>();
     private List<Workflow> workflows = new List<Workflow>();
     private List<WorkflowTask> workflowTasks = new List<WorkflowTask>();
-    public MudDataGrid<Veichle> dataGrid { get; set; }
+    private MudDataGrid<VeichleWorkflowView> dataGrid { get; set; }
     private DialogOptions dialogOptions = new DialogOptions 
     { 
         FullScreen = true,
@@ -133,12 +133,25 @@
     #endregion
 
     #region GetGridData
-    private List<Veichle> GetDatForGid()
+    private class VeichleWorkflowView
+    {
+        public Veichle Veichle { get; set; }
+        public OpenWorkflowEntry Entry { get; set; }
+    }
+
+    private List<VeichleWorkflowView> GetDataForGrid()
     {
         if (veichles == null)
-            return new List<Veichle>();
+            return new List<VeichleWorkflowView>();
 
-        return veichles.Where(x => x.HasOpenWorkflow == true).ToList();
+        return veichles
+            .Where(x => x.HasOpenWorkflow && x.OpenWorkflows != null)
+            .SelectMany(v => v.OpenWorkflows.Select(entry => new VeichleWorkflowView
+            {
+                Veichle = v,
+                Entry = entry
+            }))
+            .ToList();
     }
 
     private (string denomination, string fiscalcodeOrVat) GetUserInfo(string userId)
@@ -234,13 +247,15 @@
         }
     }
 
-    private async Task OpenResumeWorkflowDialogAsync(Veichle veichle)
+    private async Task OpenResumeWorkflowDialogAsync(VeichleWorkflowView item)
     {
         try
         {
+            var veichle = item.Veichle;
+            var entry = item.Entry;
             var currentCustomer = customers.FirstOrDefault(x => x.Id.Equals(veichle.UserId)) ?? new Customer();
-            var currentWorkflow = workflows.FirstOrDefault(x => x.Id.Equals(veichle.OpenWorkflowId)) ?? new Workflow();
-            var currentWorkflowTask = workflowTasks.FirstOrDefault(x => x.Id.Equals(veichle.OpenWorkflowTaskId)) ?? new WorkflowTask();
+            var currentWorkflow = workflows.FirstOrDefault(x => x.Id.Equals(entry.WorkflowId)) ?? new Workflow();
+            var currentWorkflowTask = workflowTasks.FirstOrDefault(x => x.Id.Equals(entry.WorkflowTaskId)) ?? new WorkflowTask();
             var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
             var parameters = new DialogParameters<ResumeWorkflow> {
             {
@@ -252,7 +267,7 @@
                     veichle = veichle,
                     workflow = currentWorkflow,
                     workflowTask = currentWorkflowTask,
-                    workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(veichle.OpenWorkflowExecutionId), //Deve esistere    
+                    workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(entry.WorkflowExecutionId),
                     components = components
                 }
             }

@@ -432,7 +432,8 @@
         Dataset.workflowExecution.UserId = Dataset.customer.Id;
         Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
         Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
-        Dataset.workflowExecution.WorkflowTaskId = Dataset.veichle?.OpenWorkflowTaskId ?? "";
+        var currentEntry = Dataset.veichle?.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
+        Dataset.workflowExecution.WorkflowTaskId = currentEntry?.WorkflowTaskId ?? "";
         Dataset.workflowExecution.FuelPre = Dataset.veichle?.ActualFuelPercentage;
         Dataset.workflowExecution.KmPre = Dataset.veichle?.ActualKilometers;
         Dataset.workflowExecution.ExecutionStatus = executionStatus;
@@ -457,14 +458,24 @@
             if (Dataset.workflowTask.UserMustUpdateFuelLevel)
                 veichle.ActualFuelPercentage = Dataset.workflowExecution.FuelPost;
 
-            veichle.OpenWorkflowId = nextTask.WorkflowId;
-            veichle.OpenWorkflowTaskId = repeat ? veichle.OpenWorkflowTaskId : nextTask.Id;
-            veichle.OpenWorkflowExecutionId = String.IsNullOrEmpty(nextTask.Id) ? "" : Guid.NewGuid().ToString();
-            veichle.OpenWorkflowExecutionSeriesId = String.IsNullOrEmpty(nextTask.Id) ? "" : veichle.OpenWorkflowExecutionId;
-            veichle.HasOpenWorkflow = String.IsNullOrEmpty(nextTask.Id) ? false : true;
+            var entry = veichle.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
+            if (entry != null)
+            {
+                if (String.IsNullOrEmpty(nextTask.Id)) // Workflow completato, rimuovo l'entry
+                {
+                    veichle.OpenWorkflows.Remove(entry);
+                }
+                else
+                {
+                    entry.WorkflowTaskId = repeat ? entry.WorkflowTaskId : nextTask.Id;
+                    entry.WorkflowExecutionId = Guid.NewGuid().ToString();
+                    entry.WorkflowExecutionSeriesId = entry.WorkflowExecutionId;
+                }
+            }
+            veichle.HasOpenWorkflow = veichle.OpenWorkflows?.Count > 0;
 
             //Quando chiudo mi salvo l'esecuzione
-            if(veichle.HasOpenWorkflow == false)
+            if(entry == null || String.IsNullOrEmpty(nextTask.Id))
             {
                 if (veichle.WorkflowExecutionsCompleted == null)
                     veichle.WorkflowExecutionsCompleted = new List<string>();
@@ -489,12 +500,13 @@
 
         //Pulisco tutti i campi per il prossimo step
         Dataset.workflowExecution = new WorkflowExecution();
-        Dataset.workflowExecution.Id = Dataset.veichle.OpenWorkflowExecutionId;
+        var nextEntry = Dataset.veichle.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
+        Dataset.workflowExecution.Id = nextEntry?.WorkflowExecutionId;
         Dataset.workflowExecution.EmployeeId = Dataset.employee.Id;
         Dataset.workflowExecution.UserId = Dataset.customer.Id;
         Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
         Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
-        Dataset.workflowExecution.WorkflowTaskId = repeat ? Dataset.veichle.OpenWorkflowTaskId : nextTask.Id; //Se devo ripetere lo uso lo stesso ID
+        Dataset.workflowExecution.WorkflowTaskId = repeat ? nextEntry?.WorkflowTaskId : nextTask.Id; //Se devo ripetere lo uso lo stesso ID
         Dataset.workflowExecution.WorkflowExecutionSeriesId = workflowExecutionSeriesId;
         Dataset.workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
         Dataset.workflowExecution.OpenAt = DateTime.Now;
