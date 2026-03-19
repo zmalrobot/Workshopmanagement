@@ -87,8 +87,34 @@
                 snackbar.Add(@languageContainer.Keys["LoginIsNotValid"], Severity.Warning);
             }
             else
-            {               
-                var user = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee()
+            {
+                var dataAccessEmployee = dbDependency.GetDataAccessEmployee();
+
+                // If no employees exist, create the first user as Manager
+                var allEmployees = await dataAccessEmployee.FindAsync(new SearcherEmployee());
+                if (allEmployees == null || allEmployees.Count == 0)
+                {
+                    var newManager = new Employee
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Username = userModel.Username.Trim(),
+                        Password = Cypher.Encrypt(userModel.Password),
+                        Name = userModel.Username.Trim(),
+                        Surname = string.Empty,
+                        EmployeeRole = EmployeeRole.Manager,
+                        InsertDate = DateTime.Now,
+                        UpdateDate = DateTime.Now,
+                        IsActive = true
+                    };
+                    await dataAccessEmployee.InsertAsync(newManager);
+
+                    await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, newManager);
+                    snackbar.Add(@languageContainer.Keys["LoginIsValid"], Severity.Success);
+                    navigationManager.NavigateTo($"/dashboard");
+                    return;
+                }
+
+                var user = await dataAccessEmployee.FindAsync(new SearcherEmployee()
                 {
                      Username = userModel.Username,
                      Password = Cypher.Encrypt(userModel.Password)
