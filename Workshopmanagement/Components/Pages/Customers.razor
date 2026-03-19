@@ -1,0 +1,241 @@
+﻿@page "/customers"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem xs="6" Style="text-align: left;">
+                @if (!isViewMode)
+                {
+                    <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(new Customer()))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Info">
+                        @languageContainer.Keys["AddCustomer"]
+                    </MudButton>
+                }
+            </MudItem>
+            <MudItem xs="6" Style="text-align: right;">
+                @if (isViewMode)
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info">
+                        @languageContainer.Keys["Edit"]
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info">
+                        @languageContainer.Keys["View"]
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12">
+        <MudDataGrid @ref="dataGrid" T="Customer" Items="@customers" ReadOnly="@isViewMode" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+        Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
+        StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges">
+            <Columns>
+                <TemplateColumn Hidden="@isViewMode" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <MudIconButton Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" />
+                        <MudIconButton Style="margin-left: 15px" Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.RestoreFromTrash" OnClick="@(() => DeletyeItemChanges(context.Item))" />
+                        @if (hidePassword)
+                        {
+                            <MudIconButton Style="margin-right: 15px" Size="@Size.Small" Color="Color.Success"
+                            Icon="@Icons.Material.Filled.Lock"
+                            OnClick="@(() => hidePassword = !hidePassword)" />
+                        }
+                        else
+                        {
+                            <MudIconButton Style="margin-right: 15px" Size="@Size.Small" Color="Color.Warning"
+                            Icon="@Icons.Material.Filled.LockOpen"
+                            OnClick="@(() => hidePassword = !hidePassword)" />
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Id" Title="@languageContainer.Keys["Id"]" Required="false" Editable="false" Sortable="false" Hidden="true" />
+                <PropertyColumn Property="x => x.Name" Title="@languageContainer.Keys["Name"]" />
+                <PropertyColumn Property="x => x.Surname" Title="@languageContainer.Keys["Surname"]" />
+                <PropertyColumn Property="x => x.Username" Title="@languageContainer.Keys["Username"]" />
+                <TemplateColumn Title="@languageContainer.Keys["Password"]" Hidden="hidePassword" Sortable="false">
+                    <CellTemplate>
+                        <MudText Color="Color.Warning">@Cypher.Decrypt(context.Item.Password)</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudTextField Required Margin="Margin.Dense" Label="@languageContainer.Keys["Password"]" Variant="Variant.Outlined"
+                        InputType="InputType.Password" @bind-Value="context.Item.Password" />
+                    </EditTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.BusinessName" Title="@languageContainer.Keys["BusinessName"]" Required="false" />
+                <PropertyColumn Property="x => x.PhonePrefix" Title="@languageContainer.Keys["PhonePrefix"]" Hidden="true" Required="false" />
+                <PropertyColumn Property="x => x.PhoneNumber" Title="@languageContainer.Keys["PhoneNumber"]" Required="false" />                    
+                <PropertyColumn Property="x => x.Email" Title="@languageContainer.Keys["Email"]" Required="false" />
+                <PropertyColumn Property="x => x.Address" Title="@languageContainer.Keys["Address"]" Required="false" />                    
+                <PropertyColumn Property="x => x.FiscalCode" Title="@languageContainer.Keys["FiscalCode"]" Required="false" />
+                <PropertyColumn Property="x => x.VatNumber" Title="@languageContainer.Keys["VatNumber"]" Required="false" />
+                <PropertyColumn Property="x => x.InsertDate" Title="@languageContainer.Keys["InsertDate"]" Editable="false" Hidden="true" />
+                <PropertyColumn Property="x => x.UpdateDate" Title="@languageContainer.Keys["UpdateDate"]" Editable="false" Hidden="true" />
+                <TemplateColumn Title="@languageContainer.Keys["IsCompany"]" Sortable="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.IsCompany" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Label="@languageContainer.Keys["IsCompany"]" @bind-Value="context.Item.IsCompany"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="Customer" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    private Employee employee;
+    private List<Customer> customers = new List<Customer>();
+    public MudDataGrid<Customer> dataGrid { get; set; }
+
+    private bool processing = true;
+    private bool isViewMode = true;
+    private bool hidePassword = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {        
+        try
+        {
+            if (firstRender)
+            {
+                processing = true;
+
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo($"login");
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+                await GetCustomers();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if(firstRender)
+                    StateHasChanged();
+            }           
+        }
+    }
+
+    private async Task GetCustomers()
+    {
+        customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
+    }
+
+    private async Task SwitchView()
+    {
+        isViewMode = !isViewMode;
+    }
+
+    private async Task StartedEditingItem(Customer item)
+    {
+        processing = true;
+        if (String.IsNullOrEmpty(item?.Id) && item != null)
+        {            
+            item.IsActive = true;
+        }
+        processing = false;
+    }
+
+    private async Task CanceledEditingItem(Customer item)
+    {
+    }
+
+    private async Task CommittedItemChanges(Customer item)
+    {
+        processing = true;
+        try
+        {
+
+            item.UpdateDate = DateTime.Now;
+
+            if (String.IsNullOrEmpty(item.Id))
+            {
+                item.Id = Guid.NewGuid().ToString();
+                item.InsertDate = DateTime.Now;
+                await dbDependency.GetDataAccessCustomer().InsertAsync(item);
+            }
+            else
+            {              
+                await dbDependency.GetDataAccessCustomer().UpdateAsync(item);
+            }
+
+            Thread.Sleep(5000);
+            await GetCustomers();
+            snackbar.Add(@languageContainer.Keys["SaveOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+
+    private async Task DeletyeItemChanges(Customer item)
+    {
+        processing = true;
+        try
+        {
+            var veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()
+            {
+                 UserId = item.Id
+            });
+
+            foreach(var veichle in veichles)
+            {
+                var h = await dbDependency.GetDataAccessWorkflowExecution().FindPagedAsync(new SearcherWorkflowExecution()
+                    {
+                        VeichleId = item.Id
+                    }, 0);
+
+                bool canBeDeleted = h.Results?.Count == 0;
+
+                if (!canBeDeleted)
+                {
+                    snackbar.Add(@languageContainer.Keys["DeletionWarningIsInUse"], Severity.Warning);
+                    return;
+                }
+            }
+           
+            await dbDependency.GetDataAccessCustomer().DeleteAsync(item.Id);
+
+            await GetCustomers();
+            snackbar.Add(@languageContainer.Keys["DeleteOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+}
+

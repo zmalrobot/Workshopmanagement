@@ -1,0 +1,625 @@
+﻿
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudDialog Style="background-color: var(--bs-body-color);">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Info">
+            <MudIcon Icon="@Icons.Material.Filled.Workspaces" Class="mr-3 mb-n1" />
+            @languageContainer.Keys["WorkkflowStartTitle"]
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (processing)
+        {
+            <MudContainer Style="text-align: center; margin-top: 50px;">
+                <MudProgressLinear Color="Color.Tertiary" Size="Size.Large" Indeterminate="true" />
+            </MudContainer>
+        }
+        else
+        {
+            <MudGrid>
+                @if (step == 1)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Color="Color.Success" Style="margin-bottom: 15px">
+                            @languageContainer.Keys["WorkkflowStartStep1"]
+                        </MudText>
+                        @foreach (var workflow in Dataset.workflows)
+                        {
+                            <MudCard Outlined="true" Elevation="15" Style="margin-top: 15px;">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">
+                                            @workflow.Title
+                                        </MudText>
+                                        <MudText Typo="Typo.body2">
+                                            @workflow.Subtitle
+                                        </MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudText Typo="Typo.body1">
+                                        @workflow.Description
+                                    </MudText>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton Disabled="@processing" OnClick="@( async (e)  => await StartWorkflow(workflow))" 
+                                    Variant="Variant.Filled" Style="@GetBgColor(workflow)" FullWidth="true"
+                                    StartIcon="@Icons.Material.Filled.ArrowForward" EndIcon="@Icons.Material.Filled.ArrowBack">
+
+                                        @if (processing)
+                                        {
+                                            <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                            <MudText Class="ms-2">@languageContainer.Keys["StartWorkflow"]</MudText>
+                                        }
+                                        else
+                                        {
+                                            <MudText>@languageContainer.Keys["StartWorkflow"]</MudText>
+                                        }
+                                    </MudButton>
+
+                                </MudCardActions>
+                            </MudCard>
+                        }
+                    </MudItem>
+                }
+                else if(step == 2)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Color="Color.Success">
+                            @languageContainer.Keys["WorkkflowStartStep2"]
+                        </MudText>
+
+                        <MudTextField Value="@searchValue" TextChanged="@(async (x)=> await FilterCustomer(x))" DebounceInterval="500"
+                        Label="@languageContainer.Keys["Search"]" Variant="Variant.Outlined" 
+                        Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" />
+
+                        <MudButton OnClick="(() => GoToNext(false))" Disabled="String.IsNullOrEmpty(selectedCustomer.Id)"
+                        Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info" FullWidth="true" Style="margin-top: 15px">
+                            @languageContainer.Keys["WorkkflowStartStepGoForward"]
+                        </MudButton>                                              
+
+                        <MudList T="Customer" @bind-SelectedValue="selectedCustomer"
+                        SelectionMode="SelectionMode.SingleSelection" Color="@Color.Info" Style="margin-top: 15px">
+                            <MudDivider />
+                            @foreach (var customer in filteredCustomer.Where(x => x.IsActive == true))
+                            {
+                                <MudListItem Text="@Utility.GetDescriptionFromCustomer(customer, languageContainer)" Value='customer' Style="text-align: center;" />
+                                <MudDivider />
+                            }                            
+                        </MudList>
+                    </MudItem>
+                }
+                else if (step == 3)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Color="Color.Success">
+                            @languageContainer.Keys["WorkkflowStartStep3"]
+                        </MudText>
+
+                        <MudTextField Value="@searchValue" TextChanged="@(async (x)=> await FilterVeichle(x))" DebounceInterval="500"
+                        Label="@languageContainer.Keys["Search"]" Variant="Variant.Outlined"
+                        Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" />
+
+                        <MudButton OnClick="(() => GoToNext(false))" Disabled="String.IsNullOrEmpty(selectedVeichle.Id)"
+                        Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info" FullWidth="true" Style="margin-top: 15px">
+                            @languageContainer.Keys["WorkkflowStartStepGoForward"]
+                        </MudButton>                      
+
+                        <MudList T="Veichle" @bind-SelectedValue="selectedVeichle"
+                        SelectionMode="SelectionMode.SingleSelection" Color="@Color.Info" Style="margin-top: 15px">
+                            <MudDivider />
+                            @foreach (var veichle in filteredVeichle)
+                            {
+                                <MudListItem Disabled="@veichle.HasOpenWorkflow" Text="@Utility.GetDescriptionFromVeichle(veichle, languageContainer)" Value='veichle' Style="text-align: center;" />
+                                <MudDivider />
+                            }
+                        </MudList>
+                    </MudItem>
+                }
+                else if (step == 4)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Color="Color.Success">
+                            @languageContainer.Keys["WorkkflowStartStep4"]
+                        </MudText>
+
+                        @if (!selectedWorkflow.RequireDisclaimer)
+                        {
+                            <MudCard Outlined="true">
+                                <MudCardContent>
+                                    <MudText Typo="Typo.h5">
+                                        @languageContainer.Keys["WorkkflowStartStep4NoSign"]
+                                    </MudText>                                    
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudButton OnClick="(() => GoToNext(false))" FullWidth="true" Variant="Variant.Filled" Color="Color.Info">
+                                        @languageContainer.Keys["WorkkflowStartStep4ConfirmNoSign"]
+                                    </MudButton>
+                                </MudCardActions>
+                            </MudCard>
+                        }
+                        else
+                        {
+                            <MudCard Outlined="true">
+                                <MudCardContent>
+                                    @*  <MudText Typo="Typo.h5">
+                                        @languageContainer.Keys["WorkkflowStartStep4Sign"]
+                                    </MudText> *@
+                                    <canvas id="drawingCanvas"
+                                    style="border:2px solid #FFFF; width:100%; height: 300px; max-height:250px; background: #FFF">
+                                    </canvas>
+                                </MudCardContent>
+                                <MudCardActions>
+                                    <MudGrid>
+                                        <MudItem xs="4" Style="text-align: left;">
+                                            <MudButton OnClick="ClearCanvas" FullWidth="false" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Clear">
+                                                @languageContainer.Keys["WorkkflowStartStep4ClearSign"]
+                                            </MudButton>
+                                        </MudItem>
+                                        <MudItem xs="4" Style="text-align: center;">
+                                            <MudButton OnClick="(() => GoToNext(true))" FullWidth="false" Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.EditNote" EndIcon="@Icons.Material.Filled.EditNote">
+                                                @languageContainer.Keys["WorkkflowStartStep4ConfirmAlreadySign"]
+                                            </MudButton>
+                                        </MudItem>
+                                        <MudItem xs="4" Style="text-align: right;">
+                                            <MudButton OnClick="(() => GoToNext(false))" FullWidth="false" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Edit" EndIcon="@Icons.Material.Filled.ArrowForward">
+                                                @languageContainer.Keys["WorkkflowStartStep4ConfirmSign"]
+                                            </MudButton>
+                                        </MudItem>
+                                    </MudGrid>   
+                                </MudCardActions>
+                            </MudCard>
+                        }
+                    </MudItem>
+                }
+                else if (step == 5)
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.h6" Color="Color.Success">
+                            @languageContainer.Keys["WorkkflowStartStep5"]
+                        </MudText>
+
+                        <MudCard Outlined="true">
+                            <MudCardContent>
+                                <MudGrid>
+                                    <MudItem xs="6" Style="text-align:right;">
+                                        <MudText>@languageContainer.Keys["WorkkflowStartStep5Workflow"]:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:left;">
+                                        <MudText>@selectedWorkflow.Title</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:right;">
+                                        <MudText>@languageContainer.Keys["WorkkflowStartStep5Customer"]:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:left;">
+                                        <MudText>@Utility.GetDescriptionFromCustomer(selectedCustomer, languageContainer)</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:right;">
+                                        <MudText>@languageContainer.Keys["WorkkflowStartStep5Veichle"]:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:left;">
+                                        <MudText>@Utility.GetDescriptionFromVeichle(selectedVeichle, languageContainer)</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:right;">
+                                        <MudText>@languageContainer.Keys["WorkkflowStartStep5Date"]:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="6" Style="text-align:left;">
+                                        <MudText>@Utility.GetDateFormatted(DateTime.Now, Utility.DateFormat.FullDate)</MudText>
+                                    </MudItem>
+                                    @if (selectedWorkflow.RequireDisclaimer && !isDisclamerAleadySign)
+                                    {
+                                        <MudItem xs="12" Style="text-align: center;">
+                                            <MudText>@languageContainer.Keys["WorkkflowStartStep5CustomerSign"]:</MudText>
+                                        </MudItem>
+                                        <MudItem xs="12" Style="text-align: center;">
+                                            <img style="max-width: 500px; background: #FFF;" src="@signImage">
+                                        </MudItem>
+                                    }
+                                    else if (selectedWorkflow.RequireDisclaimer && isDisclamerAleadySign)
+                                    {
+                                        <MudItem xs="6" Style="text-align:right;">
+                                            <MudText>@languageContainer.Keys["WorkkflowStartStep5Sign"]:</MudText>
+                                        </MudItem>
+                                        <MudItem xs="6" Style="text-align:left;">
+                                            <MudText>@languageContainer.Keys["WorkkflowStartStep5Sign2"]</MudText>
+                                        </MudItem>
+                                    }
+
+                                </MudGrid>                               
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton OnClick="Abort" FullWidth="true" Variant="Variant.Filled" Color="Color.Dark">
+                                    @languageContainer.Keys["WorkkflowStartStep5Abort"]
+                                </MudButton>
+                                <MudButton OnClick="Confirm" FullWidth="true" Variant="Variant.Filled" Color="Color.Info">
+                                    @languageContainer.Keys["WorkkflowStartStep5Confirm"]
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudGrid>
+            <MudItem xs="6" Style="text-align:left">
+                @if (step != 1)
+                {
+                    <MudButton OnClick="GoToPrev" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary">
+                        @languageContainer.Keys["WorkkflowStartStepGoBack"]
+                    </MudButton>
+                }
+            </MudItem>
+            <MudItem xs="6" Style="text-align:right">
+                @if (step != 1 && step != 5)
+                {
+                    @*   <MudButton OnClick="(() => step++)" Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary">
+                @languageContainer.Keys["WorkkflowStartStepGoForward"]
+                </MudButton> *@
+                }
+            </MudItem>
+        </MudGrid>
+
+
+    </DialogActions>
+</MudDialog>
+
+<script>
+    window.initializeDrawing = (canvasId) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+    console.error(`Canvas with id '${canvasId}' not found.`);
+    return;
+    }
+    const context = canvas.getContext("2d");
+
+    // Set the actual canvas size to match the style size
+    const setCanvasSize = () => {
+    const width = canvas.offsetWidth;
+    const height = canvas.offsetHeight;
+    canvas.width = width;
+    canvas.height = height;
+    };
+
+    setCanvasSize(); // Initialize the canvas size
+
+    let isDrawing = false;
+
+    // Set up touch and mouse events
+    const startDrawing = (event) => {
+    isDrawing = true;
+    context.beginPath();
+    const { x, y } = getEventPosition(event);
+    context.moveTo(x, y);
+    };
+
+    const draw = (event) => {
+    if (!isDrawing) return;
+    const { x, y } = getEventPosition(event);
+    context.lineTo(x, y);
+    context.stroke();
+    };
+
+    const stopDrawing = () => {
+    isDrawing = false;
+    context.closePath();
+    };
+
+    const getEventPosition = (event) => {
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+    if (event.touches && event.touches.length > 0) {
+    x = event.touches[0].clientX - rect.left;
+    y = event.touches[0].clientY - rect.top;
+    } else {
+    x = event.clientX - rect.left;
+    y = event.clientY - rect.top;
+    }
+
+    // Scale the coordinates to the canvas's internal size
+    x = (x / rect.width) * canvas.width;
+    y = (y / rect.height) * canvas.height;
+
+    return { x, y };
+    };
+
+    // Event listeners for touch and mouse
+    canvas.addEventListener("mousedown", startDrawing);
+    canvas.addEventListener("mousemove", draw);
+    canvas.addEventListener("mouseup", stopDrawing);
+    canvas.addEventListener("mouseout", stopDrawing);
+
+    canvas.addEventListener("touchstart", startDrawing);
+    canvas.addEventListener("touchmove", draw);
+    canvas.addEventListener("touchend", stopDrawing);
+    canvas.addEventListener("touchcancel", stopDrawing);
+
+    // Adjust canvas size on window resize
+    window.addEventListener("resize", setCanvasSize);
+    };
+
+    window.clearCanvas = (canvasId) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+    console.error(`Canvas with id '${canvasId}' not found.`);
+    return;
+    }
+    const context = canvas.getContext("2d");
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    };
+
+    window.saveCanvas = (canvasId) => {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) {
+    console.error(`Canvas with id '${canvasId}' not found.`);
+    return null;
+    }
+    // Convert the canvas to a data URL
+    const dataUrl = canvas.toDataURL("image/png");
+    return dataUrl;
+    };
+
+</script>
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public StartWorkflowDialogParameter Dataset { get; set; } = new StartWorkflowDialogParameter();
+
+    private List<Customer> filteredCustomer
+    {
+        get
+        {
+            if (String.IsNullOrEmpty(searchValue))
+                return Dataset.customers;
+            else
+                return Dataset.customers.Where(x => x.Name.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase)
+                                        || x.Surname.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase)
+                                        || (x.BusinessName?.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                                        || (x.FiscalCode?.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                                        || (x.VatNumber?.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase) ?? false)).ToList();
+        }
+    }
+
+    private List<Veichle> filteredVeichle
+    {
+        get
+        {
+            if (String.IsNullOrEmpty(searchValue))
+                return Dataset.veichles.Where(x => x.UserId.Equals(selectedCustomer.Id)).ToList();
+            else
+                return Dataset.veichles.Where(x => x.UserId.Equals(selectedCustomer.Id))
+                                       .Where(x => x.LicensePlate.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase)
+                                        || (x.Model?.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                                        || (x.EngineType?.Contains(searchValue, StringComparison.InvariantCultureIgnoreCase) ?? false)).ToList();
+        } 
+    }
+
+    private Workflow selectedWorkflow = new Workflow();
+    private Customer selectedCustomer = new Customer();
+    private Veichle selectedVeichle = new Veichle();
+    private bool isDisclamerAleadySign = false;
+    private string signImage = "";
+
+    private bool processing = false;
+    private bool isInitialized = false;
+    private int step = 1;
+
+    private string searchValue = "";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (step == 4 && selectedWorkflow.RequireDisclaimer && !isInitialized)
+            {
+                await JSRuntime.InvokeVoidAsync("initializeDrawing", "drawingCanvas");
+                isInitialized = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task Confirm()
+    {
+        try{
+            processing = true;
+
+            var executionId = Guid.NewGuid().ToString(); //Task singolo
+            var executionSeriesID = Guid.NewGuid().ToString(); //Serie
+
+            var tasks = new List<Task>();
+
+            tasks.Add(Task.Run(async () =>
+                {
+                    //Aggiorno il veicolo
+                    selectedVeichle.HasOpenWorkflow = true;
+                    selectedVeichle.OpenWorkflowExecutionId = executionId;
+                    selectedVeichle.OpenWorkflowExecutionSeriesId = executionSeriesID;
+                    selectedVeichle.OpenWorkflowId = selectedWorkflow.Id;
+                    selectedVeichle.OpenWorkflowTaskId = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsStartingTask = true && x.IsSignTask == false)?.Id ?? "";
+
+                    await dbDependency.GetDataAccessVeichle().UpdateAsync(selectedVeichle);
+                }));
+
+            tasks.Add(Task.Run(async () =>
+           {
+               //Creo lo step della firma
+               if (selectedWorkflow.RequireDisclaimer)
+               {
+                   var workflowExecution = new WorkflowExecution();
+                   workflowExecution.Id = Guid.NewGuid().ToString(); //Questo è "Fantasma"
+                   workflowExecution.WorkflowExecutionSeriesId = executionSeriesID;
+                   workflowExecution.EmployeeId = Dataset.employee.Id;
+                   workflowExecution.UserId = selectedCustomer.Id;
+                   workflowExecution.VeichleId = selectedVeichle.Id;
+                   workflowExecution.WorkflowId = selectedWorkflow.Id;
+                   workflowExecution.WorkflowTaskId = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsSignTask == true)?.Id ?? "";
+                   workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Closed;
+                   workflowExecution.OpenAt = DateTime.Now;
+                   workflowExecution.DisclamierSignDate = DateTime.Now;
+                   workflowExecution.DisclamierSign = signImage;
+                   workflowExecution.IsDisclamerAleadySign = isDisclamerAleadySign;
+                   workflowExecution.Titile = languageContainer.Keys["WorkflowTaskSign"];
+
+                   await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(workflowExecution);
+               }
+
+           }));
+
+            tasks.Add(Task.Run(async () =>
+           {
+               var task = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsStartingTask = true && x.IsSignTask == false) ?? new WorkflowTask();
+               //Creo il primo step
+               var workflowExecution = new WorkflowExecution();
+               workflowExecution.Id = executionId;
+               workflowExecution.WorkflowExecutionSeriesId = executionSeriesID;
+               workflowExecution.EmployeeId = Dataset.employee.Id;
+               workflowExecution.UserId = selectedCustomer.Id;
+               workflowExecution.VeichleId = selectedVeichle.Id;
+               workflowExecution.WorkflowId = selectedWorkflow.Id;
+               workflowExecution.WorkflowTaskId = task.Id;
+               workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
+               workflowExecution.OpenAt = DateTime.Now;
+               workflowExecution.Titile = $"{task.Title} - {task.Subtitle}";
+               workflowExecution.KmPost = selectedVeichle.ActualKilometers ?? 0;
+               workflowExecution.FuelPost = selectedVeichle.ActualFuelPercentage ?? 0;
+
+               await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(workflowExecution);
+
+           }));
+
+            await Task.WhenAll(tasks);
+
+
+            snackbar.Add(@languageContainer.Keys["WorkkflowStartStep5ConfirmMessage"], Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    private void Cancel()
+    {        
+        MudDialog.Cancel();
+    }
+
+    private void Abort()
+    {
+        snackbar.Add(@languageContainer.Keys["WorkkflowStartStep5AbortMessage"], Severity.Info);
+        MudDialog.Cancel();
+    }
+
+    private async Task GoToNext(bool disclamerAleadySign = false)
+    {        
+        step++;
+        searchValue = "";
+        isDisclamerAleadySign = disclamerAleadySign;
+
+        if (step == 5 && !disclamerAleadySign && selectedWorkflow.RequireDisclaimer)
+            if (!(await SaveCanvasImage()))
+            {
+                step--;
+                searchValue = "";
+                isDisclamerAleadySign = false;
+            }
+    }
+
+    private async Task GoToPrev()
+    {
+        step--;
+        searchValue = "";
+        isInitialized = false;
+    }
+
+    private async Task StartWorkflow(Workflow workflow)
+    {
+        try
+        {
+            processing = true;
+            selectedWorkflow = workflow;
+            step++;
+
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+
+        }
+        finally
+        {
+            processing = false;
+        }       
+    }
+
+    private async Task FilterCustomer(string value)
+    {
+        searchValue = value;
+    }
+
+    private async Task FilterVeichle(string value)
+    {
+        searchValue = value;
+    }
+
+    private string GetBgColor(Workflow workflow)
+    {
+        var textColor = "#FFFFFF";
+
+        System.Drawing.Color col = System.Drawing.ColorTranslator.FromHtml(workflow.Color);
+        if (col.R * 0.2126 + col.G * 0.7152 + col.B * 0.0722 < 255 / 2)
+        {
+            textColor = "#FFFFFF";
+        }
+        else
+        {
+            textColor = "#000000";
+        }
+
+        return $"background-color: {workflow.Color}; color: {textColor};";
+    }
+
+    private async Task ClearCanvas()
+    {
+        await JSRuntime.InvokeVoidAsync("clearCanvas", "drawingCanvas");
+    }  
+
+    private async Task<bool> SaveCanvasImage()
+    {
+        try{
+            signImage = await JSRuntime.InvokeAsync<string>("saveCanvas", "drawingCanvas");
+
+            if (String.IsNullOrEmpty(signImage))
+            {
+                snackbar.Add(@languageContainer.Keys["WorkkflowStartSignIsRequired"], Severity.Error);
+                return false;
+            }
+
+            return true;
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+            return false;
+        }
+        
+    }
+}
+

@@ -1,0 +1,233 @@
+ApplicationName: Camper manager
+LoginTitle: Benvenuto nel gestore camper
+Login: Login
+LoginIsNotValid: Username o password non corretti
+LoginExpiredError: Login scaduto.
+LoginIsValid: Benvenuto!
+Email: Email
+Password: Password
+Username: Nome utente
+Home: Dashboard
+CustomerManagment: Gestione clienti
+Customers: Clienti
+Veichles: Veicoli
+AdminArea: Area amministrativa
+AdminAreaDesc: Gestione dipendenti
+EmployeeManagment: Gestione dipendenti
+WorkflowManamgent: Flusso di lavoro
+UserNotAutorized: Utente non autorizzato a eseguire l'operazione richiesta
+Edit: Modifica
+View: Visualizza
+Id: Id
+Name: Nome
+Surname: Cognome
+PhonePrefix: Prefisso
+PhoneNumber: Numero di telefono
+InsertDate: Data inserimento
+UpdateDate: Data aggiornamento
+IsActive: Attivo
+AddEmployee: Aggiungi impiegato
+SaveOk: Salvataggio avvenuto con successo
+EmployeeRole: Ruolo
+Employee: Impiegato
+Manager: Manager
+AddCustomer: Aggiungi cliente
+IsCompany: Azienda
+Address: Indirizzo
+FiscalCode: Codice fiscale
+VatNumber: Partita IVA
+AddVeichles: Aggiungi veicolo
+LicensePlate: Targa
+Note: Note
+Owner: Proprietario
+WorkflowsManagment: Gestione dei flussi di lavoro
+Description: Descrizione
+Color: Colore
+Subtitle: Sottotitolo
+Titile: Titolo
+AddWorkflow: Aggiungi flusso di lavoro
+Brand: Marca
+Model: Modello
+FrameType: Tipo di telaio
+EngineType: Tipo di motore
+ActualKilometers: Km attuali
+ActualFuelPercentage: Carburante %
+Workflowstasks: Gestione task per flusso di lavoro
+AddTask: Aggiungi un task
+IsStartingTask: Task di partenza
+UserMustUpdateVeichleKm: Aggiornamento dei Km necessario
+UserMustUpdateFuelLevel: Aggiornamento del carburante necessario
+AllowImageUpload: Permetti il caricamento delle immagini
+AllowLoop: Permetti ripetizione del task
+IsComponentRequired: Sono necessari componenti per il task?
+IsFinalTask: Task di chiusura
+CanBeSkipped: Puo' essere saltato?
+TaskOrder: Numero nella sequenza
+Title: Titolo
+FiscalCodeOrVatNumber: Cf/Piva
+OpenWorkflow: Flusso attuale
+WorkflowTaskInfo: Task attuale
+StartNewWorkflow: Fai partire un nuovo flusso di lavoro
+Cancel: Annulla
+Start: Procedi
+StartingNewWorkflow: Cominica un nuovo workflow
+StartWorkflow: Comincia questo flusso
+WorkkflowStartTitle: Inizio nuovo flusso di lavoro
+WorkkflowStartStep1: Quale flusso di lavoro vuoi cominciare?
+WorkkflowStartStep2: Per quale cliente vuoi cominciare questo flusso?
+WorkkflowStartStep3: Per quale veicolo vuoi cominicare questo flusso?
+WorkkflowStartStep4: Frima scarico di responsabilita'
+WorkkflowStartStep4NoSign: Frima scarico di responsabilita' non necessaria per questo flusso
+WorkkflowStartStep4ConfirmNoSign: Procedi
+WorkkflowStartStep4ConfirmSign: Vai allo step successivo
+WorkkflowStartSignIsRequired: Necessaria la firma per proseguire
+WorkkflowStartStep4ConfirmAlreadySign: Il cliente ha gia' firmato
+WorkkflowStartStep4Sign: Frima scarico di responsabilita'
+WorkkflowStartStep4ClearSign: Pulisci
+WorkkflowStartStep5: Riassunto creazione flusso
+WorkkflowStartStep2Customer: Il cliente selezionato e' 
+WorkkflowStartStep2NoCustomer: Nessun cliente selezionato
+WorkkflowStartStep5Confirm: Procedi con la creazione del flusso
+WorkkflowStartStep5Workflow: Flusso selezionato
+WorkkflowStartStep5Customer: Cliente selezionato
+WorkkflowStartStep5Veichle: Veicolo selezionato
+WorkkflowStartStep5Abort: Annulla la creazione del flusso
+WorkkflowStartStep5AbortMessage: Creazione flusso annullata
+WorkkflowStartStep5ConfirmMessage: Flusso creato con successo
+WorkkflowStartStep5Date: Data di inizio
+WorkkflowStartStepGoBack: Vai allo step precedente
+WorkkflowStartStepGoForward: Vai allo step successivo
+Search: Cerca
+VeichleHasHopenWorkflow: Un altro flusso e' aperto per questo veicolo
+WorkflowTaskCompletion: Percentuale di completamento
+ResumingWorkflow: Riprendi il workflow
+WorkkflowResumeTitle: Proseguimento del flusso
+HomeStartNewFlow: Nuovo flusso
+HomeResumeFlow: Riprendi flusso
+HomeStartTitle: Gestione flussi di lavoro
+WorkkflowResumeCurrentTask: Step attuale
+LoadPictures: Carica immagini
+StepTitle: Definizione del lavoro
+StepNote: Note
+AddNewComponent: Aggiungi un componente
+UnitOfMeasurement: Unita' di misura
+Quanity: Quantita'
+PricePerQuantity: Prezzo per unita'
+ResumeWorkflowNextStep: Procedi allo step successivo
+ResumeWorkflowGotoNextStepTitle: Sei sicuro di voler confermare i dati inseriti?
+ResumeWorkflowGotoNextStepDescription: Una volta confermati i dati non saranno piu' modificabili.
+Yes: Procedi
+No: Annulla
+StepTitleError: La definizione del lavoro non puo' essere vuota
+StepVeichleKmError: E' necessario inserire in KM attuali
+StepVeichleFuelError: E' necessario inserire il carburante attuale
+StepImageError: E' necessario caricare almeno un immagine per proseguire
+StepComponentError: E' necessario caricare almeno un componente per proseguire
+ResumeWorkflowSaveStep: Salva step attuale
+ResumeWorkflowGotoNextStepCompleted: Passo allo step successivo
+ResumeWorkflowGotoNextStepCompletedRepeat: Ripeto lo step
+ResumeWorkflowGotoNextStepSaved: Salvataggio dati avvenuto con successo.
+DuplicateTaskOrderFound: Sono presenti duplicati per lo stesso numero nella sequenza. Cambiare il numero della sequenza.
+Logout: Logout avvenuto con successo
+ResumeWorkflowSkipStep: Salta questo step
+ResumeWorkflowGotoNextStepSkpipped: Step saltato
+ResumeWorkflowRepeteStep: Salva e Ripeti questo step
+BusinessName: Nome azienda
+WorkkflowResumeCurrentVeichle: Veicolo attuale
+WorkkflowResumeCurrentCustomer: Cliente attuale
+ResumeWorkflowCompleted: WorkflowCompletato
+HomeSelectVeichle: Per quale veicolo continuare il flusso?
+HomeSelectVeichleProceed: Procedi
+HomeSelectVeichleCancel: Annulla
+HomeNoVeichleSelected: Devi selezionare un veicolo per procedere
+ReportTitle: Resoconto lavorativo
+ReportCustomerInformationTitle: Informazioni sul cliente
+ReportCustomerInformationNameTitle: Nome e Cognome
+ReportCustomerInformationAddressTitle: Indirizzo
+ReportCustomerInformationVatNumberTitle: Partita iva
+ReportCustomerInformationFiscalCodeTitle: Codice fiscale
+ReportVeichleInformationTitle: Informazioni sul veicolo
+ReportVeichleInformationPlateTitle: Targa
+ReportVeichleInformationModelTitle: Modello
+ReportVeichleInformationKmTitle: Km
+ReportVeichleInformationFuelTitle: Carburante %
+ReportWorkflowInformationTitle: Informazioni sul flusso
+ReportWorkflowInformationDateTitle: Data di chiusura
+ReportWorkflowInformationEmployeeTitle: Responsabile
+ReportWorkflowInformationDescriptionTitle: Descrizione intervento
+ReportWorkflowDetailTitle: Interventi effettuati
+ReportWorkflowDetailNameTitle: Nome intervento
+ReportWorkflowDetailDescriptionTitle: Descrizione intervento
+ReportComponentsTitle: Componenti utilizzati
+ReportComponentsImages: Immagini caricate
+ReportComponentsNameBarcode: Codice
+ReportComponentsNameTitle: Nome
+ReportComponentsPriceTitle: Prezzo
+ReportComponentsQuantityTitle: Quantita'
+ReportComponentsUnitOfMesurmentTitle: Unita' di misura
+ReportComponentsRowTotalTitle: Totale
+ReportComponentTotalTitle: Totale
+ReportWorkflowDetailStateTitle: Stato intervento
+ReportVeichleInformationEnigineTitle: Motorizzazione
+ReportWorkflowInformationTitleTitle: Denominazione flusso eseguito
+excecutionstatus_Todo: Da fare
+Ok: Ok
+RunningOut: In fase di esaurimento
+ToBeVerified: Da verificare
+ToBeReplaced: Da sostituire
+Verified: Da verificare
+Replaced: Da rimpiazzare
+Barcode: Codice
+AddSelectedComponent: Aggiungi componente selezionato
+WorkfComponents: Gestione magazzino
+AddComponent: Aggiungi componente
+DeleteOk: Cancellazione ok
+DeletionWarningIsInUse: L'elemento non puo' essere cancellato inquanto e' stato utilizzato.
+LoginIsNotValidUserDisabled: Utente disabilitato
+RequireDisclaimer: Scarico di responsabilita'
+1ABC9C: Verde
+2ECC71: Smeraldo
+3498DB: Azzurro
+9B59B6: Viola
+34495E: Grigio scuro
+F1C40F: Giallo
+E67E22: Arancione
+E74C3C: Rosso
+ECF0F1: Bianco
+95A5A6: Grigio chiaro
+WorkflowsHistory: Storico
+Customer: Cliente
+Veichle: Veicolo
+ExecutionHistory: Storico dei workflow
+TotalSteps: Step totali
+StepNumber: Numero dello step
+StepTitleHistory: Titolo dello step
+StepTitleExHistory: Titolo dell'esecuzione
+ClosedAt: Chiuso il
+OpenAt: Aperto il
+StepTitleStatus: Stato
+StepTitleOutcome: Risultato
+Component: Componente
+ViewComponents: Componenti utilizzati
+DownloadReport: Scarica report
+TotalCompletedSteps: Step completati
+ViewImages: Visualizza immagini
+ExecutionoutcomeNone: Esito mancante
+HasOutcome: Ha un risultato
+ReportDisclaimer: Le informazioni personali, ai sensi del D.Lgs. 196 del 30 giugno 2003 "codice in materia di protezione dei dati personali" (ex L. n. 675 del 31 dicembre 1996), verranno utilizzate per finalita' di archiviazione, elaborazione dati ed adempimenti amministrativi. Potra' essere richiesta, in qualsiasi momento, la conferma, la modifica o la cancellazione dei dati stessi. 
+ReportDisclaimerSign: Dichiaro di accettare le condizioni sulla privacy.
+ViewReport: Visualizza report
+SignTask: Task di firma
+WorkflowTaskSign: Firma condizione privacy
+WorkkflowStartStep5Sign: Firma cliente
+WorkkflowStartStep5Sign2: Effettuata in precedenza
+WorkkflowStartStep5CustomerSign: Firma del cliente
+ExecutionOutcome: Esito step
+VeichleData: Dati veicolo
+Images: Immagini
+Components: Componenti
+RowsPerPageString: Elementi per pagina
+AppUpdated: Aggiornamento app avvenuto con successo
+FileVersion: Versione applicativo
+ProductVersion: Buld
+BetaWarning: Questa build e' una beta. L'integrita' e la continuita' dei dati non e' garantita.

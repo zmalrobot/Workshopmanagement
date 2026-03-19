@@ -1,0 +1,117 @@
+﻿@inject IJSRuntime JSRuntime
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudPaper Width="100%" Class="d-inline-flex py-3" Elevation="0">
+    <MudNavMenu Class="mud-width-full">
+        <MudGrid>
+            <MudItem xs="12" Style="text-align: center;">
+                <MudIcon Style="margin: auto;" Icon="@Icons.Material.Filled.AirportShuttle" Size="Size.Large" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h6" Style="text-align: center;">
+                    @languageContainer.Keys["ApplicationName"]
+                </MudText>
+            </MudItem>
+        </MudGrid>
+        <MudDivider Class="my-2" />
+        <MudNavLink Href="/dashboard" Icon="@Icons.Material.Filled.Dashboard">
+            @languageContainer.Keys["Home"]
+        </MudNavLink>
+        <MudNavLink Href="/workflows" Icon="@Icons.Material.Filled.Workspaces">
+            @languageContainer.Keys["WorkflowManamgent"]
+        </MudNavLink>
+        <MudNavLink Href="/workflowshistory" Icon="@Icons.Material.Filled.History">
+            @languageContainer.Keys["WorkflowsHistory"]
+        </MudNavLink>
+        <MudNavGroup Title="@languageContainer.Keys["CustomerManagment"]" Icon="@Icons.Material.Filled.SupervisedUserCircle" Expanded="true">
+            <MudNavLink Href="/customers" Icon="@Icons.Material.Filled.People" IconColor="Color.Info">@languageContainer.Keys["Customers"]</MudNavLink>
+            <MudNavLink Href="/veichles" Icon="@Icons.Material.Filled.CarRental" IconColor="Color.Info">@languageContainer.Keys["Veichles"]</MudNavLink>
+        </MudNavGroup>       
+    </MudNavMenu>
+</MudPaper>
+@if (employee != null && employee?.EmployeeRole == EmployeeRole.Manager)
+{
+    <MudPaper Width="100%" Class="d-inline-flex py-3" Elevation="0">
+        <MudNavMenu Class="mud-width-full">
+            <MudText Typo="Typo.h6" Class="px-4">
+                @languageContainer.Keys["AdminArea"]
+            </MudText>
+            <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary">
+                @languageContainer.Keys["AdminAreaDesc"]
+            </MudText>
+            <MudDivider Class="my-2" />
+            <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.People" IconColor="Color.Secondary">
+                @languageContainer.Keys["EmployeeManagment"]
+            </MudNavLink>
+            <MudNavLink Href="/workflowsmanagment" Icon="@Icons.Material.Filled.Workspaces" IconColor="Color.Secondary">
+                @languageContainer.Keys["WorkflowsManagment"]
+            </MudNavLink>
+            <MudNavLink Href="/workflowstasks" Icon="@Icons.Material.Filled.Task" IconColor="Color.Secondary">
+                @languageContainer.Keys["Workflowstasks"]
+            </MudNavLink>
+            <MudNavLink Href="/components" Icon="@Icons.Material.Filled.SettingsInputComponent" IconColor="Color.Secondary">
+                @languageContainer.Keys["WorkfComponents"]
+            </MudNavLink>
+        </MudNavMenu>
+    </MudPaper>
+}
+
+<MudPaper Width="100%" Class="d-inline-flex py-3" Elevation="0">
+    <MudNavMenu Class="mud-width-full">
+        <MudText Typo="Typo.caption" Color="Color.Default" Style="color: #808080; font-size: 0.6em;">
+            @languageContainer.Keys["FileVersion"]: @GetVersion(false)
+        </MudText>
+        <br />
+        <MudText Typo="Typo.caption" Color="Color.Default" Style="color: #808080; font-size: 0.6em;">
+            @languageContainer.Keys["ProductVersion"]:  @GetVersion(true)
+        </MudText>
+    </MudNavMenu>
+</MudPaper>
+
+@code {
+    private Employee employee;
+    private System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+            if (!isUserLogged)
+            {
+                snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                navigationManager.NavigateTo($"login");
+            }
+
+            employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+            if(firstRender)
+                StateHasChanged();
+        }catch(Exception ex)
+        {
+            if (ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+            {
+                snackbar.Add(@languageContainer.Keys["AppUpdated"], Severity.Info);
+                snackbar.Add(@languageContainer.Keys["Logout"], Severity.Warning);
+                navigationManager.NavigateTo($"login");
+            }
+            else
+            {
+                snackbar.Add(ex.Message, Severity.Error);
+            }
+
+        }
+
+    }
+
+    private string GetVersion(bool pv)
+    {
+       if(pv)
+            return $"{fileVersionInfo.ProductVersion}";
+        else
+            return $"{fileVersionInfo.FileVersion}";
+    }
+}

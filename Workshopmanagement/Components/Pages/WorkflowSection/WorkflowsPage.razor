@@ -1,0 +1,286 @@
+﻿@page "/workflows"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject IDialogService dialogService
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem xs="6" Style="text-align: left;">
+                <MudButton OnClick="@(() => OpenCreateWorkflowDialogAsync() )" Variant="Variant.Filled" Color="Color.Info">
+                    <MudIcon Icon="@Icons.Material.Filled.Add"/>
+                    <MudIcon Icon="@Icons.Material.Filled.Workspaces"/>
+                    <MudText Style="margin-left: 15px">@languageContainer.Keys["StartNewWorkflow"]</MudText>                       
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12">
+        <MudDataGrid @ref="dataGrid" T="Veichle" Items="@GetDatForGid()" ReadOnly="true" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+                        Filterable="true" Dense="false" Hover="true" SortMode="@SortMode.Single" Bordered="true">
+            <Columns>
+                <TemplateColumn Hidden="false" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <MudIconButton OnClick="@(() => OpenResumeWorkflowDialogAsync(context.Item))"
+                            Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Filled.Start" Variant="Variant.Filled"  />
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <PropertyColumn Property="x => x.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetUserInfo(x.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetUserInfo(x.UserId).fiscalcodeOrVat" Title="@languageContainer.Keys["FiscalCodeOrVatNumber"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetWorkflowInfo(x.OpenWorkflowId)" Title="@languageContainer.Keys["OpenWorkflow"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <PropertyColumn Property="x => GetWorkflowTaskInfo(x.OpenWorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]" CellClass="d-flex justify-center">
+                    <CellTemplate>
+                        <MudProgressCircular Color="Color.Info" Size="Size.Small" 
+                                                Value="@GetPercentageOfCompleteness(context.Item.OpenWorkflowTaskId, context.Item.OpenWorkflowId)">
+                        </MudProgressCircular>
+                    </CellTemplate>
+                </TemplateColumn>
+                    
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="Veichle" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    private Employee employee;
+    private List<Customer> customers = new List<Customer>();
+    private List<Veichle> veichles = new List<Veichle>();
+    private List<Workflow> workflows = new List<Workflow>();
+    private List<WorkflowTask> workflowTasks = new List<WorkflowTask>();
+    public MudDataGrid<Veichle> dataGrid { get; set; }
+    private DialogOptions dialogOptions = new DialogOptions 
+    { 
+        FullScreen = true,
+        CloseButton = true,
+        CloseOnEscapeKey = true 
+    };
+
+    private bool processing = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                processing = true;
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo($"login");
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+                await GetCustomers();
+                await GetVeichles();
+                await GetWorkflows();
+                await GetWorkflowTasks();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if(firstRender)
+                    StateHasChanged();
+            }
+        }
+    }
+
+    #region GetData
+    private async Task GetCustomers()
+    {
+        customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
+    }
+    private async Task GetVeichles()
+    {
+        veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle());
+    }
+    private async Task GetWorkflows()
+    {
+        workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+    }
+    private async Task GetWorkflowTasks()
+    {
+        workflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+    }
+    #endregion
+
+    #region GetGridData
+    private List<Veichle> GetDatForGid()
+    {
+        if (veichles == null)
+            return new List<Veichle>();
+
+        return veichles.Where(x => x.HasOpenWorkflow == true).ToList();
+    }
+
+    private (string denomination, string fiscalcodeOrVat) GetUserInfo(string userId)
+    {
+        if (String.IsNullOrEmpty(userId))
+            return ("", "");
+
+        var item = customers.FirstOrDefault(x => x.Id.Equals(userId)) ?? new Customer();
+
+        return ($"{item.Name} {item.Surname}", item.IsCompany ? item.VatNumber : item.FiscalCode);
+    }
+
+    private double GetPercentageOfCompleteness(string? currentTaskId, string? currentWorkflowId)
+    {
+        try{
+            if (String.IsNullOrEmpty(currentTaskId) || String.IsNullOrEmpty(currentWorkflowId))
+                return 0;
+
+            var totalNumberOfTaskForCurrentWorkflow = workflowTasks.OrderBy(x => x.TaskOrder).Where(x => x.WorkflowId.Equals(currentWorkflowId)).Count();
+            var actualWorkflowNumber = workflowTasks.OrderBy(x => x.TaskOrder).TakeWhile(x => !x.Id.Equals(currentTaskId)).Count();
+
+            if (totalNumberOfTaskForCurrentWorkflow == 0)
+                totalNumberOfTaskForCurrentWorkflow = 1;
+
+            var val = ( Convert.ToDouble(actualWorkflowNumber) / Convert.ToDouble(totalNumberOfTaskForCurrentWorkflow)) * Convert.ToDouble(100);
+            return val == 0 ? 5 : val;
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+            return 1;
+        }
+       
+    }
+
+    private string GetWorkflowInfo(string? workflowId)
+    {
+        if (String.IsNullOrEmpty(workflowId))
+            return "";
+
+        var item = workflows.FirstOrDefault(x => x.Id.Equals(workflowId)) ?? new Workflow();
+
+        return item.Title;
+    }
+
+    private string GetWorkflowTaskInfo(string? workflowTask)
+    {
+        if (String.IsNullOrEmpty(workflowTask))
+            return "";
+
+        var item = workflowTasks.FirstOrDefault(x => x.Id.Equals(workflowTask)) ?? new WorkflowTask();
+
+        return item.Title;
+    }
+    #endregion
+
+    private async Task OpenCreateWorkflowDialogAsync()
+    {
+        try
+        {
+            var parameters = new DialogParameters<StartNewWorkflow> {
+            {
+                    x => x.Dataset,
+                    new StartWorkflowDialogParameter()
+                    {
+                        employee = employee,
+                        customers = customers,
+                        veichles = veichles,
+                        workflows = workflows,
+                        workflowTasks = workflowTasks
+                    }
+                }
+            };
+
+            var dialog = await dialogService.ShowAsync<StartNewWorkflow>(@languageContainer.Keys["StartingNewWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+
+            if (!result?.Canceled ?? false)
+            {
+                processing = true;
+                await GetCustomers();
+                await GetVeichles();
+                await GetWorkflows();
+                await GetWorkflowTasks();
+            }
+
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {        
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenResumeWorkflowDialogAsync(Veichle veichle)
+    {
+        try
+        {
+            var currentCustomer = customers.FirstOrDefault(x => x.Id.Equals(veichle.UserId)) ?? new Customer();
+            var currentWorkflow = workflows.FirstOrDefault(x => x.Id.Equals(veichle.OpenWorkflowId)) ?? new Workflow();
+            var currentWorkflowTask = workflowTasks.FirstOrDefault(x => x.Id.Equals(veichle.OpenWorkflowTaskId)) ?? new WorkflowTask();
+            var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
+            var parameters = new DialogParameters<ResumeWorkflow> {
+            {
+                x => x.Dataset,
+                new ResumeWorkflowDialogParameter()
+                {
+                    employee = employee,
+                    customer = currentCustomer,
+                    veichle = veichle,
+                    workflow = currentWorkflow,
+                    workflowTask = currentWorkflowTask,
+                    workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(veichle.OpenWorkflowExecutionId), //Deve esistere    
+                    components = components
+                }
+            }
+        };
+
+            var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+
+            if (!result?.Canceled ?? false)
+            {
+                processing = true;
+                await GetCustomers();
+                await GetVeichles();
+                await GetWorkflows();
+                await GetWorkflowTasks();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+
+
+    }
+}
+

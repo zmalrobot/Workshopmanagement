@@ -1,0 +1,151 @@
+﻿
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject IDialogService dialogService
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudDialog Style="background-color: var(--bs-body-color);">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Default">
+            <MudIcon Style="@Dataset.worflowStyle" Icon="@Icons.Material.Filled.Workspaces"></MudIcon>
+            <span style="margin-left: 15px;">
+                @Utility.GetDateFormatted(Dataset.worflowDate, Utility.DateFormat.FullDate): @Dataset.worflowTitle
+            </span>
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (processing)
+        {
+            <MudContainer Style="text-align: center; margin-top: 50px;">
+                <MudProgressLinear Color="Color.Tertiary" Size="Size.Large" Indeterminate="true" />
+            </MudContainer>
+        }
+        else
+        {
+            <MudGrid>
+                @if (Dataset.useImages)
+                {
+                    <MudItem xs="12">
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.h6">
+                                    @languageContainer.Keys["ReportComponentsImages"]
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudCarousel Class="mud-width-full" Style="height:480px;"
+                                            ShowArrows="true" ShowBullets="true" EnableSwipeGesture="true" AutoCycle="false" TData="object">
+                                   
+                                    @foreach(var image in Dataset.images)
+                                    {
+                                        <MudCarouselItem Transition="Transition.Slide" Color="@Color.Dark">
+                                            <div style="text-align:center; height:100%">
+                                                <MudImage ObjectFit="ObjectFit.ScaleDown"
+                                                          Src="@($"../{image.Path.Replace("wwwroot/", "")}")" Alt="@image.Name"
+                                                          Elevation="25" Class="rounded-lg" Style="height: 100%;" />
+                                            </div>
+                                        </MudCarouselItem>
+                                    }                                   
+                                   
+                                </MudCarousel>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>
+                }
+                @if (Dataset.useComponents)
+                {
+                    <MudItem xs="12">
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.h6">
+                                    @languageContainer.Keys["ReportComponentsTitle"]
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudDataGrid T="Component" Items="@Dataset.components" ReadOnly="true"
+                                             Filterable="true" Dense="false" Hover="true" SortMode="@SortMode.Single" Bordered="true">
+                                    <Columns>
+                                        <PropertyColumn Property="x => x.Barcode" Title="@languageContainer.Keys["Barcode"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.Name" Title="@languageContainer.Keys["Name"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.Quanity" Title="@languageContainer.Keys["Quanity"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.PricePerQuantity" Title="@languageContainer.Keys["PricePerQuantity"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.UnitOfMeasurement" Title="@languageContainer.Keys["UnitOfMeasurement"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                    </Columns>
+                                    <PagerContent>
+                                        <MudDataGridPager T="Component" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+                                    </PagerContent>
+                                </MudDataGrid>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>
+                }
+                @if (Dataset.useReports)
+                {
+                    <MudItem xs="12">
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudText Typo="Typo.h6">
+                                    @languageContainer.Keys["ReportTitle"]                                    
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudButton OnClick="(() => Download())"
+                                           Variant="Variant.Filled" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Outlined.Download"
+                                           EndIcon="@Icons.Material.Outlined.Download"
+                                           FullWidth="true" Size="Size.Small" Style="margin-left: 15px;">
+                                    @languageContainer.Keys["DownloadReport"]
+                                </MudButton>
+                            </MudItem>
+                            <MudItem id="content" xs="12">
+                                @((MarkupString)Dataset.worflowReport)                               
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudButton OnClick="(() => Download())"
+                                           Variant="Variant.Filled" Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Outlined.Download"
+                                           EndIcon="@Icons.Material.Outlined.Download"
+                                           FullWidth="true" Size="Size.Small" Style="margin-left: 15px;">
+                                    @languageContainer.Keys["DownloadReport"]
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudItem>                   
+                }
+                    
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public ViewHistoryflowDialogParameter Dataset { get; set; } = new ViewHistoryflowDialogParameter();
+
+    public bool processing = false;
+
+    private async Task Download()
+    {
+        try
+        {
+            await Utility.DeleteOldFiles();
+            var fileToDownload = await Utility.GeneretaFileForDownloadFile(Dataset.worflowReport);
+            var downloadPath = await Utility.SaveFileForDownloadFile(fileToDownload);
+            JSRuntime.InvokeAsync<string>("open", downloadPath, "_blank");
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}
+

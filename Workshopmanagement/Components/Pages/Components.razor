@@ -1,0 +1,192 @@
+﻿@page "/components"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem xs="6" Style="text-align: left;">
+                @if (!isViewMode)
+                {
+                    <MudButton OnClick="@(() => dataGrid.SetEditingItemAsync(new Component()))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Info">
+                        @languageContainer.Keys["AddComponent"]
+                    </MudButton>
+                }
+            </MudItem>
+            <MudItem xs="6" Style="text-align: right;">
+                @if (isViewMode)
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info">
+                        @languageContainer.Keys["Edit"]
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info">
+                        @languageContainer.Keys["View"]
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12">
+        <MudDataGrid @ref="dataGrid" T="Component" Items="@components" ReadOnly="@isViewMode" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+        Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
+        StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges" >
+            <Columns>
+                <TemplateColumn Hidden="@isViewMode" CellClass="d-flex justify-center">
+                    <CellTemplate>
+                        <MudIconButton Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" />
+                        <MudIconButton Style="margin-left: 15px" Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.RestoreFromTrash" OnClick="@(() => DeletyeItemChanges(context.Item))" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Id" Title="@languageContainer.Keys["Id"]" Required="false" Editable="false" Sortable="false" Hidden="true" />
+                <PropertyColumn Property="x => x.Barcode" Title="@languageContainer.Keys["Barcode"]" />
+                <PropertyColumn Property="x => x.Name" Title="@languageContainer.Keys["Name"]" />
+                <PropertyColumn Property="x => x.Quanity" Title="@languageContainer.Keys["Quanity"]" />
+                <PropertyColumn Property="x => x.PricePerQuantity" Title="@languageContainer.Keys["PricePerQuantity"]" />
+                <PropertyColumn Property="x => x.UnitOfMeasurement" Title="@languageContainer.Keys["UnitOfMeasurement"]" />
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="Component" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    private Employee employee;
+    private List<Component> components = new List<Component>();
+    public MudDataGrid<Component> dataGrid { get; set; }
+
+    private bool processing = true;
+    private bool isViewMode = true;
+    private bool hidePassword = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        processing = true;
+        try
+        {
+            if (firstRender)
+            {
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo($"login");
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+                if (employee.EmployeeRole != EmployeeRole.Manager)
+                {
+                    snackbar.Add(@languageContainer.Keys["UserNotAutorized"], Severity.Warning);
+                    return;
+                }
+
+                await GetComponents();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))            
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if(firstRender)
+                    StateHasChanged();
+            }
+        }
+    }
+
+    private async Task GetComponents()
+    {
+        components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent());
+    }
+
+    private async Task SwitchView()
+    {
+        isViewMode = !isViewMode;
+    }
+
+    private async Task StartedEditingItem(Component item)
+    {
+        processing = true;
+        processing = false; 
+    }
+
+    private async Task CanceledEditingItem(Component item)
+    {
+        processing = true;
+        try
+        {
+            await GetComponents();
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+
+    private async Task CommittedItemChanges(Component item)
+    {
+        processing = true;
+        try
+        {
+            if (String.IsNullOrEmpty(item.Id))
+            {
+                item.Id = Guid.NewGuid().ToString();
+                await dbDependency.GetDataAccessComponent().InsertAsync(item);
+            }
+            else
+            {
+                await dbDependency.GetDataAccessComponent().UpdateAsync(item);
+             }
+            
+            await GetComponents();
+
+            snackbar.Add(@languageContainer.Keys["SaveOk"], Severity.Success);
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }   
+        processing = false;
+    }
+    
+    private async Task DeletyeItemChanges(Component item)
+    {
+        processing = true;
+        try
+        {
+            if (!String.IsNullOrEmpty(item.Id))
+            {
+                await dbDependency.GetDataAccessComponent().DeleteAsync(item.Id);
+            }
+
+            await GetComponents();
+            snackbar.Add(@languageContainer.Keys["DeleteOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+}
+

@@ -1,0 +1,37 @@
+﻿@page "/"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+@code {
+    private Employee employee;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+            if (!isUserLogged)
+            {
+                snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                navigationManager.NavigateTo($"login");
+            }
+            else
+            {
+                navigationManager.NavigateTo($"dashboard");
+            }
+
+            navigationManager.NavigateTo($"dashboard");
+        }catch(Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+       
+    }
+}
+

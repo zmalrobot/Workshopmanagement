@@ -1,0 +1,394 @@
+﻿@page "/workflowstasks"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>        
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem xs="4" Style="text-align: left;">
+                @if (!isViewMode)
+                {
+                    <MudButton OnClick="@(() => dataGrid.SetEditingItemAsync(new Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask()))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Info">
+                        @languageContainer.Keys["AddTask"]
+                    </MudButton>
+                }
+            </MudItem>
+            <MudItem xs="4">
+                <MudAutocomplete T="Workflow" ToStringFunc="workflow => workflow?.Title ?? String.Empty"
+                Label="@languageContainer.Keys["Workflow"]" Margin="Margin.Dense"
+                Value="selectedWorkflow" ValueChanged="@UpdateSelectedWorkflow"
+                SearchFunc="@SearchWorkflow" DebounceInterval="500" MaxItems="null"
+                ResetValueOnEmptyText="true" CoerceText="false" CoerceValue="true" />
+            </MudItem>
+            <MudItem xs="4" Style="text-align: right;">
+                @if (isViewMode)
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info">
+                        @languageContainer.Keys["Edit"]
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info">
+                        @languageContainer.Keys["View"]
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12">
+        <MudDataGrid @ref="dataGrid" T="Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask" Items="@workflowTasks" ReadOnly="@isViewMode" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+        Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
+        StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges">
+            <Columns>
+                <TemplateColumn Hidden="@isViewMode" CellClass="d-flex justify-center">
+                    <CellTemplate>
+                        @if (!context.Item.IsSignTask)
+                        {
+                            <MudIconButton Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" />
+                        }                          
+                        <MudIconButton Style="margin-left: 15px" Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.RestoreFromTrash" OnClick="@(() => DeletyeItemChanges(context.Item))" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Id" Title="@languageContainer.Keys["Id"]" Required="false" Editable="false" Sortable="false" Hidden="true" />
+
+                <PropertyColumn Property="x => x.Title" Title="@languageContainer.Keys["Title"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                <PropertyColumn Property="x => x.Subtitle" Title="@languageContainer.Keys["Subtitle"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                <TemplateColumn Title="@languageContainer.Keys["TaskOrder"]" Required="false" Sortable="false">
+                    <CellTemplate>
+                        <MudText> @(context.Item.IsSignTask ? "-" : context.Item.TaskOrder)</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudNumericField Disabled="context.Item.IsSignTask" Margin="Margin.Dense" Label="@languageContainer.Keys["TaskOrder"]" 
+                        Variant="Variant.Outlined" @bind-Value="context.Item.TaskOrder" Min="1" Max="int.MaxValue" Step="1" />
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["Description"]" Required="false" Sortable="false">
+                    <CellTemplate>
+                        <MudText> @Utility.TruncateFroHtml(context.Item.Description, 50)</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudTextField Disabled="context.Item.IsSignTask" Margin="Margin.Dense" Label="@languageContainer.Keys["Description"]" Lines="5" Variant="Variant.Outlined" @bind-Value="context.Item.Description" />
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["Note"]" Required="false" Sortable="false">
+                    <CellTemplate>
+                        <MudText> @Utility.TruncateFroHtml(context.Item.Note, 50)</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudTextField Disabled="context.Item.IsSignTask" Margin="Margin.Dense" Label="@languageContainer.Keys["Note"]" Variant="Variant.Outlined" @bind-Value="context.Item.Note" />
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["SignTask"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.IsSignTask" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Disabled="true" Label="@languageContainer.Keys["SignTask"]" @bind-Value="context.Item.IsSignTask"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["UserMustUpdateVeichleKm"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.UserMustUpdateVeichleKm" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["UserMustUpdateVeichleKm"]" @bind-Value="context.Item.UserMustUpdateVeichleKm"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["UserMustUpdateFuelLevel"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.UserMustUpdateFuelLevel" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["UserMustUpdateFuelLevel"]" @bind-Value="context.Item.UserMustUpdateFuelLevel"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["AllowImageUpload"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.AllowImageUpload" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox  Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["AllowImageUpload"]" @bind-Value="context.Item.AllowImageUpload"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["IsComponentRequired"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.IsComponentRequired" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox  Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["IsComponentRequired"]" @bind-Value="context.Item.IsComponentRequired"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+
+                <TemplateColumn Title="@languageContainer.Keys["HasOutcome"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.HasOutcome" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox  Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["HasOutcome"]" @bind-Value="context.Item.HasOutcome"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["AllowLoop"]" Required="true" Editable="true" Sortable="false" Hidden="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.AllowLoop" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox  Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["AllowLoop"]" @bind-Value="context.Item.AllowLoop"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="@languageContainer.Keys["CanBeSkipped"]" Required="true" Editable="true" Sortable="false" Hidden="true">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.CanBeSkipped" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Disabled="context.Item.IsSignTask" Label="@languageContainer.Keys["CanBeSkipped"]" @bind-Value="context.Item.CanBeSkipped"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="WorkflowTask" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+
+@code {
+    private Employee employee;
+    private Workflow selectedWorkflow = new Workflow();
+    private List<Workflow> workflows = new List<Workflow>();
+    private List<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask> workflowTasks = new List<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask>();
+    public MudDataGrid<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask> dataGrid { get; set; }
+
+    private bool processing = true;
+    private bool isViewMode = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        processing = true;
+        try
+        {
+            if (firstRender)
+            {
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo($"login");
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+                await GetWorkflows();
+                await GetWorkflowTask();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+            if(firstRender)
+                StateHasChanged();
+        }
+    }
+
+    private async Task GetWorkflows()
+    {
+        workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow()
+        {
+             IsActive = true
+        });
+
+        selectedWorkflow = workflows.FirstOrDefault() ?? new Workflow();
+    }
+
+    private async Task GetWorkflowTask()
+    {
+        workflowTasks = (await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask()
+        {
+             WorkflowId = selectedWorkflow?.Id
+        })).OrderBy(x => x.TaskOrder).ToList();
+    }
+
+    private async Task<IEnumerable<Workflow>> SearchWorkflow(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return workflows;
+        return workflows.Where(x => x.Title.Contains(value, StringComparison.InvariantCultureIgnoreCase)
+                                    || (x.Subtitle?.Contains(value, StringComparison.InvariantCultureIgnoreCase) ?? false)
+                                    || (x.Description?.Contains(value, StringComparison.InvariantCultureIgnoreCase) ?? false)).ToList();
+    }
+
+    private async Task UpdateSelectedWorkflow(Workflow item)
+    {
+        try{
+            if (item == null)
+                item = workflows?.FirstOrDefault() ?? new Workflow();
+
+            selectedWorkflow = item;
+            await GetWorkflowTask();
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);            
+        }      
+    }
+
+    private async Task SwitchView()
+    {
+        isViewMode = !isViewMode;
+    }
+
+    private async Task StartedEditingItem(WorkflowTask item)
+    {
+        processing = true;
+        try{
+            if (String.IsNullOrEmpty(item.Id))
+            {
+                item.WorkflowId = selectedWorkflow.Id;
+            }
+
+            if (item.TaskOrder == 0)
+                item.TaskOrder = (workflowTasks?.Count() ?? 0) + 1;
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        
+        processing = false;
+    }
+
+    private async Task CanceledEditingItem(WorkflowTask item)
+    {
+        processing = true;
+        try
+        {
+            await GetWorkflowTask();
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+
+    private async Task CommittedItemChanges(WorkflowTask item)
+    {
+        processing = true;
+        try
+        {
+            if (workflowTasks?.Where(x => x.TaskOrder == item.TaskOrder)?.Count() > 1)
+            {
+                snackbar.Add(@languageContainer.Keys["DuplicateTaskOrderFound"], Severity.Warning);
+                return;
+            }
+
+            if (String.IsNullOrEmpty(item.Id))
+            {
+                item.Id = Guid.NewGuid().ToString();
+                await dbDependency.GetDataAccessWorkflowTask().InsertAsync(item);
+            }
+            else
+            {
+                await dbDependency.GetDataAccessWorkflowTask().UpdateAsync(item);
+            }
+
+            await GetWorkflowTask();
+
+            var firstTask = workflowTasks?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsSignTask == false);
+
+            if(firstTask != null)
+            {
+                firstTask.IsStartingTask = true;
+                firstTask.IsFinalTask = false;
+                await dbDependency.GetDataAccessWorkflowTask().UpdateAsync(firstTask);
+            }
+
+            var lastTask = workflowTasks?.OrderBy(x => x.TaskOrder)?.LastOrDefault(x => x.IsSignTask == false);
+            if (lastTask != null)
+            {
+                firstTask.IsStartingTask = false;
+                lastTask.IsFinalTask = true;
+                await dbDependency.GetDataAccessWorkflowTask().UpdateAsync(lastTask);
+            }
+
+            if(firstTask != null && lastTask != null)
+            {
+                foreach (var task in workflowTasks.Where(x => !x.Id.Equals(firstTask.Id) && !x.Id.Equals(lastTask.Id)))
+                {
+                    task.IsStartingTask = false;
+                    task.IsFinalTask = false;
+
+                    await dbDependency.GetDataAccessWorkflowTask().UpdateAsync(task);
+                }
+            }
+
+            await GetWorkflowTask();
+
+            snackbar.Add(@languageContainer.Keys["SaveOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+        }       
+        processing = false;
+    }
+    
+    private async Task DeletyeItemChanges(WorkflowTask item)
+    {
+        processing = true;
+        try
+        {
+            var h = await dbDependency.GetDataAccessWorkflowExecution().FindPagedAsync(new SearcherWorkflowExecution()
+                {
+                    WorkflowTaskId = item.Id
+                }, 0);
+
+            bool canBeDeleted = h.Results?.Count == 0;
+
+            if (!canBeDeleted)
+            {
+                snackbar.Add(@languageContainer.Keys["DeletionWarningIsInUse"], Severity.Warning);
+                return;
+            }
+            await dbDependency.GetDataAccessWorkflowTask().DeleteAsync(item.Id);
+
+            await GetWorkflowTask();
+
+            snackbar.Add(@languageContainer.Keys["DeleteOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+}
+

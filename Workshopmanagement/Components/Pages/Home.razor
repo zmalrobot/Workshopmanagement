@@ -1,0 +1,191 @@
+﻿@page "/dashboard"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject IDialogService dialogService
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h4">
+            @languageContainer.Keys["HomeStartTitle"]
+        </MudText>
+    </MudItem>
+    <MudItem xs ="6">
+        <MudButton OnClick="OpenCreateWorkflowDialogAsync"
+            StartIcon="@Icons.Material.Filled.Workspaces" Color="Color.Primary" Variant="Variant.Filled" Style="width: 100%; height: 600%">
+            @languageContainer.Keys["HomeStartNewFlow"]
+        </MudButton>
+    </MudItem>
+    <MudItem xs="6">
+        <MudButton OnClick="HomeResumeWorkflow" 
+            StartIcon="@Icons.Material.Filled.Start" Color="Color.Secondary" Variant="Variant.Filled" Style="width: 100%; height: 600%">
+            @languageContainer.Keys["HomeResumeFlow"]
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+<MudMessageBox @ref="mudMessageBox" Title="@languageContainer.Keys["HomeSelectVeichle"]" CancelText="Cancel">
+    <MessageContent>
+       <MudGrid>
+           <MudItem xs="12">
+                <MudList @bind-SelectedValue="selectedVeichle" T="Veichle" SelectionMode="SelectionMode.SingleSelection">
+                    @foreach (var veichle in veichles)
+                    {
+                        <MudListItem Text="@veichle.LicensePlate" Value="veichle" Icon="@Icons.Material.Filled.CarRepair" />
+                    }
+                </MudList>
+           </MudItem>
+       </MudGrid>
+    </MessageContent>
+    <YesButton>
+        <MudButton OnClick="ResumeWorkflow" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+            @languageContainer.Keys["HomeSelectVeichleProceed"]
+        </MudButton>
+    </YesButton>
+</MudMessageBox>
+
+@code {
+    private Employee employee;
+    private DialogOptions dialogOptions = new DialogOptions
+        {
+            FullScreen = true,
+            CloseButton = true,
+            CloseOnEscapeKey = true
+        };
+    private MudMessageBox mudMessageBox;
+    private DialogOptions mudMessageBoxOption = new() { BackdropClick = false };
+    private Veichle selectedVeichle = new Veichle();
+    private List<Veichle> veichles = new List<Veichle>();
+
+    private bool processing = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+            if (!isUserLogged)
+            {
+                snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                navigationManager.NavigateTo($"login");
+            }
+
+            employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+        }catch(Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }      
+
+    }
+
+    private async Task OpenCreateWorkflowDialogAsync()
+    {
+        try
+        {
+            processing = true;
+
+            var parameters = new DialogParameters<StartNewWorkflow> {
+            {
+                x => x.Dataset,
+                new StartWorkflowDialogParameter()
+                {
+                    employee = employee,
+                    customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer()),
+                    veichles =  await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()),
+                    workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow()),
+                    workflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask())
+                }
+            }
+        };
+
+            var dialog = await dialogService.ShowAsync<StartNewWorkflow>(@languageContainer.Keys["StartingNewWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HomeResumeWorkflow()
+    {
+        try
+        {
+            processing = true;
+            veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()
+            {
+                 HasOpenWorkflow = true
+            });
+            var result = await mudMessageBox.ShowAsync(mudMessageBoxOption);         
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ResumeWorkflow()
+    {
+        try
+        {
+            processing = true;
+
+            if(String.IsNullOrEmpty(selectedVeichle?.Id))
+            {
+                snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
+                return;
+            }
+
+            var customer = await dbDependency.GetDataAccessCustomer().FindByIdAsync(selectedVeichle.UserId);
+            var workflow = await dbDependency.GetDataAccessWorkflow().FindByIdAsync(selectedVeichle.OpenWorkflowId);
+            var workflowTask = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(selectedVeichle.OpenWorkflowTaskId);
+            var workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(selectedVeichle.OpenWorkflowExecutionId);
+            var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
+
+            var parameters = new DialogParameters<ResumeWorkflow> {
+            {
+                x => x.Dataset,
+                    new ResumeWorkflowDialogParameter()
+                    {
+                        employee = employee,
+                        customer = customer,
+                        veichle = selectedVeichle,
+                        workflow = workflow,
+                        workflowTask = workflowTask,
+                        workflowExecution = workflowExecution, //Deve esistere,
+                        components = components
+                    }
+                }
+            };
+
+            var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+            StateHasChanged();
+        }
+    }
+}
+

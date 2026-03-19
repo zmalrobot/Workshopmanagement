@@ -1,0 +1,630 @@
+﻿
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject IDialogService dialogService
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudDialog Style="background-color: var(--bs-body-color);">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Info">
+            <MudIcon Icon="@Icons.Material.Filled.Workspaces" Class="mr-3 mb-n1" />
+            @languageContainer.Keys["WorkkflowResumeTitle"]: @Dataset.workflow.Title
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (processing)
+        {
+            <MudContainer Style="text-align: center; margin-top: 50px;">
+                <MudProgressLinear Color="Color.Tertiary" Size="Size.Large" Indeterminate="true" />
+            </MudContainer>
+        }
+        else
+        {
+            <MudGrid>               
+               <MudItem xs="6">                  
+                    <MudText Typo="Typo.h6" Color="Color.Success">
+                        <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-3 mb-n1" />
+                        @languageContainer.Keys["WorkkflowResumeCurrentTask"]: @Dataset.workflowTask.Title
+                    </MudText>
+                    <MudText Typo="Typo.subtitle1" Color="Color.Success">
+                         @Dataset.workflowTask.Subtitle
+                    </MudText>                 
+               </MudItem>
+                <MudItem xs="6" Style="text-align: right">
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption" Color="Color.Default">
+                                <MudIcon Icon="@Icons.Material.Filled.CarRental" Class="mr-3 mb-n1" />
+                                @languageContainer.Keys["WorkkflowResumeCurrentVeichle"]:
+                                @Dataset.veichle.LicensePlate
+                            </MudText>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption" Color="Color.Default">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-3 mb-n1" />
+                                @languageContainer.Keys["WorkkflowResumeCurrentCustomer"]: @Dataset.customer.Name @Dataset.customer.Surname
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.caption" Color="Color.Surface" >
+                        @Dataset.workflowTask.Description
+                    </MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudGrid>
+
+                        <MudItem xs="12">
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MudTextField @bind-Value="Dataset.workflowExecution.Titile" Margin="Margin.Dense"
+                                                  Label="@languageContainer.Keys["StepTitle"]" Variant="Variant.Outlined" />
+                                    @if (Dataset.workflowTask.HasOutcome)
+                                    {
+                                        <MudSelect @bind-Value="Dataset.workflowExecution.Executionoutcome" MultiSelection="false" Style="margin-top: 30px;"
+                                                   Label="@languageContainer.Keys["ExecutionOutcome"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                                   OpenIcon="@Icons.Material.Filled.Build" AdornmentColor="Color.Secondary" Dense="true">
+                                            @foreach (WorkflowExecutionoutcome item in Enum.GetValues(typeof(WorkflowExecutionoutcome)))
+                                            {
+                                                <MudSelectItem Value="@item">@languageContainer.Keys[item.ToString()]</MudSelectItem>
+                                            }
+                                        </MudSelect>                                       
+                                    }
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField @bind-Value="Dataset.workflowExecution.Note" Lines="5" Margin="Margin.Dense"
+                                                  Label="@languageContainer.Keys["StepNote"]" Variant="Variant.Outlined" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudItem>
+
+                        <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                            <MudDivider DividerType="DividerType.Middle" Class="my-2" />
+                        </MudItem>
+
+                        @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
+                        {
+                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                                <MudText Typo="Typo.body1" Color="Color.Secondary">
+                                    @languageContainer.Keys["VeichleData"]:
+                                </MudText>
+                            </MudItem>
+                        }    
+                        @if (Dataset.workflowTask.UserMustUpdateVeichleKm)
+                        {
+                            <MudItem xs="6">
+                                <MudNumericField @bind-Value="Dataset.workflowExecution.KmPost" Min="1" Max="int.MaxValue" Margin="Margin.Dense"
+                                                 Label="@languageContainer.Keys["ActualKilometers"]" Variant="Variant.Outlined" Step="1" />
+                            </MudItem>
+                        }
+                        @if (Dataset.workflowTask.UserMustUpdateFuelLevel)
+                        {
+                            <MudItem xs="6">
+                                <MudNumericField @bind-Value="Dataset.workflowExecution.FuelPost" Min="1" Max="100" Margin="Margin.Dense"
+                                                 Label="@languageContainer.Keys["ActualFuelPercentage"]" Variant="Variant.Outlined" Step="1" />
+                            </MudItem>
+                        }
+                        @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
+                        {
+                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                                <MudDivider DividerType="DividerType.Middle" Class="my-6" />
+                            </MudItem>
+                        }     
+                        
+                        @if (Dataset.workflowTask.AllowImageUpload)
+                        {
+                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                                <MudText Typo="Typo.body1" Color="Color.Secondary">
+                                    @languageContainer.Keys["Images"]:
+                                </MudText>
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Accept=".png, .jpg">
+                                    <ActivatorContent>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Small">
+                                            <MudIcon Icon="@Icons.Material.Filled.Add" />
+                                            <MudIcon Icon="@Icons.Material.Filled.Image" />
+                                            <MudText Style="margin-left: 15px">@languageContainer.Keys["LoadPictures"]</MudText>
+                                        </MudButton>
+                                        @* <MudFab Color="Color.Secondary"
+                                                StartIcon="@Icons.Material.Filled.Image"
+                                                Label="@languageContainer.Keys["LoadPictures"]" /> *@
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </MudItem>
+                            @if (Dataset.workflowExecution.Images != null)
+                            {
+                                <MudItem xs="6">
+                                    <MudText Typo="@Typo.h6">@Dataset.workflowExecution.Images?.Count() File@(Dataset.workflowExecution.Images?.Count() == 1 ? "" : "s"):</MudText>
+                                    <MudList T="string" Dense="true">
+                                        @foreach (var image in Dataset.workflowExecution?.Images ?? new List<Image>())
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@image">
+                                                @image.Name
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                </MudItem>
+                            }
+
+                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                                <MudDivider DividerType="DividerType.Middle" Class="my-6" />
+                            </MudItem>
+                        }
+                        @if (Dataset.workflowTask.IsComponentRequired)
+                        {
+                                    <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                                <MudText Typo="Typo.body1" Color="Color.Secondary">
+                                    @languageContainer.Keys["Components"]:
+                                </MudText>
+                            </MudItem>
+
+                           @*  <MudItem xs="4" Style="text-align: left">
+                                <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(new Component()) )" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small">
+                                    <MudIcon Icon="@Icons.Material.Filled.Add" />
+                                    <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" />
+                                    <MudText Style="margin-left: 15px">@languageContainer.Keys["AddNewComponent"]</MudText>
+                                </MudButton>
+                            </MudItem> *@
+                             <MudItem xs="4" Class="d-flex align-center"  Style="text-align: left">
+                                    <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(selectedComponent) )" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small">
+                                        <MudIcon Icon="@Icons.Material.Filled.Add" />
+                                        <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" />
+                                        @* <MudText Style="margin-left: 15px">@languageContainer.Keys["AddSelectedComponent"]</MudText> *@
+                                            <MudText Style="margin-left: 15px">@languageContainer.Keys["AddNewComponent"]</MudText>
+                                    </MudButton>
+                            </MudItem>
+                            <MudItem xs="8" Style="text-align: center">
+                                <MudAutocomplete T="Component" ToStringFunc="component => component?.Name"
+                                                 Label="@languageContainer.Keys["Component"]" 
+                                                 Margin="Margin.Dense" Variant="Variant.Outlined"
+                                                 Value="selectedComponent" ValueChanged="@UpdateSelectedComponent"
+                                                 SearchFunc="@SearchComponent" DebounceInterval="500" MaxItems="null" FullWidth="true"
+                                                 ResetValueOnEmptyText="true" CoerceText="false" CoerceValue="true" Dense="true" />
+                            </MudItem>                           
+                            <MudItem xs="12">
+                                <MudDataGrid @ref="dataGrid" T="Component" Items="@Dataset.workflowExecution.Components" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+                                             Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
+                                             StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges">
+                                    <Columns>
+                                        <TemplateColumn Hidden="false" CellClass="d-flex justify-center">
+                                            <CellTemplate>
+                                                <MudIconButton Color="Color.Info" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" />
+                                                <MudIconButton Color="Color.Error" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                                            </CellTemplate>
+                                        </TemplateColumn>
+                                        <PropertyColumn Property="x => x.Barcode" Title="@languageContainer.Keys["Barcode"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.Name" Title="@languageContainer.Keys["Name"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.Quanity" Title="@languageContainer.Keys["Quanity"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.PricePerQuantity" Title="@languageContainer.Keys["PricePerQuantity"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                        <PropertyColumn Property="x => x.UnitOfMeasurement" Title="@languageContainer.Keys["UnitOfMeasurement"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
+                                    </Columns>
+                                    <PagerContent>
+                                        <MudDataGridPager T="Component" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+                                    </PagerContent>
+                                </MudDataGrid>
+                            </MudItem>
+                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
+                                <MudDivider DividerType="DividerType.Middle" Class="my-6" />
+                            </MudItem>
+                        }
+
+                    </MudGrid>
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudGrid>
+            <MudItem xs="6" Style="text-align:left">
+                @if (Dataset.editOneExecution == false)
+                {
+                    @if (Dataset.workflowTask.CanBeSkipped)
+                    {
+                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Skipped))" Style="margin-right: 15px;"
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning">
+                            @languageContainer.Keys["ResumeWorkflowSkipStep"]
+                        </MudButton>
+                    }
+                    @if (Dataset.workflowTask.AllowLoop)
+                    {
+                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed, true))" 
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.Repeat" Color="Color.Primary">
+                            @languageContainer.Keys["ResumeWorkflowRepeteStep"]
+                        </MudButton>
+                    }
+                }               
+            </MudItem>
+            <MudItem xs="6" Style="text-align:right">
+                <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
+                          Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">
+                    @languageContainer.Keys["ResumeWorkflowSaveStep"]
+                </MudButton>
+                @if(Dataset.editOneExecution == false){
+                    <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed) )"  Style="margin-left: 15px"
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+                        @languageContainer.Keys["ResumeWorkflowNextStep"]
+                    </MudButton>
+                }                             
+            </MudItem>
+        </MudGrid>
+    </DialogActions>
+</MudDialog>
+
+
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+    [Parameter]
+    public ResumeWorkflowDialogParameter Dataset { get; set; } = new ResumeWorkflowDialogParameter();
+    public MudDataGrid<Component> dataGrid { get; set; }
+    private DialogOptions dialogOptions = new() { BackdropClick = false };
+    private Component selectedComponent = new Component();
+
+    private bool processing = false;  
+
+    private async Task Confirm(WorkflowExecutionStatus executionStatus, bool repeat = false)
+    {
+        try{
+            processing = true;        
+
+            if (!IsDataValid(executionStatus)) //Valido i dati solo se non skippo
+                return;
+
+            if (executionStatus == WorkflowExecutionStatus.Closed)
+            {
+                bool? result = await dialogService.ShowMessageBox(
+                                  languageContainer.Keys["ResumeWorkflowGotoNextStepTitle"],
+                                  languageContainer.Keys["ResumeWorkflowGotoNextStepDescription"],
+                                  yesText: @languageContainer.Keys["Yes"], cancelText: @languageContainer.Keys["No"]);
+                var confirmed = result == null ? false : true;
+                if (!confirmed)
+                    return;
+            }
+
+            var nextTask = await GetNextStep(executionStatus, repeat);
+            await InsertStepData(executionStatus);
+            await UpdateVeichle(nextTask, executionStatus, repeat);
+
+            if (executionStatus == WorkflowExecutionStatus.Closed || executionStatus == WorkflowExecutionStatus.Skipped)
+            {           
+                await GoToNextStep(nextTask, repeat);
+
+                if (executionStatus == WorkflowExecutionStatus.Skipped)
+                    snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSkpipped"], Severity.Warning);
+                else
+                {
+                    var message = languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"];
+                    if (!nextTask.IsFinalTask)
+                        if (repeat)
+                            message = $"{message} {languageContainer.Keys["ResumeWorkflowGotoNextStepCompletedRepeat"]}: {nextTask.Title}";                           
+                        else
+                            message = $"{message} {languageContainer.Keys["ResumeWorkflowGotoNextStepCompleted"]}: {nextTask.Title}";
+
+                    snackbar.Add(message, Severity.Success);
+                }
+
+                if (String.IsNullOrEmpty(nextTask.Id))
+                {
+                    snackbar.Add(languageContainer.Keys["ResumeWorkflowCompleted"], Severity.Info);
+                    MudDialog.Close(DialogResult.Ok(true));
+                }
+
+            }
+            else if (executionStatus == WorkflowExecutionStatus.InProgress)
+            {
+                snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"], Severity.Info);
+            }
+
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    private void Cancel()
+    {        
+        MudDialog.Cancel();
+    }
+
+    private async Task UploadImage(IBrowserFile file)
+    {
+        try
+        {
+            processing = true;
+
+            if (Dataset.workflowExecution.Images == null)
+                Dataset.workflowExecution.Images = new List<Image>();
+
+            var img = new Image
+            {
+                Id = Guid.NewGuid().ToString(),
+                Name = file.Name,
+                ContentType = file.ContentType,
+                Size = file.Size,                
+                LastModified = file.LastModified.UtcDateTime,               
+            };
+            img.Path = Utility.GetImagePath(img.Id, Dataset.workflowExecution.WorkflowExecutionSeriesId, img.Name);
+
+            using (var stream = new MemoryStream())
+            {        
+                await file.OpenReadStream(file.Size).CopyToAsync(stream);
+                byte[] imageBytes = stream.ToArray();
+                await File.WriteAllBytesAsync(img.Path, imageBytes);
+            }                 
+
+            Dataset.workflowExecution.Images.Add(img); //Aggiungo le nuove caricate
+
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+        }
+
+    }
+
+    private bool IsDataValid(WorkflowExecutionStatus workflowExecutionStatus)
+    {
+        bool isValid = true;
+
+        if (workflowExecutionStatus == WorkflowExecutionStatus.Skipped)
+            return true;
+
+        Dataset.workflowExecution.Titile = Dataset.workflowExecution.Titile?.Trim();
+        Dataset.workflowExecution.Note = Dataset.workflowExecution.Note?.Trim();
+
+        if (String.IsNullOrEmpty(Dataset.workflowExecution.Titile))
+        {
+            snackbar.Add(@languageContainer.Keys["StepTitleError"], Severity.Warning);
+            isValid = false;
+        }
+        if (Dataset.workflowTask.UserMustUpdateVeichleKm && Dataset.workflowExecution.KmPost == null)
+        {
+            snackbar.Add(@languageContainer.Keys["StepVeichleKmError"], Severity.Warning);
+            isValid = false;
+        }
+        if (Dataset.workflowTask.UserMustUpdateFuelLevel && Dataset.workflowExecution.FuelPost == null)
+        {
+            snackbar.Add(@languageContainer.Keys["StepVeichleFuelError"], Severity.Warning);
+            isValid = false;
+        }
+        // if (Dataset.workflowTask.AllowImageUpload && Dataset.workflowExecution.Images?.Count() == 0)
+        // {
+        //     snackbar.Add(@languageContainer.Keys["StepImageError"], Severity.Warning);
+        //     isValid = false;
+        // }
+        // if (Dataset.workflowTask.IsComponentRequired && Dataset.workflowExecution?.Components?.Count() == 0)
+        // {
+        //     snackbar.Add(@languageContainer.Keys["StepComponentError"], Severity.Warning);
+        //     isValid = false;
+        // }
+
+        return isValid;
+    }
+
+    private async Task InsertStepData(WorkflowExecutionStatus executionStatus)
+    {
+        if (executionStatus == WorkflowExecutionStatus.Skipped) //Resetto i dati non salvo niente a parte il fatto che è stato skippato
+        {            
+            Dataset.workflowExecution.Titile = String.Empty;
+            Dataset.workflowExecution.Note = String.Empty;
+            Dataset.workflowExecution.KmPost = null;
+            Dataset.workflowExecution.KmPre = null;
+            Dataset.workflowExecution.FuelPost = null;
+            Dataset.workflowExecution.FuelPre = null;
+            Dataset.workflowExecution.Images = null;
+            Dataset.workflowExecution.Components = null;
+        }    
+
+        Dataset.workflowExecution.EmployeeId = Dataset.employee.Id;
+        Dataset.workflowExecution.UserId = Dataset.customer.Id;
+        Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
+        Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
+        Dataset.workflowExecution.WorkflowTaskId = Dataset.veichle?.OpenWorkflowTaskId ?? "";
+        Dataset.workflowExecution.FuelPre = Dataset.veichle?.ActualFuelPercentage;
+        Dataset.workflowExecution.KmPre = Dataset.veichle?.ActualKilometers;
+        Dataset.workflowExecution.ExecutionStatus = executionStatus;
+
+        if (executionStatus == WorkflowExecutionStatus.Closed)
+            Dataset.workflowExecution.ClosedAt = DateTime.Now;
+
+        await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(Dataset.workflowExecution);
+    }
+
+    private async Task UpdateVeichle(WorkflowTask nextTask, WorkflowExecutionStatus executionStatus, bool repeat)
+    {
+        if (executionStatus == WorkflowExecutionStatus.Skipped) //Non facio niente
+            return;
+
+        var veichle = Dataset.veichle;        
+
+        if(executionStatus == WorkflowExecutionStatus.Closed) //Aggiorno gli step solo in caso di chiusura del task
+        {
+            if (Dataset.workflowTask.UserMustUpdateVeichleKm)
+                veichle.ActualKilometers = Dataset.workflowExecution.KmPost;
+            if (Dataset.workflowTask.UserMustUpdateFuelLevel)
+                veichle.ActualFuelPercentage = Dataset.workflowExecution.FuelPost;
+
+            veichle.OpenWorkflowId = nextTask.WorkflowId;
+            veichle.OpenWorkflowTaskId = repeat ? veichle.OpenWorkflowTaskId : nextTask.Id;
+            veichle.OpenWorkflowExecutionId = String.IsNullOrEmpty(nextTask.Id) ? "" : Guid.NewGuid().ToString();
+            veichle.OpenWorkflowExecutionSeriesId = String.IsNullOrEmpty(nextTask.Id) ? "" : veichle.OpenWorkflowExecutionId;
+            veichle.HasOpenWorkflow = String.IsNullOrEmpty(nextTask.Id) ? false : true;
+
+            //Quando chiudo mi salvo l'esecuzione
+            if(veichle.HasOpenWorkflow == false)
+            {
+                if (veichle.WorkflowExecutionsCompleted == null)
+                    veichle.WorkflowExecutionsCompleted = new List<string>();
+
+                veichle.WorkflowExecutionsCompleted.Add(Dataset.workflowExecution.WorkflowExecutionSeriesId);
+            }
+        }
+
+        veichle.UpdateDate = DateTime.Now;
+        await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
+    }
+
+    private async Task GoToNextStep(WorkflowTask nextTask, bool repeat)
+    {
+        if (String.IsNullOrEmpty(nextTask.Id)) //Ho finito
+            return;
+
+        var workflowExecutionSeriesId = Dataset.workflowExecution.WorkflowExecutionSeriesId;
+
+        //Setto i campi per il prossimo step
+        Dataset.workflowTask = nextTask;
+
+        //Pulisco tutti i campi per il prossimo step
+        Dataset.workflowExecution = new WorkflowExecution();
+        Dataset.workflowExecution.Id = Dataset.veichle.OpenWorkflowExecutionId;
+        Dataset.workflowExecution.EmployeeId = Dataset.employee.Id;
+        Dataset.workflowExecution.UserId = Dataset.customer.Id;
+        Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
+        Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
+        Dataset.workflowExecution.WorkflowTaskId = repeat ? Dataset.veichle.OpenWorkflowTaskId : nextTask.Id; //Se devo ripetere lo uso lo stesso ID
+        Dataset.workflowExecution.WorkflowExecutionSeriesId = workflowExecutionSeriesId;
+        Dataset.workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
+        Dataset.workflowExecution.OpenAt = DateTime.Now;
+        Dataset.workflowExecution.Titile = $"{nextTask.Title} - {nextTask.Subtitle}";
+
+        var nextWf = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(Dataset.workflowExecution.WorkflowTaskId);
+        if (nextWf != null)
+        {
+            if (nextWf.UserMustUpdateVeichleKm)
+                Dataset.workflowExecution.KmPost = Dataset.veichle.ActualKilometers;
+            if (nextWf.UserMustUpdateFuelLevel)
+                Dataset.workflowExecution.FuelPost = Dataset.veichle.ActualFuelPercentage;            
+        }        
+
+        await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(Dataset.workflowExecution);
+    }
+
+    private async Task<WorkflowTask> GetNextStep(WorkflowExecutionStatus executionStatus, bool repeat)
+    {
+        if (executionStatus != WorkflowExecutionStatus.Closed && executionStatus != WorkflowExecutionStatus.Skipped) //Faccio le querty solo se servono
+            return new WorkflowTask();
+
+        if (repeat)
+            return Dataset.workflowTask;
+
+        //In caso di ultimo task pulisco anche tuti i dati
+        if (Dataset.workflowTask.IsFinalTask)
+            return new WorkflowTask();
+
+        var steps = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask()
+        {
+             WorkflowId = Dataset.workflow.Id
+        });
+
+        steps = steps.Where(x => !x.Id.Equals(Dataset.workflowTask.Id)).Where(x => x.TaskOrder >= Dataset.workflowTask.TaskOrder).OrderBy(x => x.TaskOrder).ToList();
+
+        return steps.FirstOrDefault() ?? new WorkflowTask();
+    }
+
+    #region Tabella dei componenti
+    private async Task UpdateSelectedComponent(Component component)
+    {
+        try
+        {
+            if(component == null)
+                component = new Component();
+
+            selectedComponent = component;
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+
+        }
+    }
+    
+    private async Task<IEnumerable<Component>> SearchComponent(string value, CancellationToken token)
+    {
+        if (string.IsNullOrEmpty(value))
+            return Dataset.components;
+        return Dataset.components.Where(x => x.Barcode.Contains(value, StringComparison.InvariantCultureIgnoreCase)
+                                    || x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private async Task StartedEditingItem(Component item)
+    {
+
+
+    }
+
+    private async Task CanceledEditingItem(Component item)
+    {
+        try
+        {
+
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task CommittedItemChanges(Component item)
+    {
+
+        try
+        {
+            if (Dataset.workflowExecution.Components == null)
+                Dataset.workflowExecution.Components = new List<Component>();
+
+            var element = Dataset.workflowExecution.Components.FirstOrDefault(x => x.Id.Equals(item.Id));
+
+            if(element == null)
+            {
+                item.Id = Guid.NewGuid().ToString();
+                Dataset.workflowExecution.Components.Add(item);
+            }           
+            else
+            {
+                element.Name = item.Name;
+                element.PricePerQuantity = item.PricePerQuantity;
+                element.Quanity = item.Quanity;
+                element.UnitOfMeasurement = item.UnitOfMeasurement;
+            }
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task DeleteItem(Component item)
+    {
+
+        try
+        {
+            if (Dataset.workflowExecution.Components == null)
+                Dataset.workflowExecution.Components = new List<Component>();
+
+            var element = Dataset.workflowExecution.Components.FirstOrDefault(x => x.Id.Equals(item.Id));
+            if (element != null)
+            {
+                Dataset.workflowExecution.Components.Remove(element);
+            }
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+    #endregion
+}
+

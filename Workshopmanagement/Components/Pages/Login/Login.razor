@@ -1,0 +1,128 @@
+﻿@page "/login"
+@* @rendermode InteractiveServer *@
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<PageTitle>@languageContainer.Keys["ApplicationName"]</PageTitle>
+
+<MudCard Class="pa-4 mx-auto" Style="max-width: 400px;">
+    <MudCardHeader>    
+        <MudGrid>
+            <MudItem xs="12" Style="text-align: center;">
+                @*  <MudIcon Style="margin: auto;" Icon="@Icons.Material.Filled.AirportShuttle" Size="Size.Large" /> *@
+                <MudImage Alt="Missing logo.png" Src="../logo.png" Height="100">
+
+                </MudImage>
+            </MudItem>
+            <MudItem xs="12">
+                <MudText Typo="Typo.h4" Style="text-align: center;">
+                    @languageContainer.Keys["LoginTitle"]
+                </MudText>
+            </MudItem>
+        </MudGrid>
+
+    </MudCardHeader>
+    <MudCardContent>
+        <MudTextField @bind-Value="userModel.Username" Label="@languageContainer.Keys["Username"]" Variant="Variant.Filled" Required="true" />
+        <MudTextField @bind-Value="userModel.Password" Label="@languageContainer.Keys["Password"]" Variant="Variant.Filled" InputType="InputType.Password" Required="true" />
+    </MudCardContent>
+    <MudCardActions>
+        <MudGrid>
+            <MudItem xs="12" Style="text-align: right;">
+                <MudButton Disabled="@processing" OnClick="@(() => HandleLogin())" Variant="Variant.Filled" Color="Color.Primary">
+                    @if (processing)
+                    {
+                        <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ms-2">
+                            @languageContainer.Keys["Login"]
+                        </MudText>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Login" Size="Size.Small" Style="margin-right: 15px;"></MudIcon>
+                        <MudText>
+                            @languageContainer.Keys["Login"]
+                        </MudText>
+                    }
+                </MudButton>
+            </MudItem>         
+        </MudGrid>        
+    </MudCardActions>
+</MudCard>
+@code {
+    // Model for the login form
+    private UserModel userModel = new UserModel()
+    {
+        // Username = "zmalqp", //TEST ONLY
+        // Password = "zmalqop"
+    };
+    private bool processing = false;
+    private bool reloading = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {        
+        var refresh = reloading || processing;
+        if (processing)
+            processing = false;
+        if (reloading)
+            reloading = false;
+
+        if (refresh)
+            StateHasChanged();
+    }
+
+    // Handling the login
+    private async Task HandleLogin()
+    {
+        processing = true;
+        try
+        {
+            if (String.IsNullOrEmpty(userModel.Username?.Trim()) || String.IsNullOrEmpty(userModel.Password?.Trim()))
+            {
+                snackbar.Add(@languageContainer.Keys["LoginIsNotValid"], Severity.Warning);
+            }
+            else
+            {               
+                var user = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee()
+                {
+                     Username = userModel.Username,
+                     Password = Cypher.Encrypt(userModel.Password)
+                });
+
+                if (user == null || user.Count == 0)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginIsNotValid"], Severity.Warning);
+                    return;
+                }
+
+                if(user.First().EmployeeRole == EmployeeRole.None)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginIsNotValidUserDisabled"], Severity.Warning);
+                    return;
+                }
+
+                await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, user.First());
+
+
+                snackbar.Add(@languageContainer.Keys["LoginIsValid"], Severity.Success);
+                navigationManager.NavigateTo($"/dashboard");
+            }
+        }catch(Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }   
+          
+    }
+
+    // User model for form data binding
+    public class UserModel
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}

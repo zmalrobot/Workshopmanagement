@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ReportTitle}}</title>
+    <style>
+        /* Material Design Color Palette */
+        :root {
+            --primary-color: #1C90F3; /* Deep Purple 500 */
+            --primary-light-color: #1C90F3; /* Purple Light */
+            --secondary-color: #71BF44; /* Teal 200 */
+            --text-color: #333;
+            --background-color: #f4f4f9;
+            --card-background: #fff;
+            --border-color: #e0e0e0;
+            --accent-color: #03a9f4; /* Light Blue */
+            --success-color: #4caf50; /* Green */
+            --danger-color: #f44336; /* Red */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+        }
+
+        .section-title {
+            font-weight: 500;
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background-color: var(--card-background);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .customer-info div, .process-info div {
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid var(--border-color);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        th {
+            background-color: var(--primary-light-color);
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .total-row th {
+            text-align: right;
+        }
+
+        .total-row td {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .accent-text {
+            color: var(--accent-color);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: left;
+            margin-top: 20px;
+            /*background-color: var(--primary-light-color);*/
+            /*color: var(--text-color);*/
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            th, td {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+
+        @media print {
+            @page {
+                margin: 0;
+            }
+
+            body {
+                margin: 1.6cm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>{{ReportTitle}}</h1>
+        </div>
+
+        <!-- Customer Information -->
+        <div class="card">
+            <div class="section-title">{{ReportCustomerInformationTitle}}</div>
+            <div class="customer-info">
+                <div><strong>{{ReportCustomerInformationNameTitle}}:</strong> {{ReportCustomerInformationName}}</div>
+                <div><strong>{{ReportCustomerInformationAddressTitle}}:</strong> {{ReportCustomerInformationAddress}}</div>
+                <div><strong>{{ReportCustomerInformationVatNumberTitle}}:</strong> <span class="accent-text">{{ReportCustomerInformationVatNumber}}</span></div>
+                <div><strong>{{ReportCustomerInformationFiscalCodeTitle}}:</strong> <span class="accent-text">{{ReportCustomerInformationFiscalCode}}</span></div>
+            </div>
+        </div>
+
+        <!-- Veichle Information -->
+        <div class="card">
+            <div class="section-title">{{ReportVeichleInformationTitle}}</div>
+            <div class="customer-info">
+                <div><strong>{{ReportVeichleInformationPlateTitle}}:</strong> {{ReportVeichleInformationPlate}}</div>
+                <div><strong>{{ReportVeichleInformationModelTitle}}:</strong> {{ReportVeichleInformationModel}}</div>
+                <div><strong>{{ReportVeichleInformationEnigineTitle}}:</strong> {{ReportVeichleInformationEnigine}}</div>
+                <div><strong>{{ReportVeichleInformationKmTitle}}:</strong> <span class="accent-text">{{ReportVeichleInformationKm}}</span></div>
+                <div><strong>{{ReportVeichleInformationFuelTitle}}:</strong> <span class="accent-text">{{ReportVeichleInformationFuel}}</span></div>
+            </div>
+        </div>
+
+        <!-- Process Information -->
+        <div class="card">
+            <div class="section-title">{{ReportWorkflowInformationTitle}}</div>
+            <div class="process-info">
+                <div><strong>{{ReportWorkflowInformationDateTitle}}:</strong> {{ReportWorkflowInformationDate}}</div>
+                <div><strong>{{ReportWorkflowInformationEmployeeTitle}}:</strong> {{ReportWorkflowInformationEmployee}}</div>
+                <div><strong>{{ReportWorkflowInformationTitleTitle}}:</strong> {{ReportWorkflowInformationTitle}}</div>
+                <div>
+                    <strong>{{ReportWorkflowInformationDescriptionTitle}}: </strong>
+                    {{ReportWorkflowInformationDescription}}
+                </div>
+            </div>
+        </div>
+
+        <!-- HasOutcome -->
+        <div class="card" id="OutcomeSection">
+            <div class="section-title">{{ReportWorkflowDetailTitle}}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ReportWorkflowDetailNameTitle}}</th>
+                        <th>{{ReportWorkflowDetailStateTitle}}</th>
+                        <th>{{ReportWorkflowDetailDescriptionTitle}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ReportWorkflowDetails}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Component Details -->
+        <div class="card" id="ComponentsSection">
+            <div class="section-title">{{ReportComponentsTitle}}</div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ReportComponentsNameBarcode}}</th>
+                        <th>{{ReportComponentsNameTitle}}</th>
+                        <th>{{ReportComponentsPriceTitle}}</th>
+                        <th>{{ReportComponentsQuantityTitle}}</th>
+                        <th>{{ReportComponentsUnitOfMesurmentTitle}}</th>
+                        <th>{{ReportComponentsRowTotalTitle}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ReportComponents}}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <th colspan="4">{{ReportComponentTotalTitle}}</th>
+                        <td>{{ReportComponentTotalValue}}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer" id="DisclaimerSection">
+            {{ReportDisclaimer}}
+            <br />
+            <br />
+            {{ReportDisclaimerSign}}
+            <br />
+            <br />
+            {{ReportDisclaimerDate}}
+            <br />
+            {{ReportDisclaimerSignImage}}
+        </div>
+    </div>
+
+</body>
+</html>

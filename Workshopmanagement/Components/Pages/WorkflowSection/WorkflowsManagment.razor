@@ -1,0 +1,353 @@
+﻿@page "/workflowsmanagment"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudGrid>
+            <MudItem xs="6" Style="text-align: left;">
+                @if (!isViewMode)
+                {
+                    <MudButton OnClick="@(() => dataGrid.SetEditingItemAsync(new Workflow()))" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" Color="Color.Info">
+                        @languageContainer.Keys["AddWorkflow"]
+                    </MudButton>
+                }
+            </MudItem>
+            <MudItem xs="6" Style="text-align: right;">
+                @if (isViewMode)
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Edit" Color="Color.Info">
+                        @languageContainer.Keys["Edit"]
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="SwitchView" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info">
+                        @languageContainer.Keys["View"]
+                    </MudButton>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudItem>
+    <MudItem xs="12">
+        <MudDataGrid @ref="dataGrid" T="Workflow" Items="@workflows" ReadOnly="@isViewMode" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+        Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
+        StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges">
+            <Columns>
+                <TemplateColumn Hidden="@isViewMode" CellClass="d-flex justify-end">
+                    <CellTemplate>
+                        <MudIconButton Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" />
+                        <MudIconButton Style="margin-left: 15px" Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Outlined.RestoreFromTrash" OnClick="@(() => DeletyeItemChanges(context.Item))" />
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["Color"]" Sortable="false" Hidden="true">
+                    <CellTemplate>
+                        <MudText> @context.Item.Color</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+
+                        <MudSelect Label="@languageContainer.Keys["Color"]"
+                        @bind-Value="context.Item.Color" T="string" ToStringFunc="color => GetColorNameByHex(color)"
+                        CloseIcon="@Icons.Material.Filled.ColorLens" AdornmentColor="Color.Tertiary">
+                            @foreach (var color in colors)
+                            {
+                                <MudSelectItem T="string" Value="@color"> @* Style="@($"color: {color};")"> *@
+                                    @GetColorNameByHex(color)
+                                </MudSelectItem>
+                            }
+                        </MudSelect>
+
+                    </EditTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.Id" Title="@languageContainer.Keys["Id"]" Required="false" Editable="false" Sortable="false" Hidden="true" />
+                <PropertyColumn Property="x => x.Title" Title="@languageContainer.Keys["Titile"]" />
+                <PropertyColumn Property="x => x.Subtitle" Title="@languageContainer.Keys["Subtitle"]" />
+                <TemplateColumn Title="@languageContainer.Keys["Description"]" Required="false" Sortable="false">
+                    <CellTemplate>
+                        <MudText> @Utility.TruncateFroHtml(context.Item.Description, 50)</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudTextField Lines="5" Margin="Margin.Dense" Label="@languageContainer.Keys["Description"]" Variant="Variant.Outlined" @bind-Value="context.Item.Description" />
+                    </EditTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["Note"]"  Required="false" Sortable="false">
+                    <CellTemplate>
+                        <MudText> @Utility.TruncateFroHtml(context.Item.Note, 50)</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["Note"]" Variant="Variant.Outlined" @bind-Value="context.Item.Note" />
+                    </EditTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["RequireDisclaimer"]" Sortable="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.RequireDisclaimer" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Label="@languageContainer.Keys["RequireDisclaimer"]" @bind-Value="context.Item.RequireDisclaimer"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["IsActive"]" Sortable="false">
+                    <CellTemplate>
+                        <MudCheckBox @bind-Value="context.Item.IsActive" ReadOnly></MudCheckBox>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudCheckBox Label="@languageContainer.Keys["IsActive"]" @bind-Value="context.Item.IsActive"></MudCheckBox>
+                    </EditTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="Workflow" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+
+
+@code {
+    private Employee employee;
+    private List<Workflow> workflows = new List<Workflow>();
+    public MudDataGrid<Workflow> dataGrid { get; set; }
+
+    private string[] colors =
+    {
+        "#1ABC9C", "#2ECC71", "#3498DB", "#9B59B6", "#34495E", "#F1C40F", "#E67E22", "#E74C3C", "#ECF0F1", "#95A5A6"
+    };
+
+    private bool processing = true;
+    private bool isViewMode = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {        
+        try
+        {
+            if (firstRender)
+            {
+                processing = true;
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo($"login");
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+                if (employee.EmployeeRole != EmployeeRole.Manager)
+                {
+                    snackbar.Add(@languageContainer.Keys["UserNotAutorized"], Severity.Warning);
+                    return;
+
+                }
+                await GetWorkflows();
+            }
+
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if(firstRender)
+                    StateHasChanged();
+            }
+        }
+    }
+
+    private async Task GetWorkflows()
+    {
+        workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+    }
+
+    private async Task SwitchView()
+    {
+        isViewMode = !isViewMode;
+    }
+
+    private async Task StartedEditingItem(Workflow item)
+    {
+        processing = true;
+        if (String.IsNullOrEmpty(item.Id))
+        {            
+            item.IsActive = true;
+            item.Color = "#FFFFFF";
+        }
+        processing = false;
+    }
+
+    private async Task CanceledEditingItem(Workflow item)
+    {
+        processing = true;
+        try
+        {
+            await GetWorkflows();
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+
+    private async Task CommittedItemChanges(Workflow item)
+    {
+        processing = true;
+        try
+        {
+            item.UpdateDate = DateTime.Now;
+
+            if(string.IsNullOrEmpty(item.Color))
+                item.Color = "#FFFFFF";
+
+            if (String.IsNullOrEmpty(item.Id))
+            {
+                item.Id = Guid.NewGuid().ToString();
+                item.InsertDate = DateTime.Now;
+                await dbDependency.GetDataAccessWorkflow().InsertAsync(item);
+
+                @if (item.RequireDisclaimer)
+                    await 
+    dbDependency.GetDataAccessWorkflowTask().InsertAsync(new WorkflowTask()
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        WorkflowId = item.Id,
+                        Title = languageContainer.Keys["WorkflowTaskSign"],
+                        Description = "",
+                        Note = "",
+                        Subtitle = "",
+                        TaskSpecification = "",
+                        IsSignTask = true,
+                        AllowImageUpload = false,
+                        AllowLoop = false, 
+                        CanBeSkipped = false,
+                        HasOutcome = false,
+                        IsComponentRequired = false,
+                        IsFinalTask = false,
+                        IsStartingTask = false,
+                        TaskOrder = int.MinValue,
+                        UserMustUpdateFuelLevel = false,
+                        UserMustUpdateVeichleKm = false
+                    });
+            }
+            else
+            {       
+                var oldItem = await dbDependency.GetDataAccessWorkflow().FindByIdAsync(item.Id);
+                await dbDependency.GetDataAccessWorkflow().UpdateAsync(item);
+
+                if(item.RequireDisclaimer && !oldItem.RequireDisclaimer)
+                {
+                    var h = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask()
+                        {
+                            WorkflowId = item.Id
+                        });
+
+                    var alredyExist = h.Any(x => x.IsSignTask);
+
+                    if (!alredyExist)
+                        await dbDependency.GetDataAccessWorkflowTask().InsertAsync(new WorkflowTask()
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                WorkflowId = item.Id,
+                                Title = languageContainer.Keys["WorkflowTaskSign"],
+                                Description = "",
+                                Note = "",
+                                Subtitle = "",
+                                TaskSpecification = "",
+                                IsSignTask = true,
+                                AllowImageUpload = false,
+                                AllowLoop = false,
+                                CanBeSkipped = false,
+                                HasOutcome = false,
+                                IsComponentRequired = false,
+                                IsFinalTask = false,
+                                IsStartingTask = false,
+                                TaskOrder = int.MinValue,
+                                UserMustUpdateFuelLevel = false,
+                                UserMustUpdateVeichleKm = false
+                            });
+                }               
+            }
+
+            await GetWorkflows();
+
+            snackbar.Add(@languageContainer.Keys["SaveOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+
+    private async Task DeletyeItemChanges(Workflow item)
+    {
+        processing = true;
+        try
+        {
+            var h = await dbDependency.GetDataAccessWorkflowExecution().FindPagedAsync(new SearcherWorkflowExecution()
+                {
+                    WorkflowId = item.Id
+                }, 0);
+
+            bool canBeDeleted = h.Results?.Count == 0;
+
+            if (!canBeDeleted)
+            {
+                snackbar.Add(@languageContainer.Keys["DeletionWarningIsInUse"], Severity.Warning);
+                return;
+            }
+
+            var assosiatedTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask()
+            {
+                WorkflowId = item.Id
+            });
+
+            var tasks = new List<Task>();
+
+            foreach (var task in assosiatedTasks)
+            {
+                tasks.Add(Task.Run(async () =>
+                {
+                    await dbDependency.GetDataAccessWorkflowTask().DeleteAsync(task.Id);
+                }));
+            }
+
+            await Task.WhenAll(tasks);
+
+            await dbDependency.GetDataAccessWorkflow().DeleteAsync(item.Id);
+
+            await GetWorkflows();
+
+            snackbar.Add(@languageContainer.Keys["DeleteOk"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        processing = false;
+    }
+
+    private string GetColorNameByHex(string hex)
+    {
+        if (string.IsNullOrEmpty(hex))
+            return "";
+
+        //return hex;
+        return @languageContainer.Keys[hex.Replace("#","")];
+    }
+
+}
+
