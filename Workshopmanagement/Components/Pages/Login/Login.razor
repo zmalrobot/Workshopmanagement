@@ -28,6 +28,10 @@
 
     </MudCardHeader>
     <MudCardContent>
+        @if (isFirstUser)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mb-4">@languageContainer.Keys["LoginNoUsersWarning"]</MudAlert>
+        }
         <MudTextField @bind-Value="userModel.Username" Label="@languageContainer.Keys["Username"]" Variant="Variant.Filled" Required="true" />
         <MudTextField @bind-Value="userModel.Password" Label="@languageContainer.Keys["Password"]" Variant="Variant.Filled" InputType="InputType.Password" Required="true" />
     </MudCardContent>
@@ -63,6 +67,17 @@
     };
     private bool processing = false;
     private bool reloading = false;
+    private bool isFirstUser = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var allEmployees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
+            isFirstUser = allEmployees == null || allEmployees.Count == 0;
+        }
+        catch { }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {        

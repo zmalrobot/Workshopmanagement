@@ -184,6 +184,7 @@ AddComponent: Aggiungi componente
 DeleteOk: Cancellazione ok
 DeletionWarningIsInUse: L'elemento non puo' essere cancellato inquanto e' stato utilizzato.
 LoginIsNotValidUserDisabled: Utente disabilitato
+LoginNoUsersWarning: Nessun utente presente. Il primo accesso creerà automaticamente un utente Manager.
 RequireDisclaimer: Scarico di responsabilita'
 1ABC9C: Verde
 2ECC71: Smeraldo
