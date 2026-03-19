@@ -8,7 +8,7 @@ set -e
 # ============================================================
 
 APP_NAME="workshopmanagement"
-INSTALL_DIR="/opt/workshopmanagement"
+INSTALL_DIR="$HOME/Documents/workshopmanagement"
 DATA_DIR="${INSTALL_DIR}/data"
 
 echo "============================================"
@@ -20,8 +20,8 @@ echo ""
 echo "[1/5] Checking prerequisites..."
 
 if ! command -v docker &> /dev/null; then
-    echo "ERROR: Docker is not installed. Install it first:"
-    echo "  curl -fsSL https://get.docker.com | sh"
+    echo "ERROR: Docker is not installed. Install Docker Desktop from:"
+    echo "  https://www.docker.com/products/docker-desktop/"
     exit 1
 fi
 
@@ -38,17 +38,10 @@ echo "  Docker Compose: $(docker compose version)"
 echo ""
 echo "[2/5] Creating data directories..."
 
-sudo mkdir -p "${DATA_DIR}/mongodb"
-sudo mkdir -p "${DATA_DIR}/images"
-sudo mkdir -p "${DATA_DIR}/templates"
+mkdir -p "${DATA_DIR}/images"
+mkdir -p "${DATA_DIR}/templates"
 
-# Set ownership so the containers can write (app runs as non-root UID 1654 in .NET 8 images)
-sudo chown -R 1654:1654 "${DATA_DIR}/images"
-sudo chown -R 1654:1654 "${DATA_DIR}/templates"
-# MongoDB container runs as UID 999
-sudo chown -R 999:999 "${DATA_DIR}/mongodb"
-
-sudo chmod -R 755 "${DATA_DIR}"
+chmod -R 755 "${DATA_DIR}"
 
 echo "  Data directory: ${DATA_DIR}"
 
@@ -56,9 +49,8 @@ echo "  Data directory: ${DATA_DIR}"
 echo ""
 echo "[3/5] Copying project files..."
 
-sudo mkdir -p "${INSTALL_DIR}/src"
-sudo cp -r . "${INSTALL_DIR}/src/"
-sudo chown -R "$(id -u):$(id -g)" "${INSTALL_DIR}/src"
+mkdir -p "${INSTALL_DIR}/src"
+cp -r . "${INSTALL_DIR}/src/"
 
 # --- Write production docker-compose with host-bound volumes ---
 echo ""
@@ -100,7 +92,7 @@ services:
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
-      - ${DATA_DIR}/mongodb:/data/db
+      - mongodb_data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -108,6 +100,9 @@ services:
       retries: 5
       start_period: 20s
     restart: unless-stopped
+
+volumes:
+  mongodb_data:
 EOF
 
 # --- Build and deploy ---
@@ -123,7 +118,7 @@ echo "============================================"
 echo " Deployment complete!"
 echo "============================================"
 echo ""
-echo " Application: http://$(hostname -I | awk '{print $1}'):8080"
+echo " Application: http://localhost:8080"
 echo " Data stored in: ${DATA_DIR}"
 echo ""
 echo " Useful commands:"
