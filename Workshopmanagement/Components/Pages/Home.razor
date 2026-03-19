@@ -42,7 +42,7 @@
        </MudGrid>
     </MessageContent>
     <YesButton>
-        <MudButton OnClick="OnCustomerSelected" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+        <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
             @languageContainer.Keys["HomeSelectVeichleProceed"]
         </MudButton>
     </YesButton>
@@ -62,7 +62,7 @@
        </MudGrid>
     </MessageContent>
     <YesButton>
-        <MudButton OnClick="OnVeichleSelected" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+        <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
             @languageContainer.Keys["HomeSelectVeichleProceed"]
         </MudButton>
     </YesButton>
@@ -85,7 +85,7 @@
        </MudGrid>
     </MessageContent>
     <YesButton>
-        <MudButton OnClick="ResumeWorkflow" Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
+        <MudButton Variant="Variant.Text" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
             @languageContainer.Keys["HomeSelectVeichleProceed"]
         </MudButton>
     </YesButton>
@@ -205,7 +205,85 @@
             selectedResumeVeichle = null;
             selectedResumeItem = null;
 
-            await mudMessageBoxCustomer.ShowAsync(mudMessageBoxOption);
+            processing = false;
+            StateHasChanged();
+
+            // Step 1: Select customer
+            var customerResult = await mudMessageBoxCustomer.ShowAsync(mudMessageBoxOption);
+            if (customerResult != true)
+                return;
+
+            if (selectedResumeCustomer == null || string.IsNullOrEmpty(selectedResumeCustomer.Id))
+            {
+                snackbar.Add(languageContainer.Keys["HomeNoCustomerSelected"], Severity.Warning);
+                return;
+            }
+
+            // Filter vehicles for the selected customer
+            resumeVeichles = allOpenVeichles
+                .Where(v => v.UserId == selectedResumeCustomer.Id && v.HasOpenWorkflow && v.OpenWorkflows != null && v.OpenWorkflows.Any())
+                .ToList();
+
+            if (!resumeVeichles.Any())
+            {
+                snackbar.Add(languageContainer.Keys["HomeNoVeichlesForCustomer"], Severity.Warning);
+                return;
+            }
+
+            selectedResumeVeichle = null;
+            selectedResumeItem = null;
+            StateHasChanged();
+
+            // Step 2: Select vehicle
+            var veichleResult = await mudMessageBoxVeichle.ShowAsync(mudMessageBoxOption);
+            if (veichleResult != true)
+                return;
+
+            if (selectedResumeVeichle == null || string.IsNullOrEmpty(selectedResumeVeichle.Id))
+            {
+                snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
+                return;
+            }
+
+            // Build flow items for the selected vehicle
+            resumeItems = selectedResumeVeichle.OpenWorkflows
+                .Select(entry =>
+                {
+                    var wf = allWorkflows.FirstOrDefault(w => w.Id == entry.WorkflowId);
+                    var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == entry.WorkflowTaskId);
+                    return new ResumeWorkflowItem
+                    {
+                        Veichle = selectedResumeVeichle,
+                        Entry = entry,
+                        WorkflowTitle = wf?.Title ?? "",
+                        WorkflowColor = wf?.Color ?? "#607D8B",
+                        WorkflowTaskTitle = wfTask?.Title ?? ""
+                    };
+                })
+                .ToList();
+
+            if (!resumeItems.Any())
+            {
+                snackbar.Add(languageContainer.Keys["HomeNoOpenFlows"], Severity.Warning);
+                return;
+            }
+
+            selectedResumeItem = null;
+            StateHasChanged();
+
+            // Step 3: Select flow
+            var flowResult = await mudMessageBoxFlow.ShowAsync(mudMessageBoxOption);
+            if (flowResult != true)
+                return;
+
+            if (selectedResumeItem == null || string.IsNullOrEmpty(selectedResumeItem.Veichle?.Id))
+            {
+                snackbar.Add(languageContainer.Keys["HomeNoFlowSelected"], Severity.Warning);
+                return;
+            }
+
+            // Resume the selected workflow
+            await ResumeWorkflow();
         }
         catch (Exception ex)
         {
@@ -218,78 +296,11 @@
         }
     }
 
-    private async Task OnCustomerSelected()
-    {
-        if (selectedResumeCustomer == null || string.IsNullOrEmpty(selectedResumeCustomer.Id))
-        {
-            snackbar.Add(languageContainer.Keys["HomeNoCustomerSelected"], Severity.Warning);
-            return;
-        }
-
-        // Filter vehicles for the selected customer
-        resumeVeichles = allOpenVeichles
-            .Where(v => v.UserId == selectedResumeCustomer.Id && v.HasOpenWorkflow && v.OpenWorkflows != null && v.OpenWorkflows.Any())
-            .ToList();
-
-        if (!resumeVeichles.Any())
-        {
-            snackbar.Add(languageContainer.Keys["HomeNoVeichlesForCustomer"], Severity.Warning);
-            return;
-        }
-
-        selectedResumeVeichle = null;
-        selectedResumeItem = null;
-
-        await mudMessageBoxVeichle.ShowAsync(mudMessageBoxOption);
-    }
-
-    private async Task OnVeichleSelected()
-    {
-        if (selectedResumeVeichle == null || string.IsNullOrEmpty(selectedResumeVeichle.Id))
-        {
-            snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
-            return;
-        }
-
-        // Build flow items for the selected vehicle
-        resumeItems = selectedResumeVeichle.OpenWorkflows
-            .Select(entry =>
-            {
-                var wf = allWorkflows.FirstOrDefault(w => w.Id == entry.WorkflowId);
-                var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == entry.WorkflowTaskId);
-                return new ResumeWorkflowItem
-                {
-                    Veichle = selectedResumeVeichle,
-                    Entry = entry,
-                    WorkflowTitle = wf?.Title ?? "",
-                    WorkflowColor = wf?.Color ?? "#607D8B",
-                    WorkflowTaskTitle = wfTask?.Title ?? ""
-                };
-            })
-            .ToList();
-
-        if (!resumeItems.Any())
-        {
-            snackbar.Add(languageContainer.Keys["HomeNoOpenFlows"], Severity.Warning);
-            return;
-        }
-
-        selectedResumeItem = null;
-
-        await mudMessageBoxFlow.ShowAsync(mudMessageBoxOption);
-    }
-
     private async Task ResumeWorkflow()
     {
         try
         {
             processing = true;
-
-            if(selectedResumeItem == null || String.IsNullOrEmpty(selectedResumeItem.Veichle?.Id))
-            {
-                snackbar.Add(languageContainer.Keys["HomeNoFlowSelected"], Severity.Warning);
-                return;
-            }
 
             var selectedVeichle = selectedResumeItem.Veichle;
             var entry = selectedResumeItem.Entry;
