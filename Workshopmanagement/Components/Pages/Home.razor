@@ -267,12 +267,79 @@
             }
 
             employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+
+            if (firstRender)
+            {
+                await PreloadMostRecentWorkflow();
+            }
         }catch(Exception ex)
         {
             if (!ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
                 snackbar.Add(ex.Message, Severity.Error);
         }      
 
+    }
+
+    private async Task PreloadMostRecentWorkflow()
+    {
+        try
+        {
+            allOpenVeichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle { HasOpenWorkflow = true });
+            allWorkflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+            allWorkflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+
+            // Collect all open workflow entries across all vehicles
+            var allEntries = allOpenVeichles
+                .Where(v => v.OpenWorkflows != null && v.OpenWorkflows.Any())
+                .SelectMany(v => v.OpenWorkflows.Select(e => new { Veichle = v, Entry = e }))
+                .ToList();
+
+            if (!allEntries.Any()) return;
+
+            // Load executions for all entries and find the most recent one with OpenAt <= now
+            ResumeWorkflowItem bestItem = null;
+            DateTime bestOpenAt = DateTime.MinValue;
+
+            foreach (var item in allEntries)
+            {
+                if (string.IsNullOrEmpty(item.Entry.WorkflowExecutionSeriesId)) continue;
+
+                var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                    new SearcherWorkflowExecution { WorkflowExecutionSeriesId = item.Entry.WorkflowExecutionSeriesId });
+
+                var firstExecution = executions
+                    .Where(e => e.OpenAt.HasValue && e.OpenAt.Value <= DateTime.Now)
+                    .OrderBy(e => e.OpenAt)
+                    .FirstOrDefault();
+
+                if (firstExecution != null && firstExecution.OpenAt.HasValue && firstExecution.OpenAt.Value > bestOpenAt)
+                {
+                    bestOpenAt = firstExecution.OpenAt.Value;
+                    var wf = allWorkflows.FirstOrDefault(w => w.Id == item.Entry.WorkflowId);
+                    var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == item.Entry.WorkflowTaskId);
+                    bestItem = new ResumeWorkflowItem
+                    {
+                        Veichle = item.Veichle,
+                        Entry = item.Entry,
+                        WorkflowTitle = wf?.Title ?? "",
+                        WorkflowColor = wf?.Color ?? "#607D8B",
+                        WorkflowTaskTitle = wfTask?.Title ?? ""
+                    };
+                    dashboardExecutions = executions;
+                }
+            }
+
+            if (bestItem != null)
+            {
+                selectedResumeItem = bestItem;
+                showStepTable = true;
+                StateHasChanged();
+            }
+        }
+        catch (Exception)
+        {
+            // Silently fail preload - user can still manually select
+        }
     }
 
     private async Task OpenCreateWorkflowDialogAsync()

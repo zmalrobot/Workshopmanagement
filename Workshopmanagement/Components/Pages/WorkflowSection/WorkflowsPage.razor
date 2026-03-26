@@ -30,13 +30,6 @@
             <Columns>
                 <HierarchyColumn T="VeichleWorkflowView" />
 
-                <TemplateColumn Hidden="false" CellClass="justify-end">
-                    <CellTemplate>
-                        <MudIconButton OnClick="@(() => CloseWorkflowAsync(context.Item))"
-                            Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled"  />
-                    </CellTemplate>
-                </TemplateColumn>
-
                 <PropertyColumn Property="x => x.Veichle.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Veichle.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
@@ -55,6 +48,13 @@
                         <MudProgressCircular Color="Color.Info" Size="Size.Small" 
                                                 Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowTaskId, context.Item.Entry.WorkflowId)">
                         </MudProgressCircular>
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="Complete" Hidden="false" CellClass="justify-end">
+                    <CellTemplate>
+                        <MudIconButton OnClick="@(() => CloseWorkflowAsync(context.Item))"
+                            Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Filled.BlindsClosed" Variant="Variant.Filled"  />
                     </CellTemplate>
                 </TemplateColumn>
                     
