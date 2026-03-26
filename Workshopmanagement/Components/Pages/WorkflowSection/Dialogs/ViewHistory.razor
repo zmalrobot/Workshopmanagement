@@ -96,7 +96,12 @@
                                            Variant="Variant.Filled" Color="Color.Primary"
                                            StartIcon="@Icons.Material.Outlined.Download"
                                            EndIcon="@Icons.Material.Outlined.Download"
+                                           Disabled="@processing"
                                            FullWidth="true" Size="Size.Small" Style="margin-left: 15px;">
+                                    @if (processing)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Style="margin-right: 8px;" />
+                                    }
                                     @languageContainer.Keys["DownloadReport"]
                                 </MudButton>
                             </MudItem>
@@ -108,7 +113,12 @@
                                            Variant="Variant.Filled" Color="Color.Primary"
                                            StartIcon="@Icons.Material.Outlined.Download"
                                            EndIcon="@Icons.Material.Outlined.Download"
+                                           Disabled="@processing"
                                            FullWidth="true" Size="Size.Small" Style="margin-left: 15px;">
+                                    @if (processing)
+                                    {
+                                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Style="margin-right: 8px;" />
+                                    }
                                     @languageContainer.Keys["DownloadReport"]
                                 </MudButton>
                             </MudItem>
@@ -136,15 +146,22 @@
 
     private async Task Download()
     {
+        processing = true;
+        StateHasChanged();
         try
         {
-            var pdfBytes = Utility.GeneratePdfBytes(Dataset.worflowReport);
+            var pdfBytes = await Task.Run(() => Utility.GeneratePdfBytes(Dataset.worflowReport));
             var base64 = Convert.ToBase64String(pdfBytes);
             await JSRuntime.InvokeVoidAsync("downloadPdfFile", $"report_{DateTime.Now:yyyyMMddHHmmss}.pdf", base64);
         }
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+            StateHasChanged();
         }
     }
 }
