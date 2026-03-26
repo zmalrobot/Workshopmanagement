@@ -93,6 +93,122 @@
     </YesButton>
 </MudMessageBox>
 
+@if (showStepTable && selectedResumeItem != null)
+{
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudCard Outlined="true" Elevation="2">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
+                            <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
+                        </MudStack>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent Style="padding: 8px;">
+                    <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="true" Style="background-color: transparent; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 90px;"></th>
+                                <th>@languageContainer.Keys["StepTitleHistory"]</th>
+                                <th>@languageContainer.Keys["StepTitleExHistory"]</th>
+                                <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleStatus"]</th>
+                                <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleOutcome"]</th>
+                                <th>@languageContainer.Keys["OpenAt"]</th>
+                                <th>@languageContainer.Keys["ClosedAt"]</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var step in GetStepsForDashboard())
+                            {
+                                if (step.Task.TaskOrder < 0)
+                                    continue;
+                                <tr style="@(step.IsCurrentStep ? "background-color: rgba(28, 144, 243, 0.12); font-weight: 500;" : "")">
+                                    <td>
+                                        <MudStack Row="true" Spacing="1">
+                                            @if (step.Execution != null && CanEditStep(step))
+                                            {
+                                                <MudIconButton OnClick="@(() => DashboardOpenEditStepAsync(step))"
+                                                               Color="Color.Warning" Size="@Size.Small"
+                                                               Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" />
+                                            }
+                                            @if (step.Execution != null && !CanEditStep(step))
+                                            {
+                                                <MudIconButton OnClick="@(() => DashboardOpenViewStepAsync(step))"
+                                                               Color="Color.Info" Size="@Size.Small"
+                                                               Icon="@Icons.Material.Filled.RemoveRedEye" Variant="Variant.Outlined" />
+                                            }
+                                        </MudStack>
+                                    </td>
+                                    <td>@Utility.TruncateFroHtml(step.Task.Title, 40)</td>
+                                    <td>@(step.Execution != null ? Utility.TruncateFroHtml(step.Execution.Titile, 40) : "-")</td>
+                                    <td style="text-align: center;">
+                                        @if (step.Execution != null)
+                                        {
+                                            @if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.InProgress)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled._360" Color="Color.Info" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.Todo)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.AssignmentReturned" Color="Color.Default" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.Skipped)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.Closed)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.AssignmentTurnedIn" Color="Color.Success" Size="Size.Small" />
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Default" Size="Size.Small" />
+                                        }
+                                    </td>
+                                    <td style="text-align: center;">
+                                        @if (step.Execution != null)
+                                        {
+                                            @if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.RunningOut)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.GasMeter" Color="Color.Warning" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeReplaced)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Build" Color="Color.Warning" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeVerified)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Engineering" Color="Color.Warning" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.Replaced)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.Verified)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Done" Color="Color.Success" Size="Size.Small" />
+                                            }
+                                            else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.Ok)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.DoneAll" Color="Color.Success" Size="Size.Small" />
+                                            }
+                                        }
+                                    </td>
+                                    <td>@(step.Execution != null ? Utility.GetDateFormatted(step.Execution.OpenAt, Utility.DateFormat.FullDate) : "")</td>
+                                    <td>@(step.Execution != null ? Utility.GetDateFormatted(step.Execution.ClosedAt, Utility.DateFormat.FullDate) : "")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
+
 @code {
     private Employee employee;
     private DialogOptions dialogOptions = new DialogOptions
@@ -120,6 +236,8 @@
     private List<WorkflowTask> allWorkflowTasks = new List<WorkflowTask>();
 
     private bool processing = true;
+    private bool showStepTable = false;
+    private List<WorkflowExecution> dashboardExecutions = new List<WorkflowExecution>();
 
     private class ResumeWorkflowItem
     {
@@ -128,6 +246,13 @@
         public string WorkflowTitle { get; set; }
         public string WorkflowColor { get; set; }
         public string WorkflowTaskTitle { get; set; }
+    }
+
+    private class WorkflowStepView
+    {
+        public WorkflowTask Task { get; set; } = new WorkflowTask();
+        public WorkflowExecution? Execution { get; set; }
+        public bool IsCurrentStep { get; set; }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -284,8 +409,14 @@
                 return;
             }
 
-            // Resume the selected workflow
-            await ResumeWorkflow();
+            // Load executions for selected workflow and show step table
+            dashboardExecutions = new List<WorkflowExecution>();
+            if (!string.IsNullOrEmpty(selectedResumeItem.Entry.WorkflowExecutionSeriesId))
+            {
+                dashboardExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                    new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
+            }
+            showStepTable = true;
         }
         catch (Exception ex)
         {
@@ -298,39 +429,166 @@
         }
     }
 
-    private async Task ResumeWorkflow()
+    #region StepTable
+    private List<WorkflowStepView> GetStepsForDashboard()
+    {
+        if (selectedResumeItem == null) return new List<WorkflowStepView>();
+
+        var entry = selectedResumeItem.Entry;
+        var tasksForWorkflow = allWorkflowTasks
+            .Where(t => t.WorkflowId == entry.WorkflowId)
+            .OrderBy(t => t.TaskOrder)
+            .ToList();
+
+        var executionsForSeries = dashboardExecutions
+            .Where(e => e.WorkflowExecutionSeriesId == entry.WorkflowExecutionSeriesId)
+            .ToList();
+
+        var usedExecutionIds = new HashSet<string>();
+        var result = new List<WorkflowStepView>();
+
+        foreach (var task in tasksForWorkflow)
+        {
+            var taskExecutions = executionsForSeries
+                .Where(e => e.WorkflowTaskId == task.Id && !usedExecutionIds.Contains(e.Id))
+                .OrderBy(e => e.OpenAt)
+                .ToList();
+
+            if (taskExecutions.Any())
+            {
+                foreach (var exec in taskExecutions)
+                {
+                    usedExecutionIds.Add(exec.Id);
+                    result.Add(new WorkflowStepView
+                    {
+                        Task = task,
+                        Execution = exec,
+                        IsCurrentStep = exec.Id == entry.WorkflowExecutionId
+                    });
+                }
+            }
+            else
+            {
+                result.Add(new WorkflowStepView
+                {
+                    Task = task,
+                    Execution = null,
+                    IsCurrentStep = false
+                });
+            }
+        }
+
+        return result;
+    }
+
+    private bool CanEditStep(WorkflowStepView step)
+    {
+        if (step.Execution == null) return false;
+
+        return step.IsCurrentStep
+            || step.Execution.ExecutionStatus == WorkflowExecutionStatus.Todo
+            || step.Execution.ExecutionStatus == WorkflowExecutionStatus.InProgress
+            || step.Execution.Executionoutcome == WorkflowExecutionoutcome.RunningOut
+            || step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeVerified
+            || step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeReplaced;
+    }
+
+    private async Task DashboardOpenEditStepAsync(WorkflowStepView step)
     {
         try
         {
-            processing = true;
+            if (step.Execution == null) return;
 
-            var selectedVeichle = selectedResumeItem.Veichle;
+            var veichle = selectedResumeItem.Veichle;
             var entry = selectedResumeItem.Entry;
+            var customer = await dbDependency.GetDataAccessCustomer().FindByIdAsync(veichle.UserId);
+            var workflow = allWorkflows.FirstOrDefault(w => w.Id == entry.WorkflowId) ?? new Workflow();
+            var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
 
-            var customer = await dbDependency.GetDataAccessCustomer().FindByIdAsync(selectedVeichle.UserId);
-            var workflow = await dbDependency.GetDataAccessWorkflow().FindByIdAsync(entry.WorkflowId);
-            var workflowTask = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(entry.WorkflowTaskId);
-            var workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(entry.WorkflowExecutionId);
+            var isCurrentStep = step.IsCurrentStep;
+            var parameters = new DialogParameters<ResumeWorkflow> {
+            {
+                x => x.Dataset,
+                new ResumeWorkflowDialogParameter()
+                {
+                    employee = employee,
+                    customer = customer,
+                    veichle = veichle,
+                    workflow = workflow,
+                    workflowTask = step.Task,
+                    workflowExecution = step.Execution,
+                    components = components,
+                    editOneExecution = !isCurrentStep,
+                    viewOneExecution = false
+                }
+            }
+            };
+
+            var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+
+            if (!result?.Canceled ?? false)
+            {
+                // Reload vehicle and executions
+                var updatedVeichle = await dbDependency.GetDataAccessVeichle().FindByIdAsync(veichle.Id);
+                if (updatedVeichle != null)
+                {
+                    selectedResumeItem.Veichle = updatedVeichle;
+                    var updatedEntry = updatedVeichle.OpenWorkflows?
+                        .FirstOrDefault(e => e.WorkflowExecutionSeriesId == entry.WorkflowExecutionSeriesId);
+                    if (updatedEntry != null)
+                        selectedResumeItem.Entry = updatedEntry;
+                }
+
+                if (!string.IsNullOrEmpty(selectedResumeItem.Entry.WorkflowExecutionSeriesId))
+                {
+                    dashboardExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                        new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task DashboardOpenViewStepAsync(WorkflowStepView step)
+    {
+        try
+        {
+            if (step.Execution == null) return;
+
+            var veichle = selectedResumeItem.Veichle;
+            var entry = selectedResumeItem.Entry;
+            var customer = await dbDependency.GetDataAccessCustomer().FindByIdAsync(veichle.UserId);
+            var workflow = allWorkflows.FirstOrDefault(w => w.Id == entry.WorkflowId) ?? new Workflow();
             var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
 
             var parameters = new DialogParameters<ResumeWorkflow> {
             {
                 x => x.Dataset,
-                    new ResumeWorkflowDialogParameter()
-                    {
-                        employee = employee,
-                        customer = customer,
-                        veichle = selectedVeichle,
-                        workflow = workflow,
-                        workflowTask = workflowTask,
-                        workflowExecution = workflowExecution,
-                        components = components
-                    }
+                new ResumeWorkflowDialogParameter()
+                {
+                    employee = employee,
+                    customer = customer,
+                    veichle = veichle,
+                    workflow = workflow,
+                    workflowTask = step.Task,
+                    workflowExecution = step.Execution,
+                    components = components,
+                    editOneExecution = false,
+                    viewOneExecution = true
                 }
+            }
             };
 
             var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
-            var result = await dialog.Result;
+            await dialog.Result;
         }
         catch (Exception ex)
         {
@@ -338,9 +596,14 @@
         }
         finally
         {
-            processing = false;
             StateHasChanged();
         }
     }
+
+    private void CloseStepTable()
+    {
+        showStepTable = false;
+    }
+    #endregion
 }
 
