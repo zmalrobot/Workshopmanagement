@@ -13,6 +13,7 @@ namespace Workshopmanagement.DatabaseManagment
         private DataAccessWorkflowTask dataAccessWorkflowTask;
         private DataAccessWorkflowExecution dataAccessWorkflowExecution;
         private DataAccessComponent dataAccessComponent;
+        private DataAccessTimeTracking dataAccessTimeTracking;
 
         public DbDependency()
         {
@@ -24,6 +25,7 @@ namespace Workshopmanagement.DatabaseManagment
             dataAccessWorkflowTask = new DataAccessWorkflowTask(db);
             dataAccessWorkflowExecution = new DataAccessWorkflowExecution(db);
             dataAccessComponent = new DataAccessComponent(db);
+            dataAccessTimeTracking = new DataAccessTimeTracking(db);
         }
 
         public DataAccessCustomer GetDataAccessCustomer()
@@ -59,6 +61,11 @@ namespace Workshopmanagement.DatabaseManagment
         public DataAccessComponent GetDataAccessComponent()
         {
             return dataAccessComponent;
+        }
+
+        public DataAccessTimeTracking GetDataAccessTimeTracking()
+        {
+            return dataAccessTimeTracking;
         }
 
     }

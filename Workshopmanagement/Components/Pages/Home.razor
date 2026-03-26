@@ -1,4 +1,5 @@
 ﻿@page "/dashboard"
+@implements IDisposable
 
 @inject IJSRuntime JSRuntime
 @inject IDbDependency dbDependency
@@ -103,6 +104,16 @@
                         <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                             <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
                             <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
+                            <MudIconButton OnClick="@(() => DashboardStartTrackingAsync())"
+                                           Icon="@Icons.Material.Filled.PlayArrow"
+                                           Color="Color.Success" Size="Size.Small"
+                                           Disabled="@isDashboardTrackingActive"
+                                           Style="@(isDashboardTrackingActive ? "opacity: 0.3;" : "")" />
+                            <MudIconButton OnClick="@(() => DashboardStopTrackingAsync())"
+                                           Icon="@Icons.Material.Filled.Stop"
+                                           Color="Color.Error" Size="Size.Small"
+                                           Disabled="@(!isDashboardTrackingActive)"
+                                           Style="@(!isDashboardTrackingActive ? "opacity: 0.3;" : "")" />
                         </MudStack>
                     </CardHeaderContent>
                 </MudCardHeader>
@@ -246,6 +257,11 @@
     private bool showStepTable = false;
     private List<WorkflowExecution> dashboardExecutions = new List<WorkflowExecution>();
 
+    // Time tracking
+    private TimeTracking? dashboardTimeTracking = null;
+    private bool isDashboardTrackingActive = false;
+    private System.Threading.Timer? trackingTimer;
+
     private class ResumeWorkflowItem
     {
         public Veichle Veichle { get; set; }
@@ -340,6 +356,7 @@
             {
                 selectedResumeItem = bestItem;
                 showStepTable = true;
+                await LoadDashboardTrackingState();
                 StateHasChanged();
             }
         }
@@ -491,6 +508,7 @@
                     new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
             }
             showStepTable = true;
+            await LoadDashboardTrackingState();
         }
         catch (Exception ex)
         {
@@ -502,6 +520,137 @@
             StateHasChanged();
         }
     }
+
+    #region TimeTracking
+    private async Task LoadDashboardTrackingState()
+    {
+        isDashboardTrackingActive = false;
+        dashboardTimeTracking = null;
+        StopTimerRefresh();
+
+        if (employee == null || selectedResumeItem == null) return;
+
+        var seriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId;
+        if (string.IsNullOrEmpty(seriesId)) return;
+
+        var trackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
+            new SearcherTimeTracking { EmployeeId = employee.Id, WorkflowExecutionSeriesId = seriesId });
+        dashboardTimeTracking = trackings.FirstOrDefault();
+
+        if (dashboardTimeTracking != null && dashboardTimeTracking.IsActive)
+        {
+            isDashboardTrackingActive = true;
+            StartTimerRefresh();
+        }
+    }
+
+    private async Task DashboardStartTrackingAsync()
+    {
+        try
+        {
+            if (employee == null || selectedResumeItem == null) return;
+            var seriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId;
+            var employeeId = employee.Id;
+
+            // Check if user has another active tracking
+            var activeTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
+                new SearcherTimeTracking { EmployeeId = employeeId, IsActive = true });
+            var otherActive = activeTrackings.FirstOrDefault(t => t.WorkflowExecutionSeriesId != seriesId);
+
+            if (otherActive != null)
+            {
+                bool? result = await dialogService.ShowMessageBox(
+                    languageContainer.Keys["TimeTrackingAlreadyActiveTitle"],
+                    languageContainer.Keys["TimeTrackingAlreadyActiveDescription"],
+                    yesText: languageContainer.Keys["Yes"], cancelText: languageContainer.Keys["No"]);
+
+                if (result != true)
+                    return;
+
+                // Stop the other active tracking
+                var activeSession = otherActive.Sessions.LastOrDefault();
+                if (activeSession != null && activeSession.EndTime == null)
+                    activeSession.EndTime = DateTime.Now;
+                otherActive.IsActive = false;
+                await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
+            }
+
+            // Start tracking
+            if (dashboardTimeTracking != null)
+            {
+                dashboardTimeTracking.IsActive = true;
+                dashboardTimeTracking.Sessions.Add(new TimeTrackingSession { StartTime = DateTime.Now });
+                await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
+            }
+            else
+            {
+                dashboardTimeTracking = new TimeTracking
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EmployeeId = employeeId,
+                    WorkflowExecutionSeriesId = seriesId,
+                    IsActive = true,
+                    Sessions = new List<TimeTrackingSession>
+                    {
+                        new TimeTrackingSession { StartTime = DateTime.Now }
+                    }
+                };
+                await dbDependency.GetDataAccessTimeTracking().InsertAsync(dashboardTimeTracking);
+            }
+
+            isDashboardTrackingActive = true;
+            StartTimerRefresh();
+            snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task DashboardStopTrackingAsync()
+    {
+        try
+        {
+            if (dashboardTimeTracking == null) return;
+
+            var activeSession = dashboardTimeTracking.Sessions.LastOrDefault();
+            if (activeSession != null && activeSession.EndTime == null)
+                activeSession.EndTime = DateTime.Now;
+
+            dashboardTimeTracking.IsActive = false;
+            await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
+
+            isDashboardTrackingActive = false;
+            StopTimerRefresh();
+            snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void StartTimerRefresh()
+    {
+        trackingTimer?.Dispose();
+        trackingTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+    }
+
+    private void StopTimerRefresh()
+    {
+        trackingTimer?.Dispose();
+        trackingTimer = null;
+    }
+
+    public void Dispose()
+    {
+        trackingTimer?.Dispose();
+    }
+    #endregion
 
     #region StepTable
     private List<WorkflowStepView> GetStepsForDashboard()
@@ -619,6 +768,7 @@
                     dashboardExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
                         new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
                 }
+                await LoadDashboardTrackingState();
             }
         }
         catch (Exception ex)

@@ -55,19 +55,20 @@
                         @Dataset.workflowTask.Description
                     </MudText>
                 </MudItem>
+
                 <MudItem xs="12">
                     <MudGrid>
 
                         <MudItem xs="12">
                             <MudGrid>
                                 <MudItem xs="6">
-                                    <MudTextField @bind-Value="Dataset.workflowExecution.Titile" Margin="Margin.Dense"
+                                    <MudTextField @bind-Value="Dataset.workflowExecution.Titile" Margin="Margin.Dense" Disabled="@IsEditDisabled()"
                                                   Label="@languageContainer.Keys["StepTitle"]" Variant="Variant.Outlined" />
                                     @if (Dataset.workflowTask.HasOutcome)
                                     {
                                         <MudSelect @bind-Value="Dataset.workflowExecution.Executionoutcome" MultiSelection="false" Style="margin-top: 30px;"
                                                    Label="@languageContainer.Keys["ExecutionOutcome"]" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                                   OpenIcon="@Icons.Material.Filled.Build" AdornmentColor="Color.Secondary" Dense="true">
+                                                   OpenIcon="@Icons.Material.Filled.Build" AdornmentColor="Color.Secondary" Dense="true" Disabled="@IsEditDisabled()">
                                             @foreach (WorkflowExecutionoutcome item in Enum.GetValues(typeof(WorkflowExecutionoutcome)))
                                             {
                                                 <MudSelectItem Value="@item">@languageContainer.Keys[item.ToString()]</MudSelectItem>
@@ -76,7 +77,7 @@
                                     }
                                 </MudItem>
                                 <MudItem xs="6">
-                                    <MudTextField @bind-Value="Dataset.workflowExecution.Note" Lines="5" Margin="Margin.Dense"
+                                    <MudTextField @bind-Value="Dataset.workflowExecution.Note" Lines="5" Margin="Margin.Dense" Disabled="@IsEditDisabled()"
                                                   Label="@languageContainer.Keys["StepNote"]" Variant="Variant.Outlined" />
                                 </MudItem>
                             </MudGrid>
@@ -98,14 +99,14 @@
                         {
                             <MudItem xs="6">
                                 <MudNumericField @bind-Value="Dataset.workflowExecution.KmPost" Min="1" Max="int.MaxValue" Margin="Margin.Dense"
-                                                 Label="@languageContainer.Keys["ActualKilometers"]" Variant="Variant.Outlined" Step="1" />
+                                                 Label="@languageContainer.Keys["ActualKilometers"]" Variant="Variant.Outlined" Step="1" Disabled="@IsEditDisabled()" />
                             </MudItem>
                         }
                         @if (Dataset.workflowTask.UserMustUpdateFuelLevel)
                         {
                             <MudItem xs="6">
                                 <MudNumericField @bind-Value="Dataset.workflowExecution.FuelPost" Min="1" Max="100" Margin="Margin.Dense"
-                                                 Label="@languageContainer.Keys["ActualFuelPercentage"]" Variant="Variant.Outlined" Step="1" />
+                                                 Label="@languageContainer.Keys["ActualFuelPercentage"]" Variant="Variant.Outlined" Step="1" Disabled="@IsEditDisabled()" />
                             </MudItem>
                         }
                         @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
@@ -123,7 +124,7 @@
                                 </MudText>
                             </MudItem>
                             <MudItem xs="6">
-                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Accept=".png, .jpg">
+                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Accept=".png, .jpg" Disabled="@IsEditDisabled()">
                                     <ActivatorContent>
                                         <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Small">
                                             <MudIcon Icon="@Icons.Material.Filled.Add" />
@@ -184,7 +185,7 @@
                                 </MudButton>
                             </MudItem> *@
                              <MudItem xs="4" Class="d-flex align-center"  Style="text-align: left">
-                                    <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(selectedComponent) )" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small">
+                                    <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(selectedComponent) )" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@IsEditDisabled()">
                                         <MudIcon Icon="@Icons.Material.Filled.Add" />
                                         <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" />
                                         @* <MudText Style="margin-left: 15px">@languageContainer.Keys["AddSelectedComponent"]</MudText> *@
@@ -197,17 +198,17 @@
                                                  Margin="Margin.Dense" Variant="Variant.Outlined"
                                                  Value="selectedComponent" ValueChanged="@UpdateSelectedComponent"
                                                  SearchFunc="@SearchComponent" DebounceInterval="500" MaxItems="null" FullWidth="true"
-                                                 ResetValueOnEmptyText="true" CoerceText="false" CoerceValue="true" Dense="true" />
+                                                 ResetValueOnEmptyText="true" CoerceText="false" CoerceValue="true" Dense="true" Disabled="@IsEditDisabled()" />
                             </MudItem>                           
                             <MudItem xs="12">
-                                <MudDataGrid @ref="dataGrid" T="Component" Items="@Dataset.workflowExecution.Components" ReadOnly="false" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+                                <MudDataGrid @ref="dataGrid" T="Component" Items="@Dataset.workflowExecution.Components" ReadOnly="@IsEditDisabled()" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
                                              Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
                                              StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges">
                                     <Columns>
                                         <TemplateColumn Hidden="false" CellClass="d-flex justify-center">
                                             <CellTemplate>
-                                                <MudIconButton Color="Color.Info" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" />
-                                                <MudIconButton Color="Color.Error" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" />
+                                                <MudIconButton Color="Color.Info" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" Disabled="@IsEditDisabled()" />
+                                                <MudIconButton Color="Color.Error" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" Disabled="@IsEditDisabled()" />
                                             </CellTemplate>
                                         </TemplateColumn>
                                         <PropertyColumn Property="x => x.Barcode" Title="@languageContainer.Keys["Barcode"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
@@ -239,14 +240,14 @@
                     @if (Dataset.workflowTask.CanBeSkipped)
                     {
                         <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Skipped))" Style="margin-right: 15px;"
-                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning">
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning" Disabled="@IsEditDisabled()">
                             @languageContainer.Keys["ResumeWorkflowSkipStep"]
                         </MudButton>
                     }
                     @if (Dataset.workflowTask.AllowLoop)
                     {
                         <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed, true))" 
-                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.Repeat" Color="Color.Primary">
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.Repeat" Color="Color.Primary" Disabled="@IsEditDisabled()">
                             @languageContainer.Keys["ResumeWorkflowRepeteStep"]
                         </MudButton>
                     }
@@ -256,18 +257,18 @@
                 @if (Dataset.workflowExecution.IsCompleted)
                 {
                     <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Warning">
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Warning" Disabled="@IsEditDisabled()">
                         @languageContainer.Keys["SaveChanges"]
                     </MudButton>
                 }
                 else
                 {
                     <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Disabled="@IsEditDisabled()">
                         @languageContainer.Keys["ResumeWorkflowSaveStep"]
                     </MudButton>
                     <MudButton OnClick="(() => MarkAsCompleted())" Style="margin-left: 15px"
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Success">
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Success" Disabled="@IsEditDisabled()">
                         @languageContainer.Keys["StepComplete"]
                     </MudButton>
                 }                             
@@ -290,6 +291,40 @@
     private bool processing = false;  
     private Image? previewImage = null;
     private string? previewImageUrl = null;
+
+    // Time tracking
+    private TimeTracking? currentTimeTracking = null;
+    private bool isTrackingActive = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTimeTrackingState();
+    }
+
+    private async Task LoadTimeTrackingState()
+    {
+        if (Dataset.viewOneExecution) return;
+
+        var seriesId = Dataset.workflowExecution.WorkflowExecutionSeriesId;
+        var employeeId = Dataset.employee.Id;
+
+        if (string.IsNullOrEmpty(seriesId) || string.IsNullOrEmpty(employeeId)) return;
+
+        var trackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
+            new SearcherTimeTracking { EmployeeId = employeeId, WorkflowExecutionSeriesId = seriesId });
+        currentTimeTracking = trackings.FirstOrDefault();
+
+        if (currentTimeTracking != null && currentTimeTracking.IsActive)
+        {
+            isTrackingActive = true;
+        }
+    }
+
+    private bool IsEditDisabled()
+    {
+        if (Dataset.viewOneExecution) return true;
+        return !isTrackingActive;
+    }
 
     private async Task PreviewImage(Image image)
     {

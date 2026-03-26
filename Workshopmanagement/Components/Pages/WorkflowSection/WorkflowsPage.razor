@@ -1,4 +1,5 @@
 ﻿@page "/workflows"
+@implements IDisposable
 
 @inject IJSRuntime JSRuntime
 @inject IDbDependency dbDependency
@@ -28,6 +29,24 @@
         <MudDataGrid @ref="dataGrid" T="VeichleWorkflowView" Items="@GetDataForGrid()" ReadOnly="true"
                         Filterable="true" Dense="false" Hover="true" SortMode="@SortMode.Single" Bordered="true">
             <Columns>
+                <TemplateColumn Title="" Sortable="false" CellClass="d-flex justify-center align-center" HeaderStyle="width: 100px;">
+                    <CellTemplate>
+                        @{
+                            var seriesId = context.Item.Entry.WorkflowExecutionSeriesId;
+                            var isActive = IsTrackingActive(seriesId);
+                        }
+                        <MudIconButton OnClick="@(() => StartTrackingAsync(context.Item))"
+                                       Icon="@Icons.Material.Filled.PlayArrow"
+                                       Color="Color.Success" Size="Size.Small"
+                                       Disabled="@isActive"
+                                       Style="@(isActive ? "opacity: 0.3;" : "")" />
+                        <MudIconButton OnClick="@(() => StopTrackingAsync(context.Item))"
+                                       Icon="@Icons.Material.Filled.Stop"
+                                       Color="Color.Error" Size="Size.Small"
+                                       Disabled="@(!isActive)"
+                                       Style="@(!isActive ? "opacity: 0.3;" : "")" />
+                    </CellTemplate>
+                </TemplateColumn>
                 <HierarchyColumn T="VeichleWorkflowView" />
 
                 <PropertyColumn Property="x => x.Veichle.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
@@ -198,6 +217,10 @@
 
     private bool processing = true;
 
+    // Time tracking
+    private Dictionary<string, TimeTracking> trackingsBySeriesId = new Dictionary<string, TimeTracking>();
+    private System.Threading.Timer? trackingTimer;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         try
@@ -218,6 +241,7 @@
                 await GetWorkflows();
                 await GetWorkflowTasks();
                 await GetWorkflowExecutions();
+                await LoadTimeTrackingStates();
             }
 
         }
@@ -271,6 +295,140 @@
                 new SearcherWorkflowExecution { WorkflowExecutionSeriesId = seriesId });
             workflowExecutions.AddRange(executions);
         }
+    }
+    #endregion
+
+    #region TimeTracking
+    private async Task LoadTimeTrackingStates()
+    {
+        if (employee == null) return;
+        trackingsBySeriesId.Clear();
+
+        var allTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
+            new SearcherTimeTracking { EmployeeId = employee.Id });
+
+        foreach (var t in allTrackings)
+        {
+            trackingsBySeriesId[t.WorkflowExecutionSeriesId] = t;
+        }
+
+        // Start timer if any tracking is active
+        if (trackingsBySeriesId.Values.Any(t => t.IsActive))
+            StartTimerRefresh();
+        else
+            StopTimerRefresh();
+    }
+
+    private bool IsTrackingActive(string seriesId)
+    {
+        if (string.IsNullOrEmpty(seriesId)) return false;
+        return trackingsBySeriesId.TryGetValue(seriesId, out var t) && t.IsActive;
+    }
+
+    private async Task StartTrackingAsync(VeichleWorkflowView item)
+    {
+        try
+        {
+            var seriesId = item.Entry.WorkflowExecutionSeriesId;
+            var employeeId = employee.Id;
+
+            // Check if user has another active tracking
+            var otherActive = trackingsBySeriesId.Values.FirstOrDefault(t => t.IsActive && t.WorkflowExecutionSeriesId != seriesId);
+
+            if (otherActive != null)
+            {
+                bool? result = await dialogService.ShowMessageBox(
+                    languageContainer.Keys["TimeTrackingAlreadyActiveTitle"],
+                    languageContainer.Keys["TimeTrackingAlreadyActiveDescription"],
+                    yesText: languageContainer.Keys["Yes"], cancelText: languageContainer.Keys["No"]);
+
+                if (result != true)
+                    return;
+
+                // Stop the other active tracking
+                var activeSession = otherActive.Sessions.LastOrDefault();
+                if (activeSession != null && activeSession.EndTime == null)
+                    activeSession.EndTime = DateTime.Now;
+                otherActive.IsActive = false;
+                await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
+            }
+
+            // Start tracking for this workflow
+            if (trackingsBySeriesId.TryGetValue(seriesId, out var existing))
+            {
+                existing.IsActive = true;
+                existing.Sessions.Add(new TimeTrackingSession { StartTime = DateTime.Now });
+                await dbDependency.GetDataAccessTimeTracking().UpdateAsync(existing);
+            }
+            else
+            {
+                var newTracking = new TimeTracking
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EmployeeId = employeeId,
+                    WorkflowExecutionSeriesId = seriesId,
+                    IsActive = true,
+                    Sessions = new List<TimeTrackingSession>
+                    {
+                        new TimeTrackingSession { StartTime = DateTime.Now }
+                    }
+                };
+                await dbDependency.GetDataAccessTimeTracking().InsertAsync(newTracking);
+                trackingsBySeriesId[seriesId] = newTracking;
+            }
+
+            StartTimerRefresh();
+            snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task StopTrackingAsync(VeichleWorkflowView item)
+    {
+        try
+        {
+            var seriesId = item.Entry.WorkflowExecutionSeriesId;
+            if (!trackingsBySeriesId.TryGetValue(seriesId, out var tracking)) return;
+
+            var activeSession = tracking.Sessions.LastOrDefault();
+            if (activeSession != null && activeSession.EndTime == null)
+                activeSession.EndTime = DateTime.Now;
+
+            tracking.IsActive = false;
+            await dbDependency.GetDataAccessTimeTracking().UpdateAsync(tracking);
+
+            if (!trackingsBySeriesId.Values.Any(t => t.IsActive))
+                StopTimerRefresh();
+
+            snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+
+    private void StartTimerRefresh()
+    {
+        trackingTimer?.Dispose();
+        trackingTimer = new System.Threading.Timer(async _ =>
+        {
+            await InvokeAsync(StateHasChanged);
+        }, null, 0, 1000);
+    }
+
+    private void StopTimerRefresh()
+    {
+        trackingTimer?.Dispose();
+        trackingTimer = null;
+    }
+
+    public void Dispose()
+    {
+        trackingTimer?.Dispose();
     }
     #endregion
 
@@ -464,6 +622,7 @@
                 await GetWorkflows();
                 await GetWorkflowTasks();
                 await GetWorkflowExecutions();
+                await LoadTimeTrackingStates();
             }
 
         }catch(Exception ex)
@@ -509,6 +668,7 @@
 
             await GetVeichles();
             await GetWorkflowExecutions();
+            await LoadTimeTrackingStates();
         }
         catch (Exception ex)
         {
@@ -558,6 +718,7 @@
                 await GetWorkflows();
                 await GetWorkflowTasks();
                 await GetWorkflowExecutions();
+                await LoadTimeTrackingStates();
             }
 
         }
@@ -610,6 +771,7 @@
                 processing = true;
                 await GetVeichles();
                 await GetWorkflowExecutions();
+                await LoadTimeTrackingStates();
             }
         }
         catch (Exception ex)

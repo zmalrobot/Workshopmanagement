@@ -245,3 +245,13 @@ StepCompleted: Completato
 StepComplete: Completa
 SaveChanges: Salva modifiche
 BetaWarning: Questa build e' una beta. L'integrita' e la continuita' dei dati non e' garantita.
+TimeTrackingStart: Avvia tracciamento
+TimeTrackingStop: Ferma tracciamento
+TimeTrackingActive: Tracciamento attivo
+TimeTrackingInactive: Tracciamento non attivo
+TimeTrackingTotalTime: Tempo totale
+TimeTrackingAlreadyActiveTitle: Tracciamento gia' attivo
+TimeTrackingAlreadyActiveDescription: Hai gia' un workflow in corso. Avviare questo fermera' quello attuale. Vuoi continuare?
+TimeTrackingStarted: Tracciamento avviato
+TimeTrackingStopped: Tracciamento fermato
+TimeTrackingEditDisabled: Modifica disabilitata. Avvia il tracciamento per modificare.
