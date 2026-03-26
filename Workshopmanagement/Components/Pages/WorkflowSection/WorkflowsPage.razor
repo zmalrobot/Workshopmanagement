@@ -25,10 +25,12 @@
         </MudGrid>
     </MudItem>
     <MudItem xs="12">
-        <MudDataGrid @ref="dataGrid" T="VeichleWorkflowView" Items="@GetDataForGrid()" ReadOnly="true" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
+        <MudDataGrid @ref="dataGrid" T="VeichleWorkflowView" Items="@GetDataForGrid()" ReadOnly="true"
                         Filterable="true" Dense="false" Hover="true" SortMode="@SortMode.Single" Bordered="true">
             <Columns>
-                <TemplateColumn Hidden="false" CellClass="d-flex justify-end align-center">
+                <HierarchyColumn T="VeichleWorkflowView" />
+
+                <TemplateColumn Hidden="false" CellClass="justify-end">
                     <CellTemplate>
                         <MudIconButton OnClick="@(() => OpenResumeWorkflowDialogAsync(context.Item))"
                             Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Filled.Start" Variant="Variant.Filled"  />
@@ -39,7 +41,7 @@
                 <PropertyColumn Property="x => Utility.TruncateFroHtml(x.Veichle.Model, 50)" Title="@languageContainer.Keys["Model"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).denomination" Title="@languageContainer.Keys["Customer"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <PropertyColumn Property="x => GetUserInfo(x.Veichle.UserId).fiscalcodeOrVat" Title="@languageContainer.Keys["FiscalCodeOrVatNumber"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <TemplateColumn Title="@languageContainer.Keys["OpenWorkflow"]" Sortable="false" CellClass="d-flex align-center">
+                <TemplateColumn Title="@languageContainer.Keys["OpenWorkflow"]" Sortable="false">
                     <CellTemplate>
                         @{
                             var wfInfo = GetWorkflowInfoFull(context.Item.Entry.WorkflowId);
@@ -48,7 +50,7 @@
                     </CellTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => GetWorkflowTaskInfo(x.Entry.WorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
-                <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]" CellClass="d-flex justify-center align-center">
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]">
                     <CellTemplate>
                         <MudProgressCircular Color="Color.Info" Size="Size.Small" 
                                                 Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowTaskId, context.Item.Entry.WorkflowId)">
@@ -57,6 +59,112 @@
                 </TemplateColumn>
                     
             </Columns>
+
+            <ChildRowContent>
+                <td colspan="100" style="padding: 0;">
+                    <MudCard Outlined="true" Elevation="0" Class="ma-3">
+                        <MudCardContent Style="padding: 8px;">
+                            <MudSimpleTable Dense="true" Hover="true" Bordered="true" Striped="true" Style="background-color: transparent; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 90px;"></th>
+                                        <th>@languageContainer.Keys["StepTitleHistory"]</th>
+                                        <th>@languageContainer.Keys["StepTitleExHistory"]</th>
+                                        <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleStatus"]</th>
+                                        <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleOutcome"]</th>
+                                        <th>@languageContainer.Keys["OpenAt"]</th>
+                                        <th>@languageContainer.Keys["ClosedAt"]</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var step in GetStepsForWorkflow(context.Item))
+                                    {
+                                        if (step.Task.TaskOrder < 0)
+                                            continue;
+                                        <tr style="@(step.IsCurrentStep ? "background-color: rgba(28, 144, 243, 0.12); font-weight: 500;" : "")">
+                                            <td>
+                                                <MudStack Row="true" Spacing="1">
+                                                    @if (step.Execution != null && CanEditStep(step))
+                                                    {
+                                                        <MudIconButton OnClick="@(() => OpenEditStepAsync(context.Item, step))"
+                                                                       Color="Color.Warning" Size="@Size.Small"
+                                                                       Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined" />
+                                                    }
+                                                    @if (step.Execution != null && !CanEditStep(step))
+                                                    {
+                                                        <MudIconButton OnClick="@(() => OpenViewStepAsync(context.Item, step))"
+                                                                       Color="Color.Info" Size="@Size.Small"
+                                                                       Icon="@Icons.Material.Filled.RemoveRedEye" Variant="Variant.Outlined" />
+                                                    }
+                                                </MudStack>
+                                            </td>
+                                            <td>@Utility.TruncateFroHtml(step.Task.Title, 40)</td>
+                                            <td>@(step.Execution != null ? Utility.TruncateFroHtml(step.Execution.Titile, 40) : "-")</td>
+                                            <td style="text-align: center;">
+                                                @if (step.Execution != null)
+                                                {
+                                                    @if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.InProgress)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled._360" Color="Color.Info" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.Todo)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.AssignmentReturned" Color="Color.Default" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.Skipped)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.ExecutionStatus == WorkflowExecutionStatus.Closed)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.AssignmentTurnedIn" Color="Color.Success" Size="Size.Small" />
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.Schedule" Color="Color.Default" Size="Size.Small" />
+                                                }
+                                            </td>
+                                            <td style="text-align: center;">
+                                                @if (step.Execution != null)
+                                                {
+                                                    @if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.RunningOut)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.GasMeter" Color="Color.Warning" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeReplaced)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.Build" Color="Color.Warning" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeVerified)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.Engineering" Color="Color.Warning" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.Replaced)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.ThumbUp" Color="Color.Success" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.Verified)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.Done" Color="Color.Success" Size="Size.Small" />
+                                                    }
+                                                    else if (step.Execution.Executionoutcome == WorkflowExecutionoutcome.Ok)
+                                                    {
+                                                        <MudIcon Icon="@Icons.Material.Filled.DoneAll" Color="Color.Success" Size="Size.Small" />
+                                                    }
+                                                }
+                                            </td>
+                                            <td>@(step.Execution != null ? Utility.GetDateFormatted(step.Execution.OpenAt, Utility.DateFormat.FullDate) : "")</td>
+                                            <td>@(step.Execution != null ? Utility.GetDateFormatted(step.Execution.ClosedAt, Utility.DateFormat.FullDate) : "")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudCardContent>
+                    </MudCard>
+                </td>
+            </ChildRowContent>
+
             <PagerContent>
                 <MudDataGridPager T="VeichleWorkflowView" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
             </PagerContent>
@@ -72,6 +180,7 @@
     private List<Veichle> veichles = new List<Veichle>();
     private List<Workflow> workflows = new List<Workflow>();
     private List<WorkflowTask> workflowTasks = new List<WorkflowTask>();
+    private List<WorkflowExecution> workflowExecutions = new List<WorkflowExecution>();
     private MudDataGrid<VeichleWorkflowView> dataGrid { get; set; }
     private DialogOptions dialogOptions = new DialogOptions 
     { 
@@ -101,6 +210,7 @@
                 await GetVeichles();
                 await GetWorkflows();
                 await GetWorkflowTasks();
+                await GetWorkflowExecutions();
             }
 
         }
@@ -137,6 +247,24 @@
     {
         workflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
     }
+    private async Task GetWorkflowExecutions()
+    {
+        workflowExecutions = new List<WorkflowExecution>();
+
+        var openSeriesIds = veichles
+            .Where(v => v.HasOpenWorkflow && v.OpenWorkflows != null)
+            .SelectMany(v => v.OpenWorkflows.Select(e => e.WorkflowExecutionSeriesId))
+            .Where(id => !string.IsNullOrEmpty(id))
+            .Distinct()
+            .ToList();
+
+        foreach (var seriesId in openSeriesIds)
+        {
+            var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                new SearcherWorkflowExecution { WorkflowExecutionSeriesId = seriesId });
+            workflowExecutions.AddRange(executions);
+        }
+    }
     #endregion
 
     #region GetGridData
@@ -144,6 +272,13 @@
     {
         public Veichle Veichle { get; set; }
         public OpenWorkflowEntry Entry { get; set; }
+    }
+
+    private class WorkflowStepView
+    {
+        public WorkflowTask Task { get; set; } = new WorkflowTask();
+        public WorkflowExecution? Execution { get; set; }
+        public bool IsCurrentStep { get; set; }
     }
 
     private List<VeichleWorkflowView> GetDataForGrid()
@@ -159,6 +294,68 @@
                 Entry = entry
             }))
             .ToList();
+    }
+
+    private List<WorkflowStepView> GetStepsForWorkflow(VeichleWorkflowView item)
+    {
+        var result = new List<WorkflowStepView>();
+        var entry = item.Entry;
+
+        var tasksForWorkflow = workflowTasks
+            .Where(t => t.WorkflowId == entry.WorkflowId)
+            .OrderBy(t => t.TaskOrder)
+            .ToList();
+
+        var executionsForSeries = workflowExecutions
+            .Where(e => e.WorkflowExecutionSeriesId == entry.WorkflowExecutionSeriesId)
+            .ToList();
+
+        var usedExecutionIds = new HashSet<string>();
+
+        foreach (var task in tasksForWorkflow)
+        {
+            var taskExecutions = executionsForSeries
+                .Where(e => e.WorkflowTaskId == task.Id && !usedExecutionIds.Contains(e.Id))
+                .OrderBy(e => e.OpenAt)
+                .ToList();
+
+            if (taskExecutions.Any())
+            {
+                foreach (var exec in taskExecutions)
+                {
+                    usedExecutionIds.Add(exec.Id);
+                    result.Add(new WorkflowStepView
+                    {
+                        Task = task,
+                        Execution = exec,
+                        IsCurrentStep = exec.Id == entry.WorkflowExecutionId
+                    });
+                }
+            }
+            else
+            {
+                result.Add(new WorkflowStepView
+                {
+                    Task = task,
+                    Execution = null,
+                    IsCurrentStep = false
+                });
+            }
+        }
+
+        return result;
+    }
+
+    private bool CanEditStep(WorkflowStepView step)
+    {
+        if (step.Execution == null) return false;
+
+        return step.IsCurrentStep
+            || step.Execution.ExecutionStatus == WorkflowExecutionStatus.Todo
+            || step.Execution.ExecutionStatus == WorkflowExecutionStatus.InProgress
+            || step.Execution.Executionoutcome == WorkflowExecutionoutcome.RunningOut
+            || step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeVerified
+            || step.Execution.Executionoutcome == WorkflowExecutionoutcome.ToBeReplaced;
     }
 
     private (string denomination, string fiscalcodeOrVat) GetUserInfo(string userId)
@@ -226,6 +423,7 @@
     }
     #endregion
 
+    #region Dialogs
     private async Task OpenCreateWorkflowDialogAsync()
     {
         try
@@ -254,6 +452,7 @@
                 await GetVeichles();
                 await GetWorkflows();
                 await GetWorkflowTasks();
+                await GetWorkflowExecutions();
             }
 
         }catch(Exception ex)
@@ -302,6 +501,7 @@
                 await GetVeichles();
                 await GetWorkflows();
                 await GetWorkflowTasks();
+                await GetWorkflowExecutions();
             }
 
         }
@@ -313,8 +513,100 @@
         {
             StateHasChanged();
         }
-
-
     }
+
+    private async Task OpenEditStepAsync(VeichleWorkflowView item, WorkflowStepView step)
+    {
+        try
+        {
+            if (step.Execution == null) return;
+
+            var veichle = item.Veichle;
+            var currentCustomer = customers.FirstOrDefault(x => x.Id.Equals(veichle.UserId)) ?? new Customer();
+            var currentWorkflow = workflows.FirstOrDefault(x => x.Id.Equals(item.Entry.WorkflowId)) ?? new Workflow();
+            var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
+
+            var isCurrentStep = step.IsCurrentStep;
+
+            var parameters = new DialogParameters<ResumeWorkflow> {
+            {
+                x => x.Dataset,
+                new ResumeWorkflowDialogParameter()
+                {
+                    employee = employee,
+                    customer = currentCustomer,
+                    veichle = veichle,
+                    workflow = currentWorkflow,
+                    workflowTask = step.Task,
+                    workflowExecution = step.Execution,
+                    components = components,
+                    editOneExecution = !isCurrentStep,
+                    viewOneExecution = false
+                }
+            }
+        };
+
+            var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+
+            if (!result?.Canceled ?? false)
+            {
+                processing = true;
+                await GetVeichles();
+                await GetWorkflowExecutions();
+            }
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenViewStepAsync(VeichleWorkflowView item, WorkflowStepView step)
+    {
+        try
+        {
+            if (step.Execution == null) return;
+
+            var veichle = item.Veichle;
+            var currentCustomer = customers.FirstOrDefault(x => x.Id.Equals(veichle.UserId)) ?? new Customer();
+            var currentWorkflow = workflows.FirstOrDefault(x => x.Id.Equals(item.Entry.WorkflowId)) ?? new Workflow();
+            var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
+
+            var parameters = new DialogParameters<ResumeWorkflow> {
+            {
+                x => x.Dataset,
+                new ResumeWorkflowDialogParameter()
+                {
+                    employee = employee,
+                    customer = currentCustomer,
+                    veichle = veichle,
+                    workflow = currentWorkflow,
+                    workflowTask = step.Task,
+                    workflowExecution = step.Execution,
+                    components = components,
+                    editOneExecution = false,
+                    viewOneExecution = true
+                }
+            }
+        };
+
+            var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            await dialog.Result;
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+    #endregion
 }
 
