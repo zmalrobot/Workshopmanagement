@@ -21,8 +21,7 @@ export AllowInsecureTls=false
 export IsBeta=false
 export ImageBasePath="$PROJECT_DIR/data/images"
 export TemplateBasePath=Templates
-export TemplateSavePath="$PROJECT_DIR/data/templates"
 
-mkdir -p "$PROJECT_DIR/data/images" "$PROJECT_DIR/data/templates"
+mkdir -p "$PROJECT_DIR/data/images" "$PROJECT_DIR/wwwroot/templates"
 
 dotnet run --project "$PROJECT_DIR/Workshopmanagement.csproj" --no-build

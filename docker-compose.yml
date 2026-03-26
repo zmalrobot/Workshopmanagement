@@ -18,8 +18,8 @@ services:
       - IsBeta=false
       - ImageBasePath=/app/data/images
       - TemplateBasePath=Templates
-      - TemplateSavePath=/app/data/templates
+      - TemplateSavePath=/app/wwwroot/templates
     volumes:
       - /run/media/simone/15763f6d-3942-4b99-af3a-f8073fc1f67b/WorkshopManagment/images:/app/data/images
-      - /run/media/simone/15763f6d-3942-4b99-af3a-f8073fc1f67b/WorkshopManagment/templates:/app/data/templates
+      - /run/media/simone/15763f6d-3942-4b99-af3a-f8073fc1f67b/WorkshopManagment/templates:/app/wwwroot/templates
     restart: unless-stopped

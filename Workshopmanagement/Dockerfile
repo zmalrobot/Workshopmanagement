@@ -20,6 +20,6 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Create directories for persistent data
-RUN mkdir -p /app/data/images /app/data/templates
+RUN mkdir -p /app/data/images /app/wwwroot/templates
 
 ENTRYPOINT ["dotnet", "Workshopmanagement.dll"]
