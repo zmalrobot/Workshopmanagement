@@ -477,6 +477,7 @@
                    workflowExecution.WorkflowTaskId = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsSignTask == true)?.Id ?? "";
                    workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Closed;
                    workflowExecution.OpenAt = DateTime.Now;
+                   workflowExecution.ClosedAt = DateTime.Now;
                    workflowExecution.DisclamierSignDate = DateTime.Now;
                    workflowExecution.DisclamierSign = signImage;
                    workflowExecution.IsDisclamerAleadySign = isDisclamerAleadySign;

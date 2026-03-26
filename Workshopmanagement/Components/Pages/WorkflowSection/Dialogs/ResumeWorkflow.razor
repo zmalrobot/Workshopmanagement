@@ -524,6 +524,9 @@
         if (executionStatus == WorkflowExecutionStatus.Closed)
             Dataset.workflowExecution.ClosedAt = DateTime.Now;
 
+        if (Dataset.workflowExecution.IsCompleted)
+            Dataset.workflowExecution.ClosedAt ??= DateTime.Now;
+
         await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(Dataset.workflowExecution);
     }
 
