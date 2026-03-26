@@ -45,6 +45,8 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime? OpenAt { get; set; }
         public DateTime? ClosedAt { get; set; }
         public bool IsCompleted { get; set; }
+        public DateTime? StartDate { get; set; }
+        public int? EstimatedHours { get; set; }
 
         //Disclaimer
         public bool IsDisclamerAleadySign { set; get; }

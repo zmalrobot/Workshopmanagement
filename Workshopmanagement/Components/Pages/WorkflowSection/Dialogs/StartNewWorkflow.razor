@@ -206,11 +206,11 @@
                                     <MudItem xs="6" Style="text-align:left;">
                                         <MudText>@Utility.GetDescriptionFromVeichle(selectedVeichle, languageContainer)</MudText>
                                     </MudItem>
-                                    <MudItem xs="6" Style="text-align:right;">
-                                        <MudText>@languageContainer.Keys["WorkkflowStartStep5Date"]:</MudText>
+                                    <MudItem xs="12">
+                                        <MudDatePicker Label="@languageContainer.Keys["WorkkflowStartStep5Date"]" MinDate="DateTime.Today" @bind-Date="startDate" Variant="Variant.Outlined" />
                                     </MudItem>
-                                    <MudItem xs="6" Style="text-align:left;">
-                                        <MudText>@Utility.GetDateFormatted(DateTime.Now, Utility.DateFormat.FullDate)</MudText>
+                                    <MudItem xs="12">
+                                        <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]" @bind-Value="estimatedHours" Variant="Variant.Outlined" Min="0" />
                                     </MudItem>
                                     @if (selectedWorkflow.RequireDisclaimer && !isDisclamerAleadySign)
                                     {
@@ -410,6 +410,8 @@
     private Veichle selectedVeichle = new Veichle();
     private bool isDisclamerAleadySign = false;
     private string signImage = "";
+    private DateTime? startDate = DateTime.Today;
+    private int? estimatedHours;
 
     private bool processing = false;
     private bool isInitialized = false;
@@ -482,6 +484,8 @@
                    workflowExecution.DisclamierSign = signImage;
                    workflowExecution.IsDisclamerAleadySign = isDisclamerAleadySign;
                    workflowExecution.Titile = languageContainer.Keys["WorkflowTaskSign"];
+                   workflowExecution.StartDate = startDate;
+                   workflowExecution.EstimatedHours = estimatedHours;
 
                    await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(workflowExecution);
                }
@@ -515,6 +519,8 @@
                     workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
                     workflowExecution.OpenAt = DateTime.Now;
                     workflowExecution.Titile = $"{currentTask.Title} - {currentTask.Subtitle}";
+                    workflowExecution.StartDate = startDate;
+                    workflowExecution.EstimatedHours = estimatedHours;
                     if (isFirstTask)
                     {
                         workflowExecution.KmPost = selectedVeichle.ActualKilometers ?? 0;
@@ -579,6 +585,7 @@
         {
             processing = true;
             selectedWorkflow = workflow;
+            estimatedHours = workflow.EstimatedHours;
             step++;
 
         }catch(Exception ex)

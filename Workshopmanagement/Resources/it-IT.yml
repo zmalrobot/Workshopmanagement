@@ -94,7 +94,9 @@ WorkkflowStartStep5Veichle: Veicolo selezionato
 WorkkflowStartStep5Abort: Annulla la creazione del flusso
 WorkkflowStartStep5AbortMessage: Creazione flusso annullata
 WorkkflowStartStep5ConfirmMessage: Flusso creato con successo
-WorkkflowStartStep5Date: Data di inizio
+WorkkflowStartStep5Date: Data inizio pianificata
+WorkkflowStartStep5EstimatedHours: Ore stimate
+WorkflowEstimatedHours: Tempo di esecuzione
 WorkkflowStartStepGoBack: Vai allo step precedente
 WorkkflowStartStepGoForward: Vai allo step successivo
 Search: Cerca

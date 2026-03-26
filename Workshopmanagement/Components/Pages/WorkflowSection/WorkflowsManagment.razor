@@ -103,6 +103,14 @@
                         <MudCheckBox Label="@languageContainer.Keys["IsActive"]" @bind-Value="context.Item.IsActive"></MudCheckBox>
                     </EditTemplate>
                 </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowEstimatedHours"]" Sortable="false">
+                    <CellTemplate>
+                        <MudText>@(context.Item.EstimatedHours.HasValue ? context.Item.EstimatedHours.Value.ToString() : "-")</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudNumericField T="int?" Margin="Margin.Dense" Label="@languageContainer.Keys["WorkflowEstimatedHours"]" Variant="Variant.Outlined" @bind-Value="context.Item.EstimatedHours" Min="0" />
+                    </EditTemplate>
+                </TemplateColumn>
             </Columns>
             <PagerContent>
                 <MudDataGridPager T="Workflow" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
