@@ -68,11 +68,11 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 90px;"></th>
+                                        <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepCompleted"]</th>
                                         <th>@languageContainer.Keys["StepTitleHistory"]</th>
                                         <th>@languageContainer.Keys["StepTitleExHistory"]</th>
                                         <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleStatus"]</th>
                                         <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleOutcome"]</th>
-                                        <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepCompleted"]</th>
                                         <th>@languageContainer.Keys["OpenAt"]</th>
                                         <th>@languageContainer.Keys["ClosedAt"]</th>
                                     </tr>
@@ -98,6 +98,12 @@
                                                                        Icon="@Icons.Material.Filled.RemoveRedEye" Variant="Variant.Outlined" />
                                                     }
                                                 </MudStack>
+                                            </td>
+                                            <td style="text-align: center;">
+                                                @if (step.Execution != null && step.Execution.IsCompleted)
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.Check" Color="Color.Success" Size="Size.Small" />
+                                                }
                                             </td>
                                             <td>@Utility.TruncateFroHtml(step.Task.Title, 40)</td>
                                             <td>@(step.Execution != null ? Utility.TruncateFroHtml(step.Execution.Titile, 40) : "-")</td>
@@ -153,12 +159,6 @@
                                                     {
                                                         <MudIcon Icon="@Icons.Material.Filled.DoneAll" Color="Color.Success" Size="Size.Small" />
                                                     }
-                                                }
-                                            </td>
-                                            <td style="text-align: center;">
-                                                @if (step.Execution != null && step.Execution.IsCompleted)
-                                                {
-                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" Size="Size.Small" />
                                                 }
                                             </td>
                                             <td>@(step.Execution != null ? Utility.GetDateFormatted(step.Execution.OpenAt, Utility.DateFormat.FullDate) : "")</td>

@@ -79,10 +79,6 @@
                                     <MudTextField @bind-Value="Dataset.workflowExecution.Note" Lines="5" Margin="Margin.Dense"
                                                   Label="@languageContainer.Keys["StepNote"]" Variant="Variant.Outlined" />
                                 </MudItem>
-                                <MudItem xs="12">
-                                    <MudCheckBox @bind-Value="Dataset.workflowExecution.IsCompleted" 
-                                                 Label="@languageContainer.Keys["StepCompleted"]" Color="Color.Success" />
-                                </MudItem>
                             </MudGrid>
                         </MudItem>
 
@@ -248,6 +244,10 @@
                           Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">
                     @languageContainer.Keys["ResumeWorkflowSaveStep"]
                 </MudButton>
+                <MudButton OnClick="(() => MarkAsCompleted())" Style="margin-left: 15px"
+                          Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
+                    @languageContainer.Keys["StepComplete"]
+                </MudButton>
                 @if(Dataset.editOneExecution == false){
                     <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed) )"  Style="margin-left: 15px"
                               Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
@@ -271,6 +271,12 @@
     private Component selectedComponent = new Component();
 
     private bool processing = false;  
+
+    private async Task MarkAsCompleted()
+    {
+        Dataset.workflowExecution.IsCompleted = true;
+        await Confirm(WorkflowExecutionStatus.InProgress);
+    }
 
     private async Task Confirm(WorkflowExecutionStatus executionStatus, bool repeat = false)
     {
