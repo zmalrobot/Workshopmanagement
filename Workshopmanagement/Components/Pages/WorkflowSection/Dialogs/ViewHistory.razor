@@ -138,11 +138,11 @@
     {
         try
         {
-            await Utility.DeleteOldFiles();
-            var fileToDownload = await Utility.GeneretaFileForDownloadFile(Dataset.worflowReport);
-            var downloadPath = await Utility.SaveFileForDownloadFile(fileToDownload);
-            JSRuntime.InvokeAsync<string>("open", downloadPath, "_blank");
-        }catch(Exception ex)
+            var pdfBytes = Utility.GeneratePdfBytes(Dataset.worflowReport);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            await JSRuntime.InvokeVoidAsync("downloadPdfFile", $"report_{DateTime.Now:yyyyMMddHHmmss}.pdf", base64);
+        }
+        catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
         }

@@ -8,6 +8,9 @@ using Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents;
 using Workshopmanagement.DatabaseManagment;
 using HtmlAgilityPack;
 using static MudBlazor.CategoryTypes;
+using System.Text.RegularExpressions;
+using VetCV.HtmlRendererCore.PdfSharpCore;
+using PdfSharpCore;
 
 namespace Workshopmanagement.Utility
 {
@@ -433,6 +436,32 @@ namespace Workshopmanagement.Utility
 
             };
         }
+        public static byte[] GeneratePdfBytes(string htmlContent)
+        {
+            // Extract CSS custom properties from :root block
+            var cssVars = new Dictionary<string, string>();
+            var rootMatch = Regex.Match(htmlContent, @":root\s*\{([^}]+)\}", RegexOptions.Singleline);
+            if (rootMatch.Success)
+            {
+                foreach (Match m in Regex.Matches(rootMatch.Groups[1].Value, @"--([a-zA-Z0-9-]+)\s*:\s*([^;]+);"))
+                    cssVars[$"--{m.Groups[1].Value.Trim()}"] = m.Groups[2].Value.Trim();
+            }
+
+            // Replace var(--xxx) with actual values
+            htmlContent = Regex.Replace(htmlContent, @"var\(--([a-zA-Z0-9-]+)\)", m =>
+            {
+                var key = $"--{m.Groups[1].Value}";
+                return cssVars.TryGetValue(key, out var val) ? val : m.Value;
+            });
+
+            var config = new PdfGenerateConfig { PageSize = PageSize.A4 };
+            config.SetMargins(15);
+            var pdf = PdfGenerator.GeneratePdf(htmlContent, config);
+            using var ms = new MemoryStream();
+            pdf.Save(ms, false);
+            return ms.ToArray();
+        }
+
         public static async Task<string> GeneretaFileForDownloadFile(string template)
         {
             template = template.Replace("<html>", "<html moznomarginboxes mozdisallowselectionprint>");
