@@ -123,6 +123,8 @@
                                     @languageContainer.Keys["Images"]:
                                 </MudText>
                             </MudItem>
+                            @if (!Dataset.viewOneExecution)
+                            {
                             <MudItem xs="6">
                                 <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Accept=".png, .jpg" Disabled="@IsEditDisabled()">
                                     <ActivatorContent>
@@ -137,6 +139,7 @@
                                     </ActivatorContent>
                                 </MudFileUpload>
                             </MudItem>
+                            }
                             @if (Dataset.workflowExecution.Images != null)
                             {
                                 <MudItem xs="6">
@@ -184,6 +187,8 @@
                                     <MudText Style="margin-left: 15px">@languageContainer.Keys["AddNewComponent"]</MudText>
                                 </MudButton>
                             </MudItem> *@
+                            @if (!Dataset.viewOneExecution)
+                            {
                              <MudItem xs="4" Class="d-flex align-center"  Style="text-align: left">
                                     <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(selectedComponent) )" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@IsEditDisabled()">
                                         <MudIcon Icon="@Icons.Material.Filled.Add" />
@@ -192,6 +197,7 @@
                                             <MudText Style="margin-left: 15px">@languageContainer.Keys["AddNewComponent"]</MudText>
                                     </MudButton>
                             </MudItem>
+                            }
                             <MudItem xs="8" Style="text-align: center">
                                 <MudAutocomplete T="Component" ToStringFunc="component => component?.Name"
                                                  Label="@languageContainer.Keys["Component"]" 
@@ -207,8 +213,8 @@
                                     <Columns>
                                         <TemplateColumn Hidden="false" CellClass="d-flex justify-center">
                                             <CellTemplate>
-                                                <MudIconButton Color="Color.Info" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" Disabled="@IsEditDisabled()" />
-                                                <MudIconButton Color="Color.Error" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" Disabled="@IsEditDisabled()" />
+                                                <MudIconButton Color="Color.Info" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Edit" OnClick="@(() => dataGrid.SetEditingItemAsync(context.Item))" Disabled="@IsEditDisabled()" Style="@(Dataset.viewOneExecution ? "display:none;" : "")" />
+                                                <MudIconButton Color="Color.Error" Size="@Size.Medium" Icon="@Icons.Material.Outlined.Delete" OnClick="@(() => DeleteItem(context.Item))" Disabled="@IsEditDisabled()" Style="@(Dataset.viewOneExecution ? "display:none;" : "")" />
                                             </CellTemplate>
                                         </TemplateColumn>
                                         <PropertyColumn Property="x => x.Barcode" Title="@languageContainer.Keys["Barcode"]" Required="true" Editable="true" Sortable="false" Hidden="false" />
@@ -233,6 +239,8 @@
         }
     </DialogContent>
     <DialogActions>
+        @if (!Dataset.viewOneExecution)
+        {
         <MudGrid>
             <MudItem xs="6" Style="text-align:left">
                 @if (Dataset.editOneExecution == false)
@@ -274,6 +282,7 @@
                 }                             
             </MudItem>
         </MudGrid>
+        }
     </DialogActions>
 </MudDialog>
 
