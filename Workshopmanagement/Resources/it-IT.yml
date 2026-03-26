@@ -177,6 +177,10 @@ ReportComponentTotalTitle: Totale
 ReportWorkflowDetailStateTitle: Stato intervento
 ReportVeichleInformationEnigineTitle: Motorizzazione
 ReportWorkflowInformationTitleTitle: Denominazione flusso eseguito
+ReportTimeTableTitle: Time table
+ReportTimeTableEmployeeTitle: Dipendente
+ReportTimeTableHoursTitle: Ore lavorate
+ReportTimeTableTotalTitle: Totale ore
 excecutionstatus_Todo: Da fare
 Ok: Ok
 RunningOut: In fase di esaurimento

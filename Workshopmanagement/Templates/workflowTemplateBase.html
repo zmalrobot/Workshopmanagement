@@ -220,6 +220,31 @@
             </table>
         </div>
 
+        <!-- Time Table -->
+        <div class="card" id="TimeTableSection">
+            <div class="section-title">
+                {{ReportTimeTableTitle}}
+                <span style="float:right; font-weight: bold; color: var(--text-color);">{{ReportTimeTableTotal}}</span>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>{{ReportTimeTableEmployeeTitle}}</th>
+                        <th>{{ReportTimeTableHoursTitle}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{ReportTimeTableRows}}
+                </tbody>
+                <tfoot>
+                    <tr class="total-row">
+                        <th>{{ReportTimeTableTotalTitle}}</th>
+                        <td>{{ReportTimeTableTotal}}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+
         <!-- Footer -->
         <div class="footer" id="DisclaimerSection">
             {{ReportDisclaimer}}

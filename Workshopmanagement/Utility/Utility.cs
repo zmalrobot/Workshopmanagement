@@ -255,6 +255,10 @@ namespace Workshopmanagement.Utility
             reportTemplate = reportTemplate.Replace("{{ReportWorkflowDetailStateTitle}}", languageContainer.Keys["ReportWorkflowDetailStateTitle"]);
             reportTemplate = reportTemplate.Replace("{{ReportVeichleInformationEnigineTitle}}", languageContainer.Keys["ReportVeichleInformationEnigineTitle"]);
             reportTemplate = reportTemplate.Replace("{{ReportWorkflowInformationTitleTitle}}", languageContainer.Keys["ReportWorkflowInformationTitleTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportTimeTableTitle}}", languageContainer.Keys["ReportTimeTableTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportTimeTableEmployeeTitle}}", languageContainer.Keys["ReportTimeTableEmployeeTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportTimeTableHoursTitle}}", languageContainer.Keys["ReportTimeTableHoursTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportTimeTableTotalTitle}}", languageContainer.Keys["ReportTimeTableTotalTitle"]);
             #endregion
 
             #region Contents
@@ -334,6 +338,49 @@ namespace Workshopmanagement.Utility
             
             reportTemplate = reportTemplate.Replace("{{ReportComponentTotalValue}}", $"{tableTot.ToString("0.##")} €");
             reportTemplate = reportTemplate.Replace("{{ReportComponents}}", $"{compTable}");
+            #endregion
+
+            #region TimeTable
+            var seriesIdForTracking = workflowExecutions.FirstOrDefault()?.WorkflowExecutionSeriesId ?? "";
+            var timeTrackings = new List<TimeTracking>();
+            if (!string.IsNullOrEmpty(seriesIdForTracking))
+            {
+                timeTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(new SearcherTimeTracking()
+                {
+                    WorkflowExecutionSeriesId = seriesIdForTracking
+                }) ?? new List<TimeTracking>();
+            }
+
+            if (timeTrackings.Count > 0)
+            {
+                var allEmployees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee()) ?? new List<Employee>();
+                var employeeDict = allEmployees.ToDictionary(e => e.Id, e => e);
+
+                var timeTableRows = "";
+                var grandTotal = TimeSpan.Zero;
+
+                foreach (var tracking in timeTrackings)
+                {
+                    var empTime = tracking.GetTotalTime();
+                    grandTotal += empTime;
+                    employeeDict.TryGetValue(tracking.EmployeeId, out var trackedEmp);
+                    var empName = trackedEmp != null ? $"{trackedEmp.Name} {trackedEmp.Surname}" : tracking.EmployeeId;
+                    var empHours = (int)empTime.TotalHours;
+                    var empMinutes = empTime.Minutes;
+                    timeTableRows += $"<tr><td>{empName}</td><td>{empHours}h {empMinutes:D2}min</td></tr>";
+                }
+
+                var grandHours = (int)grandTotal.TotalHours;
+                var grandMinutes = grandTotal.Minutes;
+                var grandTotalStr = $"{grandHours}h {grandMinutes:D2}min";
+
+                reportTemplate = reportTemplate.Replace("{{ReportTimeTableRows}}", timeTableRows);
+                reportTemplate = reportTemplate.Replace("{{ReportTimeTableTotal}}", grandTotalStr);
+            }
+            else
+            {
+                reportTemplate = RemoveElement(reportTemplate, "TimeTableSection");
+            }
             #endregion
 
             #endregion
