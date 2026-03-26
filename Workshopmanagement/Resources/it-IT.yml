@@ -124,7 +124,7 @@ StepVeichleKmError: E' necessario inserire in KM attuali
 StepVeichleFuelError: E' necessario inserire il carburante attuale
 StepImageError: E' necessario caricare almeno un immagine per proseguire
 StepComponentError: E' necessario caricare almeno un componente per proseguire
-ResumeWorkflowSaveStep: Salva step attuale
+ResumeWorkflowSaveStep: Salva
 ResumeWorkflowGotoNextStepCompleted: Passo allo step successivo
 ResumeWorkflowGotoNextStepCompletedRepeat: Ripeto lo step
 ResumeWorkflowGotoNextStepSaved: Salvataggio dati avvenuto con successo.
@@ -243,4 +243,5 @@ CloseWorkflowDescription: Sei sicuro di voler chiudere questo workflow?
 CloseWorkflowSuccess: Workflow chiuso con successo
 StepCompleted: Completato
 StepComplete: Completa
+SaveChanges: Salva modifiche
 BetaWarning: Questa build e' una beta. L'integrita' e la continuita' dei dati non e' garantita.

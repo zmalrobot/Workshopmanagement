@@ -240,14 +240,24 @@
                 }               
             </MudItem>
             <MudItem xs="6" Style="text-align:right">
-                <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
-                          Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">
-                    @languageContainer.Keys["ResumeWorkflowSaveStep"]
-                </MudButton>
-                <MudButton OnClick="(() => MarkAsCompleted())" Style="margin-left: 15px"
-                          Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Primary">
-                    @languageContainer.Keys["StepComplete"]
-                </MudButton>
+                @if (Dataset.workflowExecution.IsCompleted)
+                {
+                    <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Warning">
+                        @languageContainer.Keys["SaveChanges"]
+                    </MudButton>
+                }
+                else
+                {
+                    <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary">
+                        @languageContainer.Keys["ResumeWorkflowSaveStep"]
+                    </MudButton>
+                    <MudButton OnClick="(() => MarkAsCompleted())" Style="margin-left: 15px"
+                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Success">
+                        @languageContainer.Keys["StepComplete"]
+                    </MudButton>
+                }
                 @if(Dataset.editOneExecution == false){
                     <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed) )"  Style="margin-left: 15px"
                               Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
