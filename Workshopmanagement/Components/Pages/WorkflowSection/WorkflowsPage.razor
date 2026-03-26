@@ -32,8 +32,8 @@
 
                 <TemplateColumn Hidden="false" CellClass="justify-end">
                     <CellTemplate>
-                        <MudIconButton OnClick="@(() => OpenResumeWorkflowDialogAsync(context.Item))"
-                            Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Filled.Start" Variant="Variant.Filled"  />
+                        <MudIconButton OnClick="@(() => CloseWorkflowAsync(context.Item))"
+                            Color="Color.Error" Size="@Size.Small" Icon="@Icons.Material.Filled.Close" Variant="Variant.Filled"  />
                     </CellTemplate>
                 </TemplateColumn>
 
@@ -461,6 +461,51 @@
         }
         finally
         {        
+            StateHasChanged();
+        }
+    }
+
+    private async Task CloseWorkflowAsync(VeichleWorkflowView item)
+    {
+        try
+        {
+            bool? result = await dialogService.ShowMessageBox(
+                languageContainer.Keys["CloseWorkflowTitle"],
+                languageContainer.Keys["CloseWorkflowDescription"],
+                yesText: languageContainer.Keys["Yes"], cancelText: languageContainer.Keys["No"]);
+
+            if (result != true)
+                return;
+
+            processing = true;
+
+            var veichle = item.Veichle;
+            var entry = item.Entry;
+
+            // Remove the workflow entry from open workflows
+            veichle.OpenWorkflows?.Remove(entry);
+            veichle.HasOpenWorkflow = veichle.OpenWorkflows?.Count > 0;
+
+            // Mark as completed
+            if (veichle.WorkflowExecutionsCompleted == null)
+                veichle.WorkflowExecutionsCompleted = new List<string>();
+            veichle.WorkflowExecutionsCompleted.Add(entry.WorkflowExecutionSeriesId);
+
+            veichle.UpdateDate = DateTime.Now;
+            await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
+
+            snackbar.Add(languageContainer.Keys["CloseWorkflowSuccess"], Severity.Success);
+
+            await GetVeichles();
+            await GetWorkflowExecutions();
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
             StateHasChanged();
         }
     }

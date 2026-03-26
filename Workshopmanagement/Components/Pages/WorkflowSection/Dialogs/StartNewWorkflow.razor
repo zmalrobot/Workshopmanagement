@@ -487,27 +487,42 @@
 
            }));
 
-            tasks.Add(Task.Run(async () =>
-           {
-               var task = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsStartingTask = true && x.IsSignTask == false) ?? new WorkflowTask();
-               //Creo il primo step
-               var workflowExecution = new WorkflowExecution();
-               workflowExecution.Id = executionId;
-               workflowExecution.WorkflowExecutionSeriesId = executionSeriesID;
-               workflowExecution.EmployeeId = Dataset.employee.Id;
-               workflowExecution.UserId = selectedCustomer.Id;
-               workflowExecution.VeichleId = selectedVeichle.Id;
-               workflowExecution.WorkflowId = selectedWorkflow.Id;
-               workflowExecution.WorkflowTaskId = task.Id;
-               workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
-               workflowExecution.OpenAt = DateTime.Now;
-               workflowExecution.Titile = $"{task.Title} - {task.Subtitle}";
-               workflowExecution.KmPost = selectedVeichle.ActualKilometers ?? 0;
-               workflowExecution.FuelPost = selectedVeichle.ActualFuelPercentage ?? 0;
+            // Create executions for ALL workflow tasks (not just the first one)
+            var allTasksForWorkflow = Dataset.workflowTasks?
+                .Where(x => x.WorkflowId.Equals(selectedWorkflow.Id) && x.IsSignTask == false)
+                .OrderBy(x => x.TaskOrder)
+                .ToList() ?? new List<WorkflowTask>();
 
-               await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(workflowExecution);
+            var isFirst = true;
+            foreach (var task in allTasksForWorkflow)
+            {
+                var taskExecutionId = isFirst ? executionId : Guid.NewGuid().ToString();
+                var currentTask = task;
+                var isFirstTask = isFirst;
+                isFirst = false;
 
-           }));
+                tasks.Add(Task.Run(async () =>
+                {
+                    var workflowExecution = new WorkflowExecution();
+                    workflowExecution.Id = taskExecutionId;
+                    workflowExecution.WorkflowExecutionSeriesId = executionSeriesID;
+                    workflowExecution.EmployeeId = Dataset.employee.Id;
+                    workflowExecution.UserId = selectedCustomer.Id;
+                    workflowExecution.VeichleId = selectedVeichle.Id;
+                    workflowExecution.WorkflowId = selectedWorkflow.Id;
+                    workflowExecution.WorkflowTaskId = currentTask.Id;
+                    workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
+                    workflowExecution.OpenAt = DateTime.Now;
+                    workflowExecution.Titile = $"{currentTask.Title} - {currentTask.Subtitle}";
+                    if (isFirstTask)
+                    {
+                        workflowExecution.KmPost = selectedVeichle.ActualKilometers ?? 0;
+                        workflowExecution.FuelPost = selectedVeichle.ActualFuelPercentage ?? 0;
+                    }
+
+                    await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(workflowExecution);
+                }));
+            }
 
             await Task.WhenAll(tasks);
 

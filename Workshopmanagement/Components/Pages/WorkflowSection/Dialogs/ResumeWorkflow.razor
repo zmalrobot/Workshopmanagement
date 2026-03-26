@@ -312,7 +312,6 @@
                 if (String.IsNullOrEmpty(nextTask.Id))
                 {
                     snackbar.Add(languageContainer.Keys["ResumeWorkflowCompleted"], Severity.Info);
-                    MudDialog.Close(DialogResult.Ok(true));
                 }
 
             }
@@ -459,28 +458,9 @@
                 veichle.ActualFuelPercentage = Dataset.workflowExecution.FuelPost;
 
             var entry = veichle.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
-            if (entry != null)
+            if (entry != null && !String.IsNullOrEmpty(nextTask.Id))
             {
-                if (String.IsNullOrEmpty(nextTask.Id)) // Workflow completato, rimuovo l'entry
-                {
-                    veichle.OpenWorkflows.Remove(entry);
-                }
-                else
-                {
-                    entry.WorkflowTaskId = repeat ? entry.WorkflowTaskId : nextTask.Id;
-                    entry.WorkflowExecutionId = Guid.NewGuid().ToString();
-                    entry.WorkflowExecutionSeriesId = entry.WorkflowExecutionId;
-                }
-            }
-            veichle.HasOpenWorkflow = veichle.OpenWorkflows?.Count > 0;
-
-            //Quando chiudo mi salvo l'esecuzione
-            if(entry == null || String.IsNullOrEmpty(nextTask.Id))
-            {
-                if (veichle.WorkflowExecutionsCompleted == null)
-                    veichle.WorkflowExecutionsCompleted = new List<string>();
-
-                veichle.WorkflowExecutionsCompleted.Add(Dataset.workflowExecution.WorkflowExecutionSeriesId);
+                entry.WorkflowTaskId = repeat ? entry.WorkflowTaskId : nextTask.Id;
             }
         }
 
@@ -498,30 +478,47 @@
         //Setto i campi per il prossimo step
         Dataset.workflowTask = nextTask;
 
-        //Pulisco tutti i campi per il prossimo step
-        Dataset.workflowExecution = new WorkflowExecution();
-        var nextEntry = Dataset.veichle.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
-        Dataset.workflowExecution.Id = nextEntry?.WorkflowExecutionId;
-        Dataset.workflowExecution.EmployeeId = Dataset.employee.Id;
-        Dataset.workflowExecution.UserId = Dataset.customer.Id;
-        Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
-        Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
-        Dataset.workflowExecution.WorkflowTaskId = repeat ? nextEntry?.WorkflowTaskId : nextTask.Id; //Se devo ripetere lo uso lo stesso ID
-        Dataset.workflowExecution.WorkflowExecutionSeriesId = workflowExecutionSeriesId;
-        Dataset.workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
-        Dataset.workflowExecution.OpenAt = DateTime.Now;
-        Dataset.workflowExecution.Titile = $"{nextTask.Title} - {nextTask.Subtitle}";
+        // Find the existing execution for the next task (already created at workflow start)
+        var existingExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+            new SearcherWorkflowExecution { WorkflowExecutionSeriesId = workflowExecutionSeriesId });
+        var nextExecution = existingExecutions
+            .FirstOrDefault(e => e.WorkflowTaskId == nextTask.Id && e.ExecutionStatus == WorkflowExecutionStatus.Todo);
 
-        var nextWf = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(Dataset.workflowExecution.WorkflowTaskId);
-        if (nextWf != null)
+        if (nextExecution != null)
         {
-            if (nextWf.UserMustUpdateVeichleKm)
-                Dataset.workflowExecution.KmPost = Dataset.veichle.ActualKilometers;
-            if (nextWf.UserMustUpdateFuelLevel)
-                Dataset.workflowExecution.FuelPost = Dataset.veichle.ActualFuelPercentage;            
-        }        
+            Dataset.workflowExecution = nextExecution;
 
-        await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(Dataset.workflowExecution);
+            // Update vehicle entry to point to this execution
+            var nextEntry = Dataset.veichle.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
+            if (nextEntry != null)
+                nextEntry.WorkflowExecutionId = nextExecution.Id;
+        }
+        else
+        {
+            // Fallback: create a new execution if not found (e.g. repeat scenario)
+            Dataset.workflowExecution = new WorkflowExecution();
+            Dataset.workflowExecution.Id = Guid.NewGuid().ToString();
+            Dataset.workflowExecution.EmployeeId = Dataset.employee.Id;
+            Dataset.workflowExecution.UserId = Dataset.customer.Id;
+            Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
+            Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
+            Dataset.workflowExecution.WorkflowTaskId = nextTask.Id;
+            Dataset.workflowExecution.WorkflowExecutionSeriesId = workflowExecutionSeriesId;
+            Dataset.workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
+            Dataset.workflowExecution.OpenAt = DateTime.Now;
+            Dataset.workflowExecution.Titile = $"{nextTask.Title} - {nextTask.Subtitle}";
+
+            var nextWf = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(nextTask.Id);
+            if (nextWf != null)
+            {
+                if (nextWf.UserMustUpdateVeichleKm)
+                    Dataset.workflowExecution.KmPost = Dataset.veichle.ActualKilometers;
+                if (nextWf.UserMustUpdateFuelLevel)
+                    Dataset.workflowExecution.FuelPost = Dataset.veichle.ActualFuelPercentage;
+            }
+
+            await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(Dataset.workflowExecution);
+        }
     }
 
     private async Task<WorkflowTask> GetNextStep(WorkflowExecutionStatus executionStatus, bool repeat)

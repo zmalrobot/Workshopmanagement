@@ -238,4 +238,7 @@ RowsPerPageString: Elementi per pagina
 AppUpdated: Aggiornamento app avvenuto con successo
 FileVersion: Versione applicativo
 ProductVersion: Buld
+CloseWorkflowTitle: Chiusura workflow
+CloseWorkflowDescription: Sei sicuro di voler chiudere questo workflow?
+CloseWorkflowSuccess: Workflow chiuso con successo
 BetaWarning: Questa build e' una beta. L'integrita' e la continuita' dei dati non e' garantita.
