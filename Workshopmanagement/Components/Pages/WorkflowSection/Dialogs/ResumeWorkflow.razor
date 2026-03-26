@@ -143,11 +143,24 @@
                                     <MudList T="string" Dense="true">
                                         @foreach (var image in Dataset.workflowExecution?.Images ?? new List<Image>())
                                         {
-                                            <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@image">
-                                                @image.Name
+                                            <MudListItem Icon="@Icons.Material.Filled.AttachFile" @key="@image" OnClick="@(() => PreviewImage(image))">
+                                                <MudText Style="cursor: pointer; text-decoration: underline;" Color="Color.Info">@image.Name</MudText>
                                             </MudListItem>
                                         }
                                     </MudList>
+                                </MudItem>
+                            }
+
+                            @if (previewImage != null)
+                            {
+                                <MudItem xs="12">
+                                    <MudPaper Elevation="2" Class="pa-2" Style="position: relative; text-align: center;">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
+                                                       Style="position: absolute; top: 4px; right: 4px; z-index: 1;"
+                                                       OnClick="@(() => previewImage = null)" />
+                                        <MudImage Src="@GetImageUrl(previewImage)" Alt="@previewImage.Name"
+                                                  Style="max-width: 100%; max-height: 400px;" ObjectFit="ObjectFit.Contain" Elevation="0" />
+                                    </MudPaper>
                                 </MudItem>
                             }
 
@@ -257,12 +270,6 @@
                               Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Success">
                         @languageContainer.Keys["StepComplete"]
                     </MudButton>
-                }
-                @if(Dataset.editOneExecution == false){
-                    <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed) )"  Style="margin-left: 15px"
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.ArrowForward" Color="Color.Info">
-                        @languageContainer.Keys["ResumeWorkflowNextStep"]
-                    </MudButton>
                 }                             
             </MudItem>
         </MudGrid>
@@ -281,6 +288,18 @@
     private Component selectedComponent = new Component();
 
     private bool processing = false;  
+    private Image? previewImage = null;
+
+    private void PreviewImage(Image image)
+    {
+        previewImage = previewImage == image ? null : image;
+    }
+
+    private string GetImageUrl(Image image)
+    {
+        var extension = Path.GetExtension(image.Name);
+        return $"/images/upload/{Dataset.workflowExecution.WorkflowExecutionSeriesId}/{image.Id}{extension}";
+    }
 
     private async Task MarkAsCompleted()
     {
