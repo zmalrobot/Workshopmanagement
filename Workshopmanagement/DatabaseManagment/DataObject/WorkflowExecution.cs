@@ -44,6 +44,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public WorkflowExecutionoutcome Executionoutcome { get; set; }
         public DateTime? OpenAt { get; set; }
         public DateTime? ClosedAt { get; set; }
+        public bool IsCompleted { get; set; }
 
         //Disclaimer
         public bool IsDisclamerAleadySign { set; get; }

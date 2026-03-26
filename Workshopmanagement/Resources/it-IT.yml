@@ -241,4 +241,5 @@ ProductVersion: Buld
 CloseWorkflowTitle: Chiusura workflow
 CloseWorkflowDescription: Sei sicuro di voler chiudere questo workflow?
 CloseWorkflowSuccess: Workflow chiuso con successo
+StepCompleted: Completato
 BetaWarning: Questa build e' una beta. L'integrita' e la continuita' dei dati non e' garantita.

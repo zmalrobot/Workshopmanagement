@@ -46,7 +46,7 @@
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]">
                     <CellTemplate>
                         <MudProgressCircular Color="Color.Info" Size="Size.Small" 
-                                                Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowTaskId, context.Item.Entry.WorkflowId)">
+                                                Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowExecutionSeriesId, context.Item.Entry.WorkflowId)">
                         </MudProgressCircular>
                     </CellTemplate>
                 </TemplateColumn>
@@ -72,6 +72,7 @@
                                         <th>@languageContainer.Keys["StepTitleExHistory"]</th>
                                         <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleStatus"]</th>
                                         <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepTitleOutcome"]</th>
+                                        <th style="width: 60px; text-align: center;">@languageContainer.Keys["StepCompleted"]</th>
                                         <th>@languageContainer.Keys["OpenAt"]</th>
                                         <th>@languageContainer.Keys["ClosedAt"]</th>
                                     </tr>
@@ -152,6 +153,12 @@
                                                     {
                                                         <MudIcon Icon="@Icons.Material.Filled.DoneAll" Color="Color.Success" Size="Size.Small" />
                                                     }
+                                                }
+                                            </td>
+                                            <td style="text-align: center;">
+                                                @if (step.Execution != null && step.Execution.IsCompleted)
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Success" Size="Size.Small" />
                                                 }
                                             </td>
                                             <td>@(step.Execution != null ? Utility.GetDateFormatted(step.Execution.OpenAt, Utility.DateFormat.FullDate) : "")</td>
@@ -368,20 +375,24 @@
         return ($"{item.Name} {item.Surname}", item.IsCompany ? item.VatNumber : item.FiscalCode);
     }
 
-    private double GetPercentageOfCompleteness(string? currentTaskId, string? currentWorkflowId)
+    private double GetPercentageOfCompleteness(string? seriesId, string? currentWorkflowId)
     {
         try{
-            if (String.IsNullOrEmpty(currentTaskId) || String.IsNullOrEmpty(currentWorkflowId))
+            if (String.IsNullOrEmpty(seriesId) || String.IsNullOrEmpty(currentWorkflowId))
                 return 0;
 
-            var totalNumberOfTaskForCurrentWorkflow = workflowTasks.OrderBy(x => x.TaskOrder).Where(x => x.WorkflowId.Equals(currentWorkflowId)).Count();
-            var actualWorkflowNumber = workflowTasks.OrderBy(x => x.TaskOrder).TakeWhile(x => !x.Id.Equals(currentTaskId)).Count();
+            var totalTasks = workflowTasks.Where(x => x.WorkflowId.Equals(currentWorkflowId) && x.TaskOrder >= 0).Count();
+            if (totalTasks == 0)
+                totalTasks = 1;
 
-            if (totalNumberOfTaskForCurrentWorkflow == 0)
-                totalNumberOfTaskForCurrentWorkflow = 1;
+            var completedCount = workflowExecutions
+                .Where(e => e.WorkflowExecutionSeriesId == seriesId && e.IsCompleted)
+                .Select(e => e.WorkflowTaskId)
+                .Distinct()
+                .Count();
 
-            var val = ( Convert.ToDouble(actualWorkflowNumber) / Convert.ToDouble(totalNumberOfTaskForCurrentWorkflow)) * Convert.ToDouble(100);
-            return val == 0 ? 5 : val;
+            var val = (Convert.ToDouble(completedCount) / Convert.ToDouble(totalTasks)) * 100.0;
+            return val;
         }catch(Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
