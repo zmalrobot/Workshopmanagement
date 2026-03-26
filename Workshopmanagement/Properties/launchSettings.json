@@ -6,7 +6,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "WebClientCulture": "it-IT",
-        "MongoServerAddress": "192.168.2.100",
+        "MongoServerAddress": "bigboi-pc.local",
         "MongoServerPort": "27017",
         "MongoDatabase": "WorkshopManager",
         "IsBeta": "true"
@@ -20,7 +20,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "WebClientCulture": "it-IT",
-        "MongoServerAddress": "192.168.2.100",
+        "MongoServerAddress": "bigboi-pc.local",
         "MongoServerPort": "27017",
         "MongoDatabase": "WorkshopManager",
         "IsBeta": "true"
@@ -34,7 +34,7 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "WebClientCulture": "it-IT",
-        "MongoServerAddress": "192.168.2.100",
+        "MongoServerAddress": "bigboi-pc.local",
         "MongoServerPort": "27017",
         "MongoDatabase": "WorkshopManager",
         "IsBeta": "true"
