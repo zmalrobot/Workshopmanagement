@@ -10,7 +10,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
       - WebClientCulture=it-IT
-      - MongoServerAddress=mongodb
+      - MongoServerAddress=webhost.local
       - MongoServerPort=27017
       - MongoDatabase=WorkshopManager
       - ApplicationName=WorkshopManagement
@@ -20,8 +20,8 @@ services:
       - TemplateBasePath=Templates
       - TemplateSavePath=/app/data/templates
     volumes:
-      - app_images:/app/data/images
-      - app_templates:/app/data/templates
+      - /home/webhost/Documenti/WorkshopManagment/images:/app/data/images
+      - /home/webhost/Documenti/WorkshopManagment/templates:/app/data/templates
     depends_on:
       mongodb:
         condition: service_healthy
@@ -33,7 +33,7 @@ services:
     ports:
       - "27017:27017"
     volumes:
-      - mongodb_data:/data/db
+      - /home/webhost/Documenti/WorkshopManagment/mongodb_data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -41,8 +41,3 @@ services:
       retries: 5
       start_period: 20s
     restart: unless-stopped
-
-volumes:
-  mongodb_data:
-  app_images:
-  app_templates:
