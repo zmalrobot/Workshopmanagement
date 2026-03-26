@@ -1,5 +1,4 @@
 ﻿@page "/dashboard"
-@implements IDisposable
 
 @inject IJSRuntime JSRuntime
 @inject IDbDependency dbDependency
@@ -101,19 +100,26 @@
             <MudCard Outlined="true" Elevation="2">
                 <MudCardHeader>
                     <CardHeaderContent>
-                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                            <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
-                            <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
-                            <MudIconButton OnClick="@(() => DashboardStartTrackingAsync())"
-                                           Icon="@Icons.Material.Filled.PlayArrow"
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
+                                <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
+                            </MudStack>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudText Typo="Typo.body2" Color="Color.Default">
+                                    @languageContainer.Keys["TimeTrackingHoursSpent"]: @FormatDashboardTotalTime()
+                                </MudText>
+                                <MudButton OnClick="@(() => DashboardStartTrackingAsync())"
+                                           StartIcon="@Icons.Material.Filled.PlayArrow" Variant="Variant.Filled"
                                            Color="Color.Success" Size="Size.Small"
                                            Disabled="@isDashboardTrackingActive"
-                                           Style="@(isDashboardTrackingActive ? "opacity: 0.3;" : "")" />
-                            <MudIconButton OnClick="@(() => DashboardStopTrackingAsync())"
-                                           Icon="@Icons.Material.Filled.Stop"
+                                           Style="@(isDashboardTrackingActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                                <MudButton OnClick="@(() => DashboardStopTrackingAsync())"
+                                           StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled"
                                            Color="Color.Error" Size="Size.Small"
                                            Disabled="@(!isDashboardTrackingActive)"
-                                           Style="@(!isDashboardTrackingActive ? "opacity: 0.3;" : "")" />
+                                           Style="@(!isDashboardTrackingActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                            </MudStack>
                         </MudStack>
                     </CardHeaderContent>
                 </MudCardHeader>
@@ -260,7 +266,6 @@
     // Time tracking
     private TimeTracking? dashboardTimeTracking = null;
     private bool isDashboardTrackingActive = false;
-    private System.Threading.Timer? trackingTimer;
 
     private class ResumeWorkflowItem
     {
@@ -319,42 +324,79 @@
 
             if (!allEntries.Any()) return;
 
-            // Load executions for all entries and find the most recent one with OpenAt <= now
+            // Check if there is an active tracking session for the current employee
             ResumeWorkflowItem bestItem = null;
-            DateTime bestOpenAt = DateTime.MinValue;
+            List<WorkflowExecution> bestExecutions = new();
 
-            foreach (var item in allEntries)
+            if (employee != null)
             {
-                if (string.IsNullOrEmpty(item.Entry.WorkflowExecutionSeriesId)) continue;
+                var activeTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
+                    new SearcherTimeTracking { EmployeeId = employee.Id, IsActive = true });
+                var activeTracking = activeTrackings.FirstOrDefault();
 
-                var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
-                    new SearcherWorkflowExecution { WorkflowExecutionSeriesId = item.Entry.WorkflowExecutionSeriesId });
-
-                var firstExecution = executions
-                    .Where(e => e.OpenAt.HasValue && e.OpenAt.Value <= DateTime.Now)
-                    .OrderBy(e => e.OpenAt)
-                    .FirstOrDefault();
-
-                if (firstExecution != null && firstExecution.OpenAt.HasValue && firstExecution.OpenAt.Value > bestOpenAt)
+                if (activeTracking != null)
                 {
-                    bestOpenAt = firstExecution.OpenAt.Value;
-                    var wf = allWorkflows.FirstOrDefault(w => w.Id == item.Entry.WorkflowId);
-                    var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == item.Entry.WorkflowTaskId);
-                    bestItem = new ResumeWorkflowItem
+                    var matchedEntry = allEntries.FirstOrDefault(
+                        e => e.Entry.WorkflowExecutionSeriesId == activeTracking.WorkflowExecutionSeriesId);
+
+                    if (matchedEntry != null)
                     {
-                        Veichle = item.Veichle,
-                        Entry = item.Entry,
-                        WorkflowTitle = wf?.Title ?? "",
-                        WorkflowColor = wf?.Color ?? "#607D8B",
-                        WorkflowTaskTitle = wfTask?.Title ?? ""
-                    };
-                    dashboardExecutions = executions;
+                        var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                            new SearcherWorkflowExecution { WorkflowExecutionSeriesId = matchedEntry.Entry.WorkflowExecutionSeriesId });
+                        var wf = allWorkflows.FirstOrDefault(w => w.Id == matchedEntry.Entry.WorkflowId);
+                        var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == matchedEntry.Entry.WorkflowTaskId);
+                        bestItem = new ResumeWorkflowItem
+                        {
+                            Veichle = matchedEntry.Veichle,
+                            Entry = matchedEntry.Entry,
+                            WorkflowTitle = wf?.Title ?? "",
+                            WorkflowColor = wf?.Color ?? "#607D8B",
+                            WorkflowTaskTitle = wfTask?.Title ?? ""
+                        };
+                        bestExecutions = executions;
+                    }
+                }
+            }
+
+            // Fall back to most recent workflow if no active tracking found
+            if (bestItem == null)
+            {
+                DateTime bestOpenAt = DateTime.MinValue;
+
+                foreach (var item in allEntries)
+                {
+                    if (string.IsNullOrEmpty(item.Entry.WorkflowExecutionSeriesId)) continue;
+
+                    var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                        new SearcherWorkflowExecution { WorkflowExecutionSeriesId = item.Entry.WorkflowExecutionSeriesId });
+
+                    var firstExecution = executions
+                        .Where(e => e.OpenAt.HasValue && e.OpenAt.Value <= DateTime.Now)
+                        .OrderBy(e => e.OpenAt)
+                        .FirstOrDefault();
+
+                    if (firstExecution != null && firstExecution.OpenAt.HasValue && firstExecution.OpenAt.Value > bestOpenAt)
+                    {
+                        bestOpenAt = firstExecution.OpenAt.Value;
+                        var wf = allWorkflows.FirstOrDefault(w => w.Id == item.Entry.WorkflowId);
+                        var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == item.Entry.WorkflowTaskId);
+                        bestItem = new ResumeWorkflowItem
+                        {
+                            Veichle = item.Veichle,
+                            Entry = item.Entry,
+                            WorkflowTitle = wf?.Title ?? "",
+                            WorkflowColor = wf?.Color ?? "#607D8B",
+                            WorkflowTaskTitle = wfTask?.Title ?? ""
+                        };
+                        bestExecutions = executions;
+                    }
                 }
             }
 
             if (bestItem != null)
             {
                 selectedResumeItem = bestItem;
+                dashboardExecutions = bestExecutions;
                 showStepTable = true;
                 await LoadDashboardTrackingState();
                 StateHasChanged();
@@ -526,7 +568,6 @@
     {
         isDashboardTrackingActive = false;
         dashboardTimeTracking = null;
-        StopTimerRefresh();
 
         if (employee == null || selectedResumeItem == null) return;
 
@@ -540,7 +581,6 @@
         if (dashboardTimeTracking != null && dashboardTimeTracking.IsActive)
         {
             isDashboardTrackingActive = true;
-            StartTimerRefresh();
         }
     }
 
@@ -599,7 +639,6 @@
             }
 
             isDashboardTrackingActive = true;
-            StartTimerRefresh();
             snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
         }
         catch (Exception ex)
@@ -622,7 +661,7 @@
             await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
 
             isDashboardTrackingActive = false;
-            StopTimerRefresh();
+            StateHasChanged();
             snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
         }
         catch (Exception ex)
@@ -631,25 +670,15 @@
         }
     }
 
-    private void StartTimerRefresh()
+    private string FormatDashboardTotalTime()
     {
-        trackingTimer?.Dispose();
-        trackingTimer = new System.Threading.Timer(async _ =>
-        {
-            await InvokeAsync(StateHasChanged);
-        }, null, 0, 1000);
+        if (dashboardTimeTracking == null) return "00:00:00";
+        var total = TimeSpan.FromTicks(dashboardTimeTracking.Sessions
+            .Where(s => s.EndTime.HasValue)
+            .Sum(s => (s.EndTime!.Value - s.StartTime).Ticks));
+        return $"{(int)total.TotalHours:D2}:{total.Minutes:D2}:{total.Seconds:D2}";
     }
 
-    private void StopTimerRefresh()
-    {
-        trackingTimer?.Dispose();
-        trackingTimer = null;
-    }
-
-    public void Dispose()
-    {
-        trackingTimer?.Dispose();
-    }
     #endregion
 
     #region StepTable
