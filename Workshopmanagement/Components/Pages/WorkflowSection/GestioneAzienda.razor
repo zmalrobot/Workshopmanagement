@@ -59,14 +59,14 @@
                             @if (logoPreviewBase64 != null)
                             {
                                 <div style="margin-bottom:8px;">
-                                    <img src="@logoPreviewBase64" alt="Preview" style="width:128px; height:128px; object-fit:contain; border:1px solid #555; border-radius:4px; background:#222;" />
+                                    <img src="@logoPreviewBase64" alt="Preview" style="width:128px; height:128px; object-fit:cover; border-radius:50%; border:2px solid #555; background:#222;" />
                                     <MudText Typo="Typo.caption" Color="Color.Secondary">Preview – salvato come PNG 512×512</MudText>
                                 </div>
                             }
                             else if (settings.HasLogo)
                             {
                                 <div style="margin-bottom:8px;">
-                                    <img src="@logoUrl" alt="Logo" style="width:128px; height:128px; object-fit:contain; border:1px solid #555; border-radius:4px; background:#222;" />
+                                    <img src="@logoUrl" alt="Logo" style="width:128px; height:128px; object-fit:cover; border-radius:50%; border:2px solid #555; background:#222;" />
                                 </div>
                             }
                             <MudFileUpload T="IBrowserFile" Accept="image/*" FilesChanged="OnLogoChanged">

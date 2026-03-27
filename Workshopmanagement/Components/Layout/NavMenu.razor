@@ -11,7 +11,7 @@
             <MudItem xs="12" Style="text-align: center; padding: 8px;">
                 @if (hasCompanyLogo)
                 {
-                    <img src="/images/companylogo.png" alt="Logo" style="max-height:80px; max-width:160px; object-fit:contain;" />
+                    <img src="/images/companylogo.png" alt="Logo" style="width:80px; height:80px; object-fit:cover; border-radius:50%;" />
                 }
                 else
                 {
@@ -28,6 +28,9 @@
         </MudNavLink>
         <MudNavLink Href="/workflowshistory" Icon="@Icons.Material.Filled.History">
             @languageContainer.Keys["WorkflowsHistory"]
+        </MudNavLink>
+        <MudNavLink Href="/calendario" Icon="@Icons.Material.Filled.CalendarMonth">
+            @languageContainer.Keys["CalendarioTitle"]
         </MudNavLink>
         <MudNavGroup Title="@languageContainer.Keys["CustomerManagment"]" Icon="@Icons.Material.Filled.SupervisedUserCircle" Expanded="true">
             <MudNavLink Href="/customers" Icon="@Icons.Material.Filled.People" IconColor="Color.Info">@languageContainer.Keys["Customers"]</MudNavLink>
@@ -46,9 +49,6 @@
                 @languageContainer.Keys["AdminAreaDesc"]
             </MudText>
             <MudDivider Class="my-2" />
-            <MudNavLink Href="/calendario" Icon="@Icons.Material.Filled.CalendarMonth" IconColor="Color.Secondary">
-                @languageContainer.Keys["CalendarioTitle"]
-            </MudNavLink>
             <MudNavLink Href="/employees" Icon="@Icons.Material.Filled.People" IconColor="Color.Secondary">
                 @languageContainer.Keys["EmployeeManagment"]
             </MudNavLink>

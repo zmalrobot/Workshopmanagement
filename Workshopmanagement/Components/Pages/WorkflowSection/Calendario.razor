@@ -62,16 +62,23 @@
                                 <MudText Typo="Typo.h6">@GetWeekLabelL()</MudText>
                             </MudItem>
                             <MudItem xs="3">
-                                <MudSelect T="string" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined"
-
-                                           Value="selectedEmployeeId"
-                                           ValueChanged="@(v => { selectedEmployeeId = v; StateHasChanged(); })">
-                                    <MudSelectItem T="string" Value="@("")">— @languageContainer.Keys["CalendarioTuttiOperatori"] —</MudSelectItem>
-                                    @foreach (var emp in employees.OrderBy(e => e.Surname))
-                                    {
-                                        <MudSelectItem T="string" Value="@emp.Id">@emp.Name @emp.Surname</MudSelectItem>
-                                    }
-                                </MudSelect>
+                                @if (employee?.EmployeeRole == EmployeeRole.Manager)
+                                {
+                                    <MudSelect T="string" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined"
+                                               Value="selectedEmployeeId"
+                                               ValueChanged="@(v => { selectedEmployeeId = v; StateHasChanged(); })">
+                                        <MudSelectItem T="string" Value="@("")">— @languageContainer.Keys["CalendarioTuttiOperatori"] —</MudSelectItem>
+                                        @foreach (var emp in employees.OrderBy(e => e.Surname))
+                                        {
+                                            <MudSelectItem T="string" Value="@emp.Id">@emp.Name @emp.Surname</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                }
+                                else
+                                {
+                                    var curEmp = employees.FirstOrDefault(e => e.Id == selectedEmployeeId);
+                                    <MudText Typo="Typo.body2">@(curEmp != null ? $"{curEmp.Name} {curEmp.Surname}" : "")</MudText>
+                                }
                             </MudItem>
                             <MudItem xs="3" Style="text-align:right;">
                                 <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Circle" Style="background-color:#2e7d32;color:white;">@languageContainer.Keys["CalendarioLegendaInLavoro"]</MudChip>
@@ -186,6 +193,7 @@
     private List<Veichle> veichles = new();
     private List<Workshopmanagement.DatabaseManagment.DataObject.Workflow> workflows = new();
     private List<Employee> employees = new();
+    private List<Customer> customers = new();
     private List<TimeTracking> allTrackings = new();
     private CompanySettings settings = new();
 
@@ -206,9 +214,8 @@
                 employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
                 if (employee?.EmployeeRole != EmployeeRole.Manager)
                 {
-                    snackbar.Add(@languageContainer.Keys["UserNotAutorized"], Severity.Warning);
-                    navigationManager.NavigateTo("dashboard");
-                    return;
+                    // Non-managers can see the calendar but only their own lavorazioni
+                    selectedEmployeeId = employee?.Id ?? "";
                 }
                 await LoadData();
             }
@@ -236,6 +243,7 @@
         veichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle());
         workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
         employees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
+        customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
         allTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(new SearcherTimeTracking());
 
         var allSeriesIds = veichles
@@ -339,6 +347,11 @@
             var wf = wfExec != null ? workflows.FirstOrDefault(w => w.Id == wfExec.WorkflowId) : null;
             var veichle = wfExec?.VeichleId != null ? veichles.FirstOrDefault(v => v.Id == wfExec.VeichleId) : null;
             var plate = veichle?.LicensePlate ?? "";
+            var customer = veichle?.UserId != null ? customers.FirstOrDefault(c => c.Id == veichle.UserId) : null;
+            var customerName = customer != null
+                ? (string.IsNullOrWhiteSpace(customer.BusinessName) ? $"{customer.Name} {customer.Surname}".Trim() : customer.BusinessName)
+                : "";
+            var subLabel1 = string.Join(" – ", new[] { customerName, plate }.Where(s => !string.IsNullOrEmpty(s)));
             var empIds1 = allTrackings.Where(t => t.WorkflowExecutionSeriesId == seriesId).Select(t => t.EmployeeId).Distinct().ToList();
             var empNames1 = string.Join(", ", employees.Where(e => empIds1.Contains(e.Id)).Select(e => $"{e.Name} {e.Surname}"));
             var statusLabel1 = isCompleted ? "Completato" : (hasActive ? "In Lavorazione" : (isInFuture ? "Programmato" : "Aperto"));
@@ -347,7 +360,7 @@
             {
                 SeriesId = seriesId,
                 Label = wf?.Title ?? seriesId,
-                SubLabel = plate,
+                SubLabel = subLabel1,
                 LicensePlate = plate,
                 EmployeeNames = empNames1,
                 EstimatedHours = estimatedHours,
@@ -383,6 +396,10 @@
                 e.WorkflowExecutionSeriesId == tracking.WorkflowExecutionSeriesId);
             var wf = wfExec != null ? workflows.FirstOrDefault(w => w.Id == wfExec.WorkflowId) : null;
             var veichle = wfExec?.VeichleId != null ? veichles.FirstOrDefault(v => v.Id == wfExec.VeichleId) : null;
+            var customer2 = veichle?.UserId != null ? customers.FirstOrDefault(c => c.Id == veichle.UserId) : null;
+            var customerName2 = customer2 != null
+                ? (string.IsNullOrWhiteSpace(customer2.BusinessName) ? $"{customer2.Name} {customer2.Surname}".Trim() : customer2.BusinessName)
+                : "";
 
             // Find employee name for subtitle when showing all employees
             var emp = employees.FirstOrDefault(e => e.Id == tracking.EmployeeId);
@@ -399,13 +416,15 @@
                 var plate2 = veichle?.LicensePlate ?? "";
                 var empName2 = emp != null ? $"{emp.Name} {emp.Surname}" : "";
                 var statusLabel2 = isActive ? "In Corso" : "Completato";
+                var subLabel2 = string.Join(" – ", new[] { customerName2, plate2 }.Where(s => !string.IsNullOrEmpty(s)));
+                if (!string.IsNullOrEmpty(empLabel)) subLabel2 = $"{subLabel2} {empLabel}".Trim();
 
                 events.Add(new CalEvent
                 {
                     SeriesId = tracking.WorkflowExecutionSeriesId,
                     EmployeeTag = tracking.EmployeeId,
                     Label = wf?.Title ?? tracking.WorkflowExecutionSeriesId,
-                    SubLabel = $"{plate2} {empLabel}".Trim(),
+                    SubLabel = subLabel2,
                     LicensePlate = plate2,
                     EmployeeNames = empName2,
                     StatusLabel = statusLabel2,
