@@ -7,12 +7,12 @@
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
 
-<MudDialog Style="background-color: var(--bs-body-color);">
+<MudDialog Style="min-width: min(95vw, 820px);">
     <TitleContent>
-        <MudText Typo="Typo.h6" Color="Color.Info">
-            <MudIcon Icon="@Icons.Material.Filled.Workspaces" Class="mr-3 mb-n1" />
-            @languageContainer.Keys["WorkkflowResumeTitle"]: @Dataset.workflow.Title
-        </MudText>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Workspaces" Color="Color.Info" />
+            <MudText Typo="Typo.h6">@Dataset.workflow.Title</MudText>
+        </MudStack>
     </TitleContent>
     <DialogContent>
         @if (processing)
@@ -23,127 +23,128 @@
         }
         else
         {
-            <MudGrid>               
-               <MudItem xs="6">                  
-                    <MudText Typo="Typo.h6" Color="Color.Success">
-                        <MudIcon Icon="@Icons.Material.Filled.Task" Class="mr-3 mb-n1" />
-                        @languageContainer.Keys["WorkkflowResumeCurrentTask"]: @Dataset.workflowTask.Title
-                    </MudText>
-                    <MudText Typo="Typo.subtitle1" Color="Color.Success">
-                         @Dataset.workflowTask.Subtitle
-                    </MudText>                 
-               </MudItem>
-                <MudItem xs="6" Style="text-align: right">
-                    <MudGrid>
-                        <MudItem xs="12">
-                            <MudText Typo="Typo.caption" Color="Color.Default">
-                                <MudIcon Icon="@Icons.Material.Filled.CarRental" Class="mr-3 mb-n1" />
-                                @languageContainer.Keys["WorkkflowResumeCurrentVeichle"]:
-                                @Dataset.veichle.LicensePlate
-                            </MudText>
-                        </MudItem>
-                        <MudItem xs="12">
-                            <MudText Typo="Typo.caption" Color="Color.Default">
-                                <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-3 mb-n1" />
-                                @languageContainer.Keys["WorkkflowResumeCurrentCustomer"]: @Dataset.customer.Name @Dataset.customer.Surname
-                            </MudText>
-                        </MudItem>
-                    </MudGrid>
-                </MudItem>
-                <MudItem xs="12">
-                    <MudText Typo="Typo.caption" Color="Color.Surface" >
-                        @Dataset.workflowTask.Description
-                    </MudText>
-                </MudItem>
+            <MudStack Spacing="3">
 
-                <MudItem xs="12">
-                    <MudGrid>
+                @* ── Step info header ──*@
+                <MudCard Elevation="0" Outlined="true" Style="border-radius: 12px;">
+                    <MudCardContent Class="pa-3">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" sm="7">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                    <MudIcon Icon="@Icons.Material.Filled.Task" Color="Color.Success" Size="Size.Small" />
+                                    <MudText Typo="Typo.subtitle1" Color="Color.Success" Style="font-weight:600;">@Dataset.workflowTask.Title</MudText>
+                                </MudStack>
+                                @if (!string.IsNullOrWhiteSpace(Dataset.workflowTask.Subtitle))
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Success" Class="ml-5">@Dataset.workflowTask.Subtitle</MudText>
+                                }
+                                @if (!string.IsNullOrWhiteSpace(Dataset.workflowTask.Description))
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Default" Class="ml-5 mt-1">@Dataset.workflowTask.Description</MudText>
+                                }
+                            </MudItem>
+                            <MudItem xs="12" sm="5">
+                                <MudStack Spacing="1">
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.CarRental" Size="Size.Small" Color="Color.Default" />
+                                        <MudText Typo="Typo.caption">@Dataset.veichle.LicensePlate</MudText>
+                                    </MudStack>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                        <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" Color="Color.Default" />
+                                        <MudText Typo="Typo.caption">@Dataset.customer.Name @Dataset.customer.Surname</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
 
-                        <MudItem xs="12">
-                            <MudGrid>
-                                <MudItem xs="6">
-                                    <MudTextField @bind-Value="Dataset.workflowExecution.Titile" Margin="Margin.Dense" Disabled="@IsEditDisabled()"
-                                                  Label="@languageContainer.Keys["StepTitle"]" Variant="Variant.Outlined" />
-                                    @if (Dataset.workflowTask.HasOutcome)
-                                    {
-                                        <MudSelect @bind-Value="Dataset.workflowExecution.Executionoutcome" MultiSelection="false" Style="margin-top: 30px;"
-                                                   Label="@languageContainer.Keys["ExecutionOutcome"]" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                                   OpenIcon="@Icons.Material.Filled.Build" AdornmentColor="Color.Secondary" Dense="true" Disabled="@IsEditDisabled()">
-                                            @foreach (WorkflowExecutionoutcome item in Enum.GetValues(typeof(WorkflowExecutionoutcome)))
-                                            {
-                                                <MudSelectItem Value="@item">@languageContainer.Keys[item.ToString()]</MudSelectItem>
-                                            }
-                                        </MudSelect>                                       
-                                    }
-                                </MudItem>
-                                <MudItem xs="6">
-                                    <MudTextField @bind-Value="Dataset.workflowExecution.Note" Lines="5" Margin="Margin.Dense" Disabled="@IsEditDisabled()"
-                                                  Label="@languageContainer.Keys["StepNote"]" Variant="Variant.Outlined" />
-                                </MudItem>
+                @* ── Main fields card ──*@
+                <MudCard Elevation="0" Outlined="true" Style="border-radius: 12px;">
+                    <MudCardContent Class="pa-3">
+                        <MudGrid Spacing="2">
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="Dataset.workflowExecution.Titile" Margin="Margin.Dense" Disabled="@IsEditDisabled()"
+                                              Label="@languageContainer.Keys["StepTitle"]" Variant="Variant.Outlined" />
+                                @if (Dataset.workflowTask.HasOutcome)
+                                {
+                                    <MudSelect @bind-Value="Dataset.workflowExecution.Executionoutcome" MultiSelection="false" Class="mt-3"
+                                               Label="@languageContainer.Keys["ExecutionOutcome"]" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                               OpenIcon="@Icons.Material.Filled.Build" AdornmentColor="Color.Secondary" Dense="true" Disabled="@IsEditDisabled()">
+                                        @foreach (WorkflowExecutionoutcome item in Enum.GetValues(typeof(WorkflowExecutionoutcome)))
+                                        {
+                                            <MudSelectItem Value="@item">@languageContainer.Keys[item.ToString()]</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                }
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="Dataset.workflowExecution.Note" Lines="5" Margin="Margin.Dense" Disabled="@IsEditDisabled()"
+                                              Label="@languageContainer.Keys["StepNote"]" Variant="Variant.Outlined" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+
+                @* ── Vehicle data card (conditional) ──*@
+                @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
+                {
+                    <MudExpansionPanel @bind-IsExpanded="vehicleCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);" Elevation="0">
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.DirectionsCar" Color="Color.Secondary" Size="Size.Small" />
+                                <MudText Typo="Typo.subtitle2">@languageContainer.Keys["VeichleData"]</MudText>
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudGrid Spacing="2" Class="pa-2">
+                                @if (Dataset.workflowTask.UserMustUpdateVeichleKm)
+                                {
+                                    <MudItem xs="12" sm="6">
+                                        <MudNumericField @bind-Value="Dataset.workflowExecution.KmPost" Min="1" Max="int.MaxValue" Margin="Margin.Dense"
+                                                         Label="@languageContainer.Keys["ActualKilometers"]" Variant="Variant.Outlined" Step="1" Disabled="@IsEditDisabled()" />
+                                    </MudItem>
+                                }
+                                @if (Dataset.workflowTask.UserMustUpdateFuelLevel)
+                                {
+                                    <MudItem xs="12" sm="6">
+                                        <MudNumericField @bind-Value="Dataset.workflowExecution.FuelPost" Min="1" Max="100" Margin="Margin.Dense"
+                                                         Label="@languageContainer.Keys["ActualFuelPercentage"]" Variant="Variant.Outlined" Step="1" Disabled="@IsEditDisabled()" />
+                                    </MudItem>
+                                }
                             </MudGrid>
-                        </MudItem>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
 
-                        <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                            <MudDivider DividerType="DividerType.Middle" Class="my-2" />
-                        </MudItem>
-
-                        @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
-                        {
-                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                                <MudText Typo="Typo.body1" Color="Color.Secondary">
-                                    @languageContainer.Keys["VeichleData"]:
-                                </MudText>
-                            </MudItem>
-                        }    
-                        @if (Dataset.workflowTask.UserMustUpdateVeichleKm)
-                        {
-                            <MudItem xs="6">
-                                <MudNumericField @bind-Value="Dataset.workflowExecution.KmPost" Min="1" Max="int.MaxValue" Margin="Margin.Dense"
-                                                 Label="@languageContainer.Keys["ActualKilometers"]" Variant="Variant.Outlined" Step="1" Disabled="@IsEditDisabled()" />
-                            </MudItem>
-                        }
-                        @if (Dataset.workflowTask.UserMustUpdateFuelLevel)
-                        {
-                            <MudItem xs="6">
-                                <MudNumericField @bind-Value="Dataset.workflowExecution.FuelPost" Min="1" Max="100" Margin="Margin.Dense"
-                                                 Label="@languageContainer.Keys["ActualFuelPercentage"]" Variant="Variant.Outlined" Step="1" Disabled="@IsEditDisabled()" />
-                            </MudItem>
-                        }
-                        @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
-                        {
-                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                                <MudDivider DividerType="DividerType.Middle" Class="my-6" />
-                            </MudItem>
-                        }     
-                        
-                        @if (Dataset.workflowTask.AllowImageUpload)
-                        {
-                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                                <MudText Typo="Typo.body1" Color="Color.Secondary">
-                                    @languageContainer.Keys["Images"]:
-                                </MudText>
-                            </MudItem>
-                            @if (!Dataset.viewOneExecution)
-                            {
-                            <MudItem xs="6">
-                                <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Accept=".png, .jpg" Disabled="@IsEditDisabled()">
-                                    <ActivatorContent>
-                                        <MudButton Variant="Variant.Filled" Color="Color.Info" Size="Size.Small">
-                                            <MudIcon Icon="@Icons.Material.Filled.Add" />
-                                            <MudIcon Icon="@Icons.Material.Filled.Image" />
-                                            <MudText Style="margin-left: 15px">@languageContainer.Keys["LoadPictures"]</MudText>
-                                        </MudButton>
-                                        @* <MudFab Color="Color.Secondary"
-                                                StartIcon="@Icons.Material.Filled.Image"
-                                                Label="@languageContainer.Keys["LoadPictures"]" /> *@
-                                    </ActivatorContent>
-                                </MudFileUpload>
-                            </MudItem>
-                            }
-                            @if (Dataset.workflowExecution.Images != null)
-                            {
-                                <MudItem xs="6">
-                                    <MudText Typo="@Typo.h6">@Dataset.workflowExecution.Images?.Count() File@(Dataset.workflowExecution.Images?.Count() == 1 ? "" : "s"):</MudText>
+                @* ── Images card (conditional) ──*@
+                @if (Dataset.workflowTask.AllowImageUpload)
+                {
+                    <MudExpansionPanel @bind-IsExpanded="imagesCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);" Elevation="0">
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.Image" Color="Color.Secondary" Size="Size.Small" />
+                                <MudText Typo="Typo.subtitle2">@languageContainer.Keys["Images"]</MudText>
+                                @if (Dataset.workflowExecution.Images != null && Dataset.workflowExecution.Images.Any())
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@Dataset.workflowExecution.Images.Count()</MudChip>
+                                }
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudStack Spacing="2" Class="pa-2">
+                                @if (!Dataset.viewOneExecution)
+                                {
+                                    <MudFileUpload T="IBrowserFile" FilesChanged="UploadImage" Accept=".png, .jpg" Disabled="@IsEditDisabled()">
+                                        <ActivatorContent>
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small" StartIcon="@Icons.Material.Filled.AddPhotoAlternate" Disabled="@IsEditDisabled()">
+                                                @languageContainer.Keys["LoadPictures"]
+                                            </MudButton>
+                                        </ActivatorContent>
+                                    </MudFileUpload>
+                                }
+                                @if (Dataset.workflowExecution.Images != null && Dataset.workflowExecution.Images.Any())
+                                {
                                     <MudList T="string" Dense="true">
                                         @foreach (var image in Dataset.workflowExecution?.Images ?? new List<Image>())
                                         {
@@ -152,61 +153,57 @@
                                             </MudListItem>
                                         }
                                     </MudList>
-                                </MudItem>
-                            }
-
-                            @if (previewImage != null)
-                            {
-                                <MudItem xs="12">
+                                }
+                                @if (previewImage != null)
+                                {
                                     <MudPaper Elevation="2" Class="pa-2" Style="position: relative; text-align: center;">
                                         <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Error" Size="Size.Small"
                                                        Style="position: absolute; top: 4px; right: 4px; z-index: 1;"
                                                        OnClick="@(() => previewImage = null)" />
                                         <MudImage Src="@previewImageUrl" Alt="@previewImage.Name"
-                                                  Style="max-width: 100%; max-height: 400px;" ObjectFit="ObjectFit.Contain" Elevation="0" />
+                                                  Style="max-width: 100%; max-height: 350px;" ObjectFit="ObjectFit.Contain" Elevation="0" />
                                     </MudPaper>
-                                </MudItem>
-                            }
+                                }
+                            </MudStack>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
 
-                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                                <MudDivider DividerType="DividerType.Middle" Class="my-6" />
-                            </MudItem>
-                        }
-                        @if (Dataset.workflowTask.IsComponentRequired)
-                        {
-                                    <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                                <MudText Typo="Typo.body1" Color="Color.Secondary">
-                                    @languageContainer.Keys["Components"]:
-                                </MudText>
-                            </MudItem>
-
-                           @*  <MudItem xs="4" Style="text-align: left">
-                                <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(new Component()) )" Variant="Variant.Filled" Color="Color.Info" Size="Size.Small">
-                                    <MudIcon Icon="@Icons.Material.Filled.Add" />
-                                    <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" />
-                                    <MudText Style="margin-left: 15px">@languageContainer.Keys["AddNewComponent"]</MudText>
-                                </MudButton>
-                            </MudItem> *@
-                            @if (!Dataset.viewOneExecution)
-                            {
-                             <MudItem xs="4" Class="d-flex align-center"  Style="text-align: left">
-                                    <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(selectedComponent) )" Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@IsEditDisabled()">
-                                        <MudIcon Icon="@Icons.Material.Filled.Add" />
-                                        <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" />
-                                        @* <MudText Style="margin-left: 15px">@languageContainer.Keys["AddSelectedComponent"]</MudText> *@
-                                            <MudText Style="margin-left: 15px">@languageContainer.Keys["AddNewComponent"]</MudText>
-                                    </MudButton>
-                            </MudItem>
-                            }
-                            <MudItem xs="8" Style="text-align: center">
-                                <MudAutocomplete T="Component" ToStringFunc="component => component?.Name"
-                                                 Label="@languageContainer.Keys["Component"]" 
-                                                 Margin="Margin.Dense" Variant="Variant.Outlined"
-                                                 Value="selectedComponent" ValueChanged="@UpdateSelectedComponent"
-                                                 SearchFunc="@SearchComponent" DebounceInterval="500" MaxItems="null" FullWidth="true"
-                                                 ResetValueOnEmptyText="true" CoerceText="false" CoerceValue="true" Dense="true" Disabled="@IsEditDisabled()" />
-                            </MudItem>                           
-                            <MudItem xs="12">
+                @* ── Components card (conditional) ──*@
+                @if (Dataset.workflowTask.IsComponentRequired)
+                {
+                    <MudExpansionPanel @bind-IsExpanded="componentsCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);" Elevation="0">
+                        <TitleContent>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" Color="Color.Secondary" Size="Size.Small" />
+                                <MudText Typo="Typo.subtitle2">@languageContainer.Keys["Components"]</MudText>
+                                @if (Dataset.workflowExecution.Components != null && Dataset.workflowExecution.Components.Any())
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">@Dataset.workflowExecution.Components.Count()</MudChip>
+                                }
+                            </MudStack>
+                        </TitleContent>
+                        <ChildContent>
+                            <MudStack Spacing="2" Class="pa-2">
+                                <MudGrid Spacing="2" AlignItems="AlignItems.Center">
+                                    @if (!Dataset.viewOneExecution)
+                                    {
+                                        <MudItem xs="12" sm="4">
+                                            <MudButton OnClick="@((e) => dataGrid.SetEditingItemAsync(selectedComponent))" Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                       StartIcon="@Icons.Material.Filled.Add" Disabled="@IsEditDisabled()">
+                                                @languageContainer.Keys["AddNewComponent"]
+                                            </MudButton>
+                                        </MudItem>
+                                    }
+                                    <MudItem xs="12" sm="@(Dataset.viewOneExecution ? 12 : 8)">
+                                        <MudAutocomplete T="Component" ToStringFunc="component => component?.Name"
+                                                         Label="@languageContainer.Keys["Component"]"
+                                                         Margin="Margin.Dense" Variant="Variant.Outlined"
+                                                         Value="selectedComponent" ValueChanged="@UpdateSelectedComponent"
+                                                         SearchFunc="@SearchComponent" DebounceInterval="500" MaxItems="null" FullWidth="true"
+                                                         ResetValueOnEmptyText="true" CoerceText="false" CoerceValue="true" Dense="true" Disabled="@IsEditDisabled()" />
+                                    </MudItem>
+                                </MudGrid>
                                 <MudDataGrid @ref="dataGrid" T="Component" Items="@Dataset.workflowExecution.Components" ReadOnly="@IsEditDisabled()" EditMode="DataGridEditMode.Form" EditTrigger="DataGridEditTrigger.Manual"
                                              Filterable="true" Dense="true" Hover="true" SortMode="@SortMode.Single" Bordered="true"
                                              StartedEditingItem="@StartedEditingItem" CanceledEditingItem="@CanceledEditingItem" CommittedItemChanges="@CommittedItemChanges">
@@ -227,55 +224,48 @@
                                         <MudDataGridPager T="Component" PageSizeOptions="@Utility.pageSizeOptions" RowsPerPageString="@languageContainer.Keys["RowsPerPageString"]" />
                                     </PagerContent>
                                 </MudDataGrid>
-                            </MudItem>
-                            <MudItem xs="12" Style="padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0;">
-                                <MudDivider DividerType="DividerType.Middle" Class="my-6" />
-                            </MudItem>
-                        }
+                            </MudStack>
+                        </ChildContent>
+                    </MudExpansionPanel>
+                }
 
-                    </MudGrid>
-                </MudItem>
-            </MudGrid>
+            </MudStack>
         }
     </DialogContent>
     <DialogActions>
         @if (!Dataset.viewOneExecution)
         {
-        <MudGrid>
-            <MudItem xs="6" Style="text-align:left">
-                @if (Dataset.editOneExecution == false)
-                {
-                    @if (Dataset.workflowTask.CanBeSkipped)
+            <MudStack Row="true" Justify="Justify.SpaceBetween" Class="w-100 px-1" Wrap="Wrap.Wrap" Spacing="2">
+                <MudStack Row="true" Spacing="1">
+                    @if (Dataset.editOneExecution == false && Dataset.workflowTask.CanBeSkipped)
                     {
-                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Skipped))" Style="margin-right: 15px;"
-                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning" Disabled="@IsEditDisabled()">
+                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Skipped))"
+                                   Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning" Disabled="@IsEditDisabled()">
                             @languageContainer.Keys["ResumeWorkflowSkipStep"]
                         </MudButton>
                     }
-
-                }               
-            </MudItem>
-            <MudItem xs="6" Style="text-align:right">
-                @if (Dataset.workflowExecution.IsCompleted)
-                {
-                    <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Warning" Disabled="@IsEditDisabled()">
-                        @languageContainer.Keys["SaveChanges"]
-                    </MudButton>
-                }
-                else
-                {
-                    <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress) )" 
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Disabled="@IsEditDisabled()">
-                        @languageContainer.Keys["ResumeWorkflowSaveStep"]
-                    </MudButton>
-                    <MudButton OnClick="(() => MarkAsCompleted())" Style="margin-left: 15px"
-                              Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Success" Disabled="@IsEditDisabled()">
-                        @languageContainer.Keys["StepComplete"]
-                    </MudButton>
-                }                             
-            </MudItem>
-        </MudGrid>
+                </MudStack>
+                <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd">
+                    @if (Dataset.workflowExecution.IsCompleted)
+                    {
+                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress))"
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Warning" Disabled="@IsEditDisabled()">
+                            @languageContainer.Keys["SaveChanges"]
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.InProgress))"
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" Color="Color.Primary" Disabled="@IsEditDisabled()">
+                            @languageContainer.Keys["ResumeWorkflowSaveStep"]
+                        </MudButton>
+                        <MudButton OnClick="(() => MarkAsCompleted())"
+                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Check" Color="Color.Success" Disabled="@IsEditDisabled()">
+                            @languageContainer.Keys["StepComplete"]
+                        </MudButton>
+                    }
+                </MudStack>
+            </MudStack>
         }
     </DialogActions>
 </MudDialog>
@@ -291,9 +281,14 @@
     private DialogOptions dialogOptions = new() { BackdropClick = false };
     private Component selectedComponent = new Component();
 
-    private bool processing = false;  
+    private bool processing = false;
     private Image? previewImage = null;
     private string? previewImageUrl = null;
+
+    // Expansion panels state
+    private bool vehicleCardExpanded = true;
+    private bool imagesCardExpanded = true;
+    private bool componentsCardExpanded = true;
 
     // Time tracking
     private TimeTracking? currentTimeTracking = null;
