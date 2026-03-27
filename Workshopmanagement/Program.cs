@@ -11,7 +11,7 @@ namespace Workshopmanagement
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +41,9 @@ namespace Workshopmanagement
             //builder.WebHost.UseStaticWebAssets();
 
             var app = builder.Build();
+
+            // Ensure MongoDB indexes exist at startup
+            await MongoDbIndexInitializer.EnsureIndexesAsync();
 
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
