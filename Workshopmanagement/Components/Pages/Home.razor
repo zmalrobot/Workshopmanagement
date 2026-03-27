@@ -974,6 +974,7 @@
                 WorkflowTaskId = step.Task.Id,
                 WorkflowExecutionSeriesId = step.Execution.WorkflowExecutionSeriesId,
                 ExecutionStatus = WorkflowExecutionStatus.Todo,
+                OpenAt = DateTime.Now,
                 StartDate = step.Execution.StartDate,
                 EstimatedHours = step.Execution.EstimatedHours,
                 AssignedEmployeeIds = step.Execution.AssignedEmployeeIds != null
