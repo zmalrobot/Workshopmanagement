@@ -23,6 +23,7 @@ namespace Workshopmanagement
             builder.Services.AddLanguageContainer(Assembly.GetExecutingAssembly(), CultureInfo.GetCultureInfo(Environment.GetEnvironmentVariable("WebClientCulture") ?? "it-IT")); //, CultureInfo.GetCultureInfo("it-IT")); //Nel caso non lo traduciamo ma lo vogliamo in Italiano
             builder.Services.AddScoped<IDbDependency, DbDependency>();
             builder.Services.AddScoped<ICamperTheme, VeniceCamperTheme>();
+            builder.Services.AddSingleton<ThemeService>();
             builder.Services.AddMudServices();
             builder.Services.AddMudServices(config =>
             {

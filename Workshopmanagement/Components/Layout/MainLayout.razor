@@ -1,62 +1,86 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 
 @inject IJSRuntime JSRuntime
 @inject ISnackbar snackbar
 @inject ILanguageContainerService languageContainer
 @inject ICamperTheme camperTheme
+@inject ThemeService themeService
+@inject IDbDependency dbDependency
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
 
-@* Required *@
-<MudThemeProvider Theme="@camperTheme.GetTheme()" IsDarkMode="true" />
+@* Theme + dialog/snackbar providers *@
+<MudThemeProvider Theme="@themeService.GetMudTheme()" IsDarkMode="@themeService.IsDarkMode" />
 <MudPopoverProvider />
-
-@* Needed for dialogs *@
 <MudDialogProvider />
-
-@* Needed for snackbars *@
 <MudSnackbarProvider />
 
- <MudLayout>
-    @if (!IsLoginPage)
-    {
-        <MudAppBar Elevation="1">
-            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
-            @if (Convert.ToBoolean(Environment.GetEnvironmentVariable("IsBeta")))
-            {
-                <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Style="width: 100%;">
-                    @languageContainer.Keys["BetaWarning"]
-                </MudAlert>
-            }            
-            <MudSpacer />
-            <MudIconButton OnClick="Logout" Icon="@Icons.Material.Filled.DesktopAccessDisabled" Color="Color.Inherit"/>
-        </MudAppBar>
+<div class="app-wrapper @themeService.GetBodyClass()">
+    <MudLayout>
+        @if (!IsLoginPage)
+        {
+            <MudAppBar Elevation="0" Class="app-appbar">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+                @if (Convert.ToBoolean(Environment.GetEnvironmentVariable("IsBeta")))
+                {
+                    <MudAlert Severity="Severity.Warning" Variant="Variant.Text" Style="width: 100%;">
+                        @languageContainer.Keys["BetaWarning"]
+                    </MudAlert>
+                }
+                <MudSpacer />
+                <MudIconButton OnClick="Logout" Icon="@Icons.Material.Filled.DesktopAccessDisabled" Color="Color.Inherit" />
+            </MudAppBar>
 
-        <MudDrawer @bind-Open="@_open" Elevation="1">
-            <MudNavMenu>
-              <NavMenu/>
-            </MudNavMenu>
-        </MudDrawer>
-    }
-    
-    <MudMainContent>
-        <MudContainer Style="margin-top: 15px">
-            @Body
-        </MudContainer>      
-    </MudMainContent>
-</MudLayout>
+            <MudDrawer @bind-Open="@_open" Elevation="0" Class="app-drawer">
+                <MudNavMenu>
+                    <NavMenu />
+                </MudNavMenu>
+            </MudDrawer>
+        }
+
+        <MudMainContent Class="app-main-content">
+            <MudContainer Style="margin-top: 15px; padding-bottom: 24px;">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</div>
 
 @code {
-
-    // You can modify the condition if other pages need to be excluded
-    // e.g., to hide on "/login" and "/register", use:
-    // private bool IsLoginPage => Navigation.Uri.Contains("login") || Navigation.Uri.Contains("register");
-    private bool IsLoginPage => navigationManager.Uri.Contains("login");   
-
+    private bool IsLoginPage => navigationManager.Uri.Contains("login");
     private bool _open = true;
-    private void ToggleDrawer()
+
+    private void ToggleDrawer() => _open = !_open;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        _open = !_open;
+        if (firstRender && !themeService.IsInitialized)
+        {
+            try
+            {
+                var list = await dbDependency.GetDataAccessCompanySettings().FindAsync(new SearcherCompanySettings());
+                var saved = list.FirstOrDefault()?.SelectedTheme;
+                if (!string.IsNullOrEmpty(saved) && Enum.TryParse<ThemeVariant>(saved, out var variant))
+                    themeService.InitializeFromDb(variant);
+                else
+                    themeService.InitializeFromDb(ThemeVariant.MaterialExpressiveDark);
+                StateHasChanged();
+            }
+            catch { /* keep default theme */ }
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        themeService.OnThemeChanged += HandleThemeChanged;
+    }
+
+    private void HandleThemeChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        themeService.OnThemeChanged -= HandleThemeChanged;
     }
 
     private async Task Logout()
@@ -64,14 +88,14 @@
         try
         {
             await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, null);
-
             snackbar.Add(@languageContainer.Keys["Logout"], Severity.Warning);
             navigationManager.NavigateTo($"login");
-        }catch(Exception ex)
+        }
+        catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
             navigationManager.NavigateTo($"login");
         }
-       
     }
 }
+

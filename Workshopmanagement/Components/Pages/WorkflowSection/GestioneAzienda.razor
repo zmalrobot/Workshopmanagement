@@ -7,6 +7,7 @@
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
 @inject IWebHostEnvironment webHostEnvironment
+@inject ThemeService themeService
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -146,6 +147,59 @@
             </MudCard>
         </MudItem>
 
+        @* ─── Appearance card ─────────────────────────────────────────────── *@
+        <MudItem xs="12">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Palette" Class="mr-2" />
+                            @languageContainer.Keys["AppearanceSettings"]
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@languageContainer.Keys["AppearanceSettingsDesc"]</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid Spacing="3">
+                        @foreach (var info in GetThemeOptions())
+                        {
+                            var isSelected = themeService.CurrentVariant == info.Variant;
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudCard Outlined="@(!isSelected)" Elevation="@(isSelected ? 6 : 1)"
+                                         Style="@($"cursor:pointer; border: 2px solid {(isSelected ? info.PrimaryColor : "transparent")}; border-radius:12px; transition: all 0.2s ease;")"
+                                         @onclick="() => ApplyTheme(info.Variant)">
+                                    <MudCardContent Class="pa-3">
+                                        <MudStack Spacing="2">
+                                            @* Color preview row *@
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                                                <div style="@($"width:28px; height:28px; border-radius:50%; background:{info.PrimaryColor}; flex-shrink:0;")" />
+                                                <div style="@($"width:20px; height:20px; border-radius:50%; background:{info.AccentColor}; flex-shrink:0;")" />
+                                                <div style="@($"flex:1; height:20px; border-radius:6px; background:{info.BackgroundColor}; border:1px solid rgba(128,128,128,0.3);")" />
+                                                @if (isSelected)
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                                }
+                                            </MudStack>
+                                            @* Labels *@
+                                            <MudStack Spacing="0">
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em;">@info.DesignSystem</MudText>
+                                                <MudText Typo="Typo.subtitle2" Style="font-weight:600;">@info.Name</MudText>
+                                            </MudStack>
+                                            <MudChip T="string" Size="Size.Small" Color="@(info.IsDark ? Color.Dark : Color.Default)"
+                                                     Icon="@(info.IsDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
+                                                     Style="align-self:flex-start; height:22px; font-size:0.72rem;">
+                                                @(info.IsDark ? languageContainer.Keys["ThemeDark"] : languageContainer.Keys["ThemeLight"])
+                                            </MudChip>
+                                        </MudStack>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
         <MudItem xs="12">
             <MudButton Variant="Variant.Filled"
                        Color="Color.Success"
@@ -215,6 +269,10 @@
     {
         var list = await dbDependency.GetDataAccessCompanySettings().FindAsync(new SearcherCompanySettings());
         settings = list.FirstOrDefault() ?? new CompanySettings();
+
+        // Sync ThemeService with stored preference
+        if (!string.IsNullOrEmpty(settings.SelectedTheme) && Enum.TryParse<ThemeVariant>(settings.SelectedTheme, out var savedVariant))
+            themeService.SetTheme(savedVariant);
 
         morningStart = settings.MorningStart.ToTimeSpan();
         morningEnd = settings.MorningEnd.ToTimeSpan();
@@ -292,4 +350,33 @@
             StateHasChanged();
         }
     }
+
+    // ── Theme picker helpers ───────────────────────────────────────────────
+
+    private record ThemeInfo(
+        ThemeVariant Variant,
+        string Name,
+        string DesignSystem,
+        bool IsDark,
+        string PrimaryColor,
+        string BackgroundColor,
+        string AccentColor);
+
+    private List<ThemeInfo> GetThemeOptions() => new()
+    {
+        new(ThemeVariant.MaterialExpressiveDark,  "Expressive Dark",   "Material Design 3",  true,  "#D0BCFF", "#0F0D13", "#EFB8C8"),
+        new(ThemeVariant.MaterialExpressiveLight, "Expressive Light",  "Material Design 3",  false, "#6750A4", "#FFFBFE", "#7D5260"),
+        new(ThemeVariant.AppleLiquidGlassDark,   "Liquid Glass Dark",  "Apple Design",       true,  "#0A84FF", "#1C1C1E", "#30D158"),
+        new(ThemeVariant.AppleLiquidGlassLight,  "Liquid Glass Light", "Apple Design",       false, "#007AFF", "#F2F2F7", "#34C759"),
+        new(ThemeVariant.FluentDesignDark,        "Fluent Dark",        "Microsoft Fluent",   true,  "#60CDFF", "#202020", "#74B4C8"),
+        new(ThemeVariant.FluentDesignLight,       "Fluent Light",       "Microsoft Fluent",   false, "#0078D4", "#F3F3F3", "#0099BC"),
+    };
+
+    private void ApplyTheme(ThemeVariant variant)
+    {
+        settings.SelectedTheme = variant.ToString();
+        themeService.SetTheme(variant);
+        StateHasChanged();
+    }
 }
+

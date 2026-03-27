@@ -89,7 +89,7 @@
                 @* ── Vehicle data card (conditional) ──*@
                 @if (Dataset.workflowTask.UserMustUpdateVeichleKm || Dataset.workflowTask.UserMustUpdateFuelLevel)
                 {
-                    <MudExpansionPanel @bind-IsExpanded="vehicleCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);" Elevation="0">
+                    <MudExpansionPanel @bind-Expanded="vehicleCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);">
                         <TitleContent>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                 <MudIcon Icon="@Icons.Material.Filled.DirectionsCar" Color="Color.Secondary" Size="Size.Small" />
@@ -120,7 +120,7 @@
                 @* ── Images card (conditional) ──*@
                 @if (Dataset.workflowTask.AllowImageUpload)
                 {
-                    <MudExpansionPanel @bind-IsExpanded="imagesCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);" Elevation="0">
+                    <MudExpansionPanel @bind-Expanded="imagesCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);">
                         <TitleContent>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                 <MudIcon Icon="@Icons.Material.Filled.Image" Color="Color.Secondary" Size="Size.Small" />
@@ -172,7 +172,7 @@
                 @* ── Components card (conditional) ──*@
                 @if (Dataset.workflowTask.IsComponentRequired)
                 {
-                    <MudExpansionPanel @bind-IsExpanded="componentsCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);" Elevation="0">
+                    <MudExpansionPanel @bind-Expanded="componentsCardExpanded" Style="border-radius: 12px; border: 1px solid rgba(0,0,0,0.12);">
                         <TitleContent>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                 <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" Color="Color.Secondary" Size="Size.Small" />

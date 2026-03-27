@@ -309,3 +309,17 @@ WorkingHoursMorning: Mattina
 WorkingHoursAfternoon: Pomeriggio
 WorkingHoursStart: Inizio
 WorkingHoursEnd: Fine
+AppearanceSettings: Aspetto
+AppearanceSettingsDesc: Scegli il tema dell'applicazione
+ThemeMaterialExpressiveDark: Expressive Dark
+ThemeMaterialExpressiveLight: Expressive Light
+ThemeAppleLiquidGlassDark: Liquid Glass Dark
+ThemeAppleLiquidGlassLight: Liquid Glass Light
+ThemeFluentDesignDark: Fluent Dark
+ThemeFluentDesignLight: Fluent Light
+ThemeDesignMd3: Material Design 3
+ThemeDesignApple: Apple Design
+ThemeDesignFluent: Microsoft Fluent
+ThemeDark: Scuro
+ThemeLight: Chiaro
+ThemeDefault: Predefinito

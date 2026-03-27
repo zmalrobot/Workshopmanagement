@@ -18,6 +18,9 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? CompanyPhone { get; set; }
         public bool HasLogo { get; set; }
 
+        // Appearance
+        public string? SelectedTheme { get; set; }
+
         // Working hours
         public TimeOnly MorningStart { get; set; } = new TimeOnly(9, 0);
         public TimeOnly MorningEnd { get; set; } = new TimeOnly(13, 0);
