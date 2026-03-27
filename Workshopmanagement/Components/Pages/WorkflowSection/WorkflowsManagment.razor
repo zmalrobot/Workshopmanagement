@@ -105,10 +105,17 @@
                 </TemplateColumn>
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowEstimatedHours"]" Sortable="false">
                     <CellTemplate>
-                        <MudText>@(context.Item.EstimatedHours.HasValue ? context.Item.EstimatedHours.Value.ToString() : "-")</MudText>
+                        @{
+                            var h = context.Item.EstimatedHours;
+                            var m = context.Item.EstimatedMinutes;
+                            <MudText>@((h.HasValue || (m.HasValue && m.Value > 0)) ? $"{(h.HasValue ? h.Value + "h" : "")} {(m.HasValue && m.Value > 0 ? m.Value + "m" : "")}".Trim() : "-")</MudText>
+                        }
                     </CellTemplate>
                     <EditTemplate>
-                        <MudNumericField T="int?" Margin="Margin.Dense" Label="@languageContainer.Keys["WorkflowEstimatedHours"]" Variant="Variant.Outlined" @bind-Value="context.Item.EstimatedHours" Min="0" />
+                        <MudStack Row="true" Spacing="2">
+                            <MudNumericField T="int?" Margin="Margin.Dense" Label="@languageContainer.Keys["WorkflowEstimatedHours"]" Variant="Variant.Outlined" @bind-Value="context.Item.EstimatedHours" Min="0" />
+                            <MudNumericField T="int?" Margin="Margin.Dense" Label="@languageContainer.Keys["WorkflowEstimatedMinutes"]" Variant="Variant.Outlined" @bind-Value="context.Item.EstimatedMinutes" Min="0" Max="59" />
+                        </MudStack>
                     </EditTemplate>
                 </TemplateColumn>
             </Columns>

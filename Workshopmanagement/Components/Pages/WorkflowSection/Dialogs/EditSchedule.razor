@@ -23,11 +23,17 @@
         else
         {
             <MudGrid>
-                <MudItem xs="12">
+                <MudItem xs="6">
                     <MudDatePicker Label="@languageContainer.Keys["WorkkflowStartStep5Date"]"
                                    @bind-Date="startDate"
                                    Variant="Variant.Outlined"
                                    Culture="@(new System.Globalization.CultureInfo("it-IT"))" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTimePicker Label="@languageContainer.Keys["WorkkflowStartStep5Time"]"
+                                   @bind-Time="startTime"
+                                   Variant="Variant.Outlined"
+                                   AmPm="false" />
                 </MudItem>
                 <MudItem xs="6">
                     <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]"
@@ -62,13 +68,15 @@
     public EditScheduleDialogParameter Dataset { get; set; } = new EditScheduleDialogParameter();
 
     private DateTime? startDate;
+    private TimeSpan? startTime;
     private int? estimatedHours;
     private int? estimatedMinutes;
     private bool processing = false;
 
     protected override void OnInitialized()
     {
-        startDate = Dataset.StartDate;
+        startDate = Dataset.StartDate?.Date;
+        startTime = Dataset.StartDate?.TimeOfDay;
         estimatedHours = Dataset.EstimatedHours;
         estimatedMinutes = Dataset.EstimatedMinutes;
     }
@@ -84,7 +92,7 @@
 
             var tasks = executions.Select(exec =>
             {
-                exec.StartDate = startDate;
+                exec.StartDate = startDate?.Date.Add(startTime ?? TimeSpan.Zero);
                 exec.EstimatedHours = estimatedHours;
                 exec.EstimatedMinutes = estimatedMinutes;
                 return dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(exec);

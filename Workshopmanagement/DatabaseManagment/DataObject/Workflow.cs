@@ -25,5 +25,6 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime InsertDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public int? EstimatedHours { get; set; }
+        public int? EstimatedMinutes { get; set; }
     }
 }

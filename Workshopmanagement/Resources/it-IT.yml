@@ -98,7 +98,8 @@ WorkkflowStartStep5Date: Data inizio pianificata
 WorkkflowStartStep5Time: Ora di inizio
 WorkkflowStartStep5EstimatedHours: Ore stimate
 WorkkflowStartStep5EstimatedMinutes: Minuti stimati
-WorkflowEstimatedHours: Tempo di esecuzione
+WorkflowEstimatedHours: Tempo di esecuzione (ore)
+WorkflowEstimatedMinutes: Tempo di esecuzione (min)
 WorkkflowStartStepGoBack: Vai allo step precedente
 WorkkflowStartStepGoForward: Vai allo step successivo
 Search: Cerca

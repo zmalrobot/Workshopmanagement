@@ -39,7 +39,13 @@
                             @if (isScheduledFuture)
                             {
                                 <MudTooltip Text="@languageContainer.Keys["WorkflowFutureScheduled"]">
-                                    <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small" Style="font-size:0.7rem;">@Utility.GetDateFormatted(GetSeriesStartDate(seriesId), Utility.DateFormat.OnlyDate)</MudChip>
+                                    <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small" Style="font-size:0.7rem;">
+                                        @Utility.GetDateFormatted(GetSeriesStartDate(seriesId), Utility.DateFormat.OnlyDate)
+                                        @if (GetSeriesStartDate(seriesId) is { } sd2 && (sd2.Hour != 0 || sd2.Minute != 0))
+                                        {
+                                            <span class="ml-1">@Utility.GetDateFormatted(sd2, Utility.DateFormat.OnlyTime)</span>
+                                        }
+                                    </MudChip>
                                 </MudTooltip>
                             }
                             else
@@ -62,7 +68,14 @@
 
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowColStartDate"]" Sortable="false">
                     <CellTemplate>
-                        @Utility.GetDateFormatted(GetSeriesStartDate(context.Item.Entry.WorkflowExecutionSeriesId), Utility.DateFormat.OnlyDate)
+                        @{
+                            var sd = GetSeriesStartDate(context.Item.Entry.WorkflowExecutionSeriesId);
+                            @Utility.GetDateFormatted(sd, Utility.DateFormat.OnlyDate)
+                            @if (sd.HasValue && (sd.Value.Hour != 0 || sd.Value.Minute != 0))
+                            {
+                                <MudText Typo="Typo.caption" Class="ml-1">@Utility.GetDateFormatted(sd, Utility.DateFormat.OnlyTime)</MudText>
+                            }
+                        }
                     </CellTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]" Sortable="false">
