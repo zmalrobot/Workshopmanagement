@@ -53,6 +53,8 @@ namespace Workshopmanagement.Utility.Themes
             ThemeVariant.AppleLiquidGlassLight   => AppleLiquidGlassTheme.Light,
             ThemeVariant.FluentDesignDark        => FluentDesignTheme.Dark,
             ThemeVariant.FluentDesignLight       => FluentDesignTheme.Light,
+            ThemeVariant.CarbonDark              => CarbonTheme.Dark,
+            ThemeVariant.CarbonLight             => CarbonTheme.Light,
             _                                    => MaterialExpressiveTheme.Dark
         };
 
@@ -61,6 +63,7 @@ namespace Workshopmanagement.Utility.Themes
             ThemeVariant.MaterialExpressiveLight => false,
             ThemeVariant.AppleLiquidGlassLight   => false,
             ThemeVariant.FluentDesignLight       => false,
+            ThemeVariant.CarbonLight             => false,
             _                                    => true
         };
 
@@ -73,6 +76,8 @@ namespace Workshopmanagement.Utility.Themes
             ThemeVariant.AppleLiquidGlassLight   => "theme-glass-light",
             ThemeVariant.FluentDesignDark        => "theme-fluent-dark",
             ThemeVariant.FluentDesignLight       => "theme-fluent-light",
+            ThemeVariant.CarbonDark              => "theme-carbon-dark",
+            ThemeVariant.CarbonLight             => "theme-carbon-light",
             _                                    => "theme-md3-dark"
         };
     }

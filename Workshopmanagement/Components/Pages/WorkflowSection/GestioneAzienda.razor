@@ -161,40 +161,85 @@
                 </MudCardHeader>
                 <MudCardContent>
                     <MudGrid Spacing="3">
-                        @foreach (var info in GetThemeOptions())
-                        {
-                            var isSelected = themeService.CurrentVariant == info.Variant;
-                            <MudItem xs="12" sm="6" md="4">
-                                <MudCard Outlined="@(!isSelected)" Elevation="@(isSelected ? 6 : 1)"
-                                         Style="@($"cursor:pointer; border: 2px solid {(isSelected ? info.PrimaryColor : "transparent")}; border-radius:12px; transition: all 0.2s ease;")"
-                                         @onclick="() => ApplyTheme(info.Variant)">
-                                    <MudCardContent Class="pa-3">
-                                        <MudStack Spacing="2">
-                                            @* Color preview row *@
-                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
-                                                <div style="@($"width:28px; height:28px; border-radius:50%; background:{info.PrimaryColor}; flex-shrink:0;")" />
-                                                <div style="@($"width:20px; height:20px; border-radius:50%; background:{info.AccentColor}; flex-shrink:0;")" />
-                                                <div style="@($"flex:1; height:20px; border-radius:6px; background:{info.BackgroundColor}; border:1px solid rgba(128,128,128,0.3);")" />
+
+                        @* ── Dark column ──────────────────────────────── *@
+                        <MudItem xs="12" sm="6">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.DarkMode" Size="Size.Small" Color="Color.Secondary" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary"
+                                         Style="text-transform:uppercase; letter-spacing:0.07em; font-weight:600;">Dark Mode</MudText>
+                            </MudStack>
+                            <MudStack Spacing="2">
+                                @foreach (var info in GetThemeOptions().Where(t => t.IsDark))
+                                {
+                                    var isSelected = themeService.CurrentVariant == info.Variant;
+                                    <MudCard Outlined="@(!isSelected)" Elevation="@(isSelected ? 4 : 1)"
+                                             Style="@($"cursor:pointer; border:2px solid {(isSelected ? info.PrimaryColor : "transparent")}; border-radius:12px; transition:all 0.2s ease;")"
+                                             @onclick="() => ApplyTheme(info.Variant)">
+                                        <MudCardContent Class="pa-3">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                @* Palette swatch *@
+                                                <div style="@($"width:44px; height:44px; border-radius:8px; background:{info.BackgroundColor}; border:1px solid rgba(128,128,128,0.25); flex-shrink:0; position:relative; overflow:hidden;")"
+                                                     title="@info.Name">
+                                                    <div style="@($"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:22px; height:22px; border-radius:50%; background:{info.PrimaryColor};")" />
+                                                    <div style="@($"position:absolute; bottom:5px; right:5px; width:9px; height:9px; border-radius:50%; background:{info.AccentColor};")" />
+                                                </div>
+                                                @* Labels *@
+                                                <MudStack Spacing="0" Style="flex:1; min-width:0;">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary"
+                                                             Style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em;">@info.DesignSystem</MudText>
+                                                    <MudText Typo="Typo.subtitle2" Style="font-weight:600;">@info.Name</MudText>
+                                                </MudStack>
                                                 @if (isSelected)
                                                 {
-                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" />
+                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Style="flex-shrink:0;" />
                                                 }
                                             </MudStack>
-                                            @* Labels *@
-                                            <MudStack Spacing="0">
-                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em;">@info.DesignSystem</MudText>
-                                                <MudText Typo="Typo.subtitle2" Style="font-weight:600;">@info.Name</MudText>
+                                        </MudCardContent>
+                                    </MudCard>
+                                }
+                            </MudStack>
+                        </MudItem>
+
+                        @* ── Light column ─────────────────────────────── *@
+                        <MudItem xs="12" sm="6">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                                <MudIcon Icon="@Icons.Material.Filled.LightMode" Size="Size.Small" Color="Color.Secondary" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary"
+                                         Style="text-transform:uppercase; letter-spacing:0.07em; font-weight:600;">Light Mode</MudText>
+                            </MudStack>
+                            <MudStack Spacing="2">
+                                @foreach (var info in GetThemeOptions().Where(t => !t.IsDark))
+                                {
+                                    var isSelected = themeService.CurrentVariant == info.Variant;
+                                    <MudCard Outlined="@(!isSelected)" Elevation="@(isSelected ? 4 : 1)"
+                                             Style="@($"cursor:pointer; border:2px solid {(isSelected ? info.PrimaryColor : "transparent")}; border-radius:12px; transition:all 0.2s ease;")"
+                                             @onclick="() => ApplyTheme(info.Variant)">
+                                        <MudCardContent Class="pa-3">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                                @* Palette swatch *@
+                                                <div style="@($"width:44px; height:44px; border-radius:8px; background:{info.BackgroundColor}; border:1px solid rgba(128,128,128,0.25); flex-shrink:0; position:relative; overflow:hidden;")"
+                                                     title="@info.Name">
+                                                    <div style="@($"position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); width:22px; height:22px; border-radius:50%; background:{info.PrimaryColor};")" />
+                                                    <div style="@($"position:absolute; bottom:5px; right:5px; width:9px; height:9px; border-radius:50%; background:{info.AccentColor};")" />
+                                                </div>
+                                                @* Labels *@
+                                                <MudStack Spacing="0" Style="flex:1; min-width:0;">
+                                                    <MudText Typo="Typo.caption" Color="Color.Secondary"
+                                                             Style="font-size:0.68rem; text-transform:uppercase; letter-spacing:0.06em;">@info.DesignSystem</MudText>
+                                                    <MudText Typo="Typo.subtitle2" Style="font-weight:600;">@info.Name</MudText>
+                                                </MudStack>
+                                                @if (isSelected)
+                                                {
+                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Small" Style="flex-shrink:0;" />
+                                                }
                                             </MudStack>
-                                            <MudChip T="string" Size="Size.Small" Color="@(info.IsDark ? Color.Dark : Color.Default)"
-                                                     Icon="@(info.IsDark ? Icons.Material.Filled.DarkMode : Icons.Material.Filled.LightMode)"
-                                                     Style="align-self:flex-start; height:22px; font-size:0.72rem;">
-                                                @(info.IsDark ? languageContainer.Keys["ThemeDark"] : languageContainer.Keys["ThemeLight"])
-                                            </MudChip>
-                                        </MudStack>
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
-                        }
+                                        </MudCardContent>
+                                    </MudCard>
+                                }
+                            </MudStack>
+                        </MudItem>
+
                     </MudGrid>
                 </MudCardContent>
             </MudCard>
@@ -364,12 +409,14 @@
 
     private List<ThemeInfo> GetThemeOptions() => new()
     {
-        new(ThemeVariant.MaterialExpressiveDark,  "Expressive Dark",   "Material Design 3",  true,  "#D0BCFF", "#0F0D13", "#EFB8C8"),
-        new(ThemeVariant.MaterialExpressiveLight, "Expressive Light",  "Material Design 3",  false, "#6750A4", "#FFFBFE", "#7D5260"),
-        new(ThemeVariant.AppleLiquidGlassDark,   "Liquid Glass Dark",  "Apple Design",       true,  "#0A84FF", "#1C1C1E", "#30D158"),
-        new(ThemeVariant.AppleLiquidGlassLight,  "Liquid Glass Light", "Apple Design",       false, "#007AFF", "#F2F2F7", "#34C759"),
-        new(ThemeVariant.FluentDesignDark,        "Fluent Dark",        "Microsoft Fluent",   true,  "#60CDFF", "#202020", "#74B4C8"),
-        new(ThemeVariant.FluentDesignLight,       "Fluent Light",       "Microsoft Fluent",   false, "#0078D4", "#F3F3F3", "#0099BC"),
+        new(ThemeVariant.MaterialExpressiveDark,  "Expressive",   "Material Design 3",  true,  "#D0BCFF", "#0F0D13", "#EFB8C8"),
+        new(ThemeVariant.MaterialExpressiveLight, "Expressive",   "Material Design 3",  false, "#6750A4", "#FFFBFE", "#7D5260"),
+        new(ThemeVariant.AppleLiquidGlassDark,   "Liquid Glass",  "Apple Design",       true,  "#0A84FF", "#1C1C1E", "#30D158"),
+        new(ThemeVariant.AppleLiquidGlassLight,  "Liquid Glass",  "Apple Design",       false, "#007AFF", "#F2F2F7", "#34C759"),
+        new(ThemeVariant.FluentDesignDark,        "Fluent",        "Microsoft Fluent",   true,  "#60CDFF", "#202020", "#74B4C8"),
+        new(ThemeVariant.FluentDesignLight,       "Fluent",        "Microsoft Fluent",   false, "#0078D4", "#F3F3F3", "#0099BC"),
+        new(ThemeVariant.CarbonDark,              "Carbon",        "IBM Carbon",         true,  "#0F62FE", "#161616", "#8A3FFC"),
+        new(ThemeVariant.CarbonLight,             "Carbon",        "IBM Carbon",         false, "#0F62FE", "#F4F4F4", "#8A3FFC"),
     };
 
     private void ApplyTheme(ThemeVariant variant)

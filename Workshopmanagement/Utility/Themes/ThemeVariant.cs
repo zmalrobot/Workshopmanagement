@@ -7,6 +7,8 @@ namespace Workshopmanagement.Utility.Themes
         AppleLiquidGlassDark,
         AppleLiquidGlassLight,
         FluentDesignDark,
-        FluentDesignLight
+        FluentDesignLight,
+        CarbonDark,
+        CarbonLight
     }
 }
