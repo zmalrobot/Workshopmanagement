@@ -273,3 +273,5 @@ WorkflowEditSchedule: Modifica pianificazione
 WorkflowEditScheduleTitle: Modifica data di inizio e ore stimate
 WorkflowEditScheduleSaved: Pianificazione aggiornata con successo
 WorkflowFutureScheduled: Flusso pianificato per data futura
+WorkflowColAssigned: Assegnato a
+WorkflowDashboardAssigned: Operatori

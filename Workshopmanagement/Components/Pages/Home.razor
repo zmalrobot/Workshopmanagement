@@ -101,9 +101,20 @@
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
-                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
-                                <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
+                            <MudStack Spacing="1">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
+                                    <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
+                                </MudStack>
+                                @{
+                                    var dashEmpNames = GetDashboardEmployeeNames();
+                                }
+                                @if (!string.IsNullOrEmpty(dashEmpNames))
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Style="vertical-align: middle; margin-right: 4px;" />@languageContainer.Keys["WorkflowDashboardAssigned"]: @dashEmpNames
+                                    </MudText>
+                                }
                             </MudStack>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                                 <MudText Typo="Typo.body2" Color="Color.Default">
@@ -258,6 +269,7 @@
     private List<Veichle> allOpenVeichles = new List<Veichle>();
     private List<Workflow> allWorkflows = new List<Workflow>();
     private List<WorkflowTask> allWorkflowTasks = new List<WorkflowTask>();
+    private List<Employee> allEmployees = new List<Employee>();
 
     private bool processing = true;
     private bool showStepTable = false;
@@ -315,6 +327,7 @@
             allOpenVeichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle { HasOpenWorkflow = true });
             allWorkflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
             allWorkflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+            allEmployees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
 
             // Collect all open workflow entries across all vehicles
             var allEntries = allOpenVeichles
@@ -455,6 +468,7 @@
             });
             allWorkflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
             allWorkflowTasks = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+            allEmployees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
             var customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
 
             // Get distinct customer IDs from vehicles with open workflows
@@ -677,6 +691,20 @@
             .Where(s => s.EndTime.HasValue)
             .Sum(s => (s.EndTime!.Value - s.StartTime).Ticks));
         return $"{(int)total.TotalHours:D2}:{total.Minutes:D2}:{total.Seconds:D2}";
+    }
+
+    private string GetDashboardEmployeeNames()
+    {
+        if (dashboardExecutions == null || !dashboardExecutions.Any()) return "";
+        var names = dashboardExecutions
+            .Where(e => !string.IsNullOrEmpty(e.EmployeeId))
+            .Select(e => e.EmployeeId)
+            .Distinct()
+            .Select(id => allEmployees.FirstOrDefault(emp => emp.Id == id))
+            .Where(emp => emp != null)
+            .Select(emp => $"{emp!.Name} {emp.Surname}")
+            .ToList();
+        return names.Any() ? string.Join(", ", names) : "";
     }
 
     #endregion

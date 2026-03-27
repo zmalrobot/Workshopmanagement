@@ -70,6 +70,11 @@
                         @(GetSeriesEstimatedHours(context.Item.Entry.WorkflowExecutionSeriesId)?.ToString() ?? "-")
                     </CellTemplate>
                 </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowColAssigned"]" Sortable="false">
+                    <CellTemplate>
+                        <MudText Typo="Typo.body2">@GetSeriesEmployeeNames(context.Item.Entry.WorkflowExecutionSeriesId)</MudText>
+                    </CellTemplate>
+                </TemplateColumn>
 
                 <PropertyColumn Property="x => x.Veichle.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <TemplateColumn Title="@languageContainer.Keys["TimeTrackingHoursSpent"]" Sortable="false">
@@ -245,6 +250,7 @@
 @code {
     private Employee employee;
     private List<Customer> customers = new List<Customer>();
+    private List<Employee> employees = new List<Employee>();
     private List<Veichle> veichles = new List<Veichle>();
     private List<VeichleWorkflowView> gridItems = new List<VeichleWorkflowView>();
     private List<Workflow> workflows = new List<Workflow>();
@@ -283,6 +289,7 @@
                 await GetWorkflows();
                 await GetWorkflowTasks();
                 await GetWorkflowExecutions();
+                await GetEmployees();
                 await LoadTimeTrackingStates();
             }
 
@@ -344,6 +351,10 @@
             .OrderBy(x => workflowExecutions
                 .FirstOrDefault(e => e.WorkflowExecutionSeriesId == x.Entry.WorkflowExecutionSeriesId)?.StartDate ?? DateTime.MaxValue)
             .ToList();
+    }
+    private async Task GetEmployees()
+    {
+        employees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
     }
     #endregion
 
@@ -432,6 +443,19 @@
             }
 
             snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
+
+            // Add employee to AssignedEmployeeIds on the current execution
+            var startExecution = workflowExecutions.FirstOrDefault(e => e.Id == item.Entry.WorkflowExecutionId);
+            if (startExecution != null)
+            {
+                if (startExecution.AssignedEmployeeIds == null)
+                    startExecution.AssignedEmployeeIds = new List<string>();
+                if (!startExecution.AssignedEmployeeIds.Contains(employeeId))
+                {
+                    startExecution.AssignedEmployeeIds.Add(employeeId);
+                    await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(startExecution);
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -452,6 +476,14 @@
 
             tracking.IsActive = false;
             await dbDependency.GetDataAccessTimeTracking().UpdateAsync(tracking);
+
+            // Remove employee from AssignedEmployeeIds on the current execution
+            var stopExecution = workflowExecutions.FirstOrDefault(e => e.Id == item.Entry.WorkflowExecutionId);
+            if (stopExecution != null && stopExecution.AssignedEmployeeIds != null)
+            {
+                stopExecution.AssignedEmployeeIds.Remove(employee.Id);
+                await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(stopExecution);
+            }
 
             StateHasChanged();
             snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
@@ -653,6 +685,23 @@
         if (string.IsNullOrEmpty(seriesId)) return false;
         var startDate = GetSeriesStartDate(seriesId);
         return startDate.HasValue && startDate.Value.Date > DateTime.Today;
+    }
+
+    private string GetSeriesEmployeeNames(string? seriesId)
+    {
+        if (string.IsNullOrEmpty(seriesId)) return "-";
+        var employeeIds = workflowExecutions
+            .Where(e => e.WorkflowExecutionSeriesId == seriesId && e.AssignedEmployeeIds != null)
+            .SelectMany(e => e.AssignedEmployeeIds!)
+            .Distinct()
+            .ToList();
+        if (!employeeIds.Any()) return "-";
+        var names = employeeIds
+            .Select(id => employees.FirstOrDefault(emp => emp.Id == id))
+            .Where(emp => emp != null)
+            .Select(emp => $"{emp!.Name} {emp.Surname}")
+            .ToList();
+        return names.Any() ? string.Join(", ", names) : "-";
     }
     #endregion
 
