@@ -148,7 +148,7 @@
                     {
                         <MudItem xs="12">
                             <MudText Typo="Typo.caption">Ore stimate</MudText>
-                            <MudText Typo="Typo.body2">@selectedEvent.EstimatedHours.Value.ToString("F1") h</MudText>
+                            <MudText Typo="Typo.body2">@selectedEvent.EstimatedHours.Value.ToString("F0")h @(selectedEvent.EstimatedMinutes.HasValue && selectedEvent.EstimatedMinutes.Value > 0 ? selectedEvent.EstimatedMinutes.Value + "m" : "")</MudText>
                         </MudItem>
                     }
                 </MudGrid>
@@ -291,6 +291,7 @@
         public string LicensePlate { get; set; } = "";
         public string EmployeeNames { get; set; } = "";
         public double? EstimatedHours { get; set; }
+        public int? EstimatedMinutes { get; set; }
         public string StatusLabel { get; set; } = "";
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
@@ -327,6 +328,7 @@
 
             var startDate = execs.Min(e => e.StartDate)!.Value;
             var estimatedHours = execs.FirstOrDefault()?.EstimatedHours;
+            var estimatedMinutes = execs.FirstOrDefault()?.EstimatedMinutes;
             var isCompleted = execs.All(e =>
                 e.ExecutionStatus == WorkflowExecutionStatus.Closed ||
                 e.ExecutionStatus == WorkflowExecutionStatus.Skipped);
@@ -336,7 +338,7 @@
             if (isCompleted && closedAt.HasValue)
                 logicalEnd = closedAt.Value;
             else if (estimatedHours.HasValue && estimatedHours.Value > 0)
-                logicalEnd = AddWorkingMinutes(startDate, estimatedHours.Value * 60, ms, me, as_, ae);
+                logicalEnd = AddWorkingMinutes(startDate, estimatedHours.Value * 60 + (estimatedMinutes ?? 0), ms, me, as_, ae);
             else
                 logicalEnd = AddWorkingMinutes(startDate, 60, ms, me, as_, ae);
 
@@ -364,6 +366,7 @@
                 LicensePlate = plate,
                 EmployeeNames = empNames1,
                 EstimatedHours = estimatedHours,
+                EstimatedMinutes = estimatedMinutes,
                 StatusLabel = statusLabel1,
                 Start = startDate,
                 End = logicalEnd,

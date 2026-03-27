@@ -7,5 +7,6 @@ namespace Workshopmanagement.Utility.DialogParameter
         public string WorkflowExecutionSeriesId { get; set; } = "";
         public DateTime? StartDate { get; set; }
         public int? EstimatedHours { get; set; }
+        public int? EstimatedMinutes { get; set; }
     }
 }

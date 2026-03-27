@@ -29,11 +29,17 @@
                                    Variant="Variant.Outlined"
                                    Culture="@(new System.Globalization.CultureInfo("it-IT"))" />
                 </MudItem>
-                <MudItem xs="12">
+                <MudItem xs="6">
                     <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]"
                                      @bind-Value="estimatedHours"
                                      Variant="Variant.Outlined"
                                      Min="1" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedMinutes"]"
+                                     @bind-Value="estimatedMinutes"
+                                     Variant="Variant.Outlined"
+                                     Min="0" Max="59" />
                 </MudItem>
             </MudGrid>
         }
@@ -57,12 +63,14 @@
 
     private DateTime? startDate;
     private int? estimatedHours;
+    private int? estimatedMinutes;
     private bool processing = false;
 
     protected override void OnInitialized()
     {
         startDate = Dataset.StartDate;
         estimatedHours = Dataset.EstimatedHours;
+        estimatedMinutes = Dataset.EstimatedMinutes;
     }
 
     private async Task SaveAsync()
@@ -78,6 +86,7 @@
             {
                 exec.StartDate = startDate;
                 exec.EstimatedHours = estimatedHours;
+                exec.EstimatedMinutes = estimatedMinutes;
                 return dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(exec);
             });
 

@@ -206,11 +206,17 @@
                                     <MudItem xs="6" Style="text-align:left;">
                                         <MudText>@Utility.GetDescriptionFromVeichle(selectedVeichle, languageContainer)</MudText>
                                     </MudItem>
-                                    <MudItem xs="12">
+                                    <MudItem xs="6">
                                         <MudDatePicker Label="@languageContainer.Keys["WorkkflowStartStep5Date"]" MinDate="DateTime.Today" @bind-Date="startDate" Variant="Variant.Outlined" Culture="@(new System.Globalization.CultureInfo("it-IT"))" />
                                     </MudItem>
-                                    <MudItem xs="12">
+                                    <MudItem xs="6">
+                                        <MudTimePicker Label="@languageContainer.Keys["WorkkflowStartStep5Time"]" @bind-Time="startTime" Variant="Variant.Outlined" AmPm="false" />
+                                    </MudItem>
+                                    <MudItem xs="6">
                                         <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]" @bind-Value="estimatedHours" Variant="Variant.Outlined" Min="1" />
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedMinutes"]" @bind-Value="estimatedMinutes" Variant="Variant.Outlined" Min="0" Max="59" />
                                     </MudItem>
                                     @if (selectedWorkflow.RequireDisclaimer && !isDisclamerAleadySign)
                                     {
@@ -411,7 +417,9 @@
     private bool isDisclamerAleadySign = false;
     private string signImage = "";
     private DateTime? startDate = DateTime.Today;
+    private TimeSpan? startTime = new TimeSpan(DateTime.Now.Hour, DateTime.Now.Minute, 0);
     private int? estimatedHours;
+    private int? estimatedMinutes;
 
     private bool processing = false;
     private bool isInitialized = false;
@@ -484,8 +492,9 @@
                    workflowExecution.DisclamierSign = signImage;
                    workflowExecution.IsDisclamerAleadySign = isDisclamerAleadySign;
                    workflowExecution.Titile = languageContainer.Keys["WorkflowTaskSign"];
-                   workflowExecution.StartDate = startDate;
+                   workflowExecution.StartDate = startDate?.Date.Add(startTime ?? TimeSpan.Zero);
                    workflowExecution.EstimatedHours = estimatedHours;
+                   workflowExecution.EstimatedMinutes = estimatedMinutes;
 
                    await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(workflowExecution);
                }
@@ -519,8 +528,9 @@
                     workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
                     workflowExecution.OpenAt = DateTime.Now;
                     workflowExecution.Titile = $"{currentTask.Title} - {currentTask.Subtitle}";
-                    workflowExecution.StartDate = startDate;
+                    workflowExecution.StartDate = startDate?.Date.Add(startTime ?? TimeSpan.Zero);
                     workflowExecution.EstimatedHours = estimatedHours;
+                    workflowExecution.EstimatedMinutes = estimatedMinutes;
                     if (isFirstTask)
                     {
                         workflowExecution.KmPost = selectedVeichle.ActualKilometers ?? 0;

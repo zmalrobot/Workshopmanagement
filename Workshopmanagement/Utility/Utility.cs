@@ -264,9 +264,32 @@ namespace Workshopmanagement.Utility
             reportTemplate = reportTemplate.Replace("{{ReportTimeTableEmployeeTitle}}", languageContainer.Keys["ReportTimeTableEmployeeTitle"]);
             reportTemplate = reportTemplate.Replace("{{ReportTimeTableHoursTitle}}", languageContainer.Keys["ReportTimeTableHoursTitle"]);
             reportTemplate = reportTemplate.Replace("{{ReportTimeTableTotalTitle}}", languageContainer.Keys["ReportTimeTableTotalTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationTitle}}", languageContainer.Keys["ReportCompanyInformationTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationNameTitle}}", languageContainer.Keys["ReportCompanyInformationNameTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationVatNumberTitle}}", languageContainer.Keys["ReportCompanyInformationVatNumberTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationPhoneTitle}}", languageContainer.Keys["ReportCompanyInformationPhoneTitle"]);
             #endregion
 
             #region Contents
+            //Company
+            var companySettingsList = await dbDependency.GetDataAccessCompanySettings().FindAsync(new SearcherCompanySettings());
+            var companySettings = companySettingsList?.FirstOrDefault() ?? new CompanySettings();
+            var companyLogoHtml = "";
+            if (companySettings.HasLogo)
+            {
+                var logoFilePath = Path.Combine("wwwroot", "images", "companylogo.png");
+                if (File.Exists(logoFilePath))
+                {
+                    var logoBytes = await File.ReadAllBytesAsync(logoFilePath);
+                    var logoBase64 = Convert.ToBase64String(logoBytes);
+                    companyLogoHtml = $"<img src=\"data:image/png;base64,{logoBase64}\" style=\"width:80px;height:80px;border-radius:50%;object-fit:cover;\" />";
+                }
+            }
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyLogo}}", companyLogoHtml);
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationName}}", companySettings.CompanyName ?? "");
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationVatNumber}}", companySettings.CompanyVatNumber ?? "");
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationPhone}}", companySettings.CompanyPhone ?? "");
+
             //Customer
             reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationName}}", $"{customer.Name} {customer.Surname}");
             reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationAddress}}", $"{customer.Address}");

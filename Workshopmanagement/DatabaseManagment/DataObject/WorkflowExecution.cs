@@ -47,6 +47,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public bool IsCompleted { get; set; }
         public DateTime? StartDate { get; set; }
         public int? EstimatedHours { get; set; }
+        public int? EstimatedMinutes { get; set; }
         public List<string>? AssignedEmployeeIds { get; set; }
 
         //Disclaimer
