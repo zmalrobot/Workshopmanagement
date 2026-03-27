@@ -13,5 +13,6 @@ namespace Workshopmanagement.Utility.DialogParameter
         public List<Component> components = new List<Component>();
         public bool editOneExecution = false;  //In pratica apro in modalità edit singola esecuzione
         public bool viewOneExecution = false;  //Modalità visualizzazione
+        public bool isNewExecution = false;    //Nuova esecuzione da creare (Duplica) - inserisce invece di aggiornare
     }
 }

@@ -252,13 +252,7 @@
                             @languageContainer.Keys["ResumeWorkflowSkipStep"]
                         </MudButton>
                     }
-                    @if (Dataset.workflowTask.AllowLoop)
-                    {
-                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Closed, true))" 
-                                   Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" EndIcon="@Icons.Material.Filled.Repeat" Color="Color.Primary" Disabled="@IsEditDisabled()">
-                            @languageContainer.Keys["ResumeWorkflowRepeteStep"]
-                        </MudButton>
-                    }
+
                 }               
             </MudItem>
             <MudItem xs="6" Style="text-align:right">
@@ -520,12 +514,18 @@
             Dataset.workflowExecution.Components = null;
         }    
 
+        bool isNew = Dataset.isNewExecution;
+        Dataset.isNewExecution = false;
+
         Dataset.workflowExecution.EmployeeId = Dataset.employee.Id;
         Dataset.workflowExecution.UserId = Dataset.customer.Id;
         Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
         Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
-        var currentEntry = Dataset.veichle?.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
-        Dataset.workflowExecution.WorkflowTaskId = currentEntry?.WorkflowTaskId ?? "";
+        if (!isNew)
+        {
+            var currentEntry = Dataset.veichle?.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
+            Dataset.workflowExecution.WorkflowTaskId = currentEntry?.WorkflowTaskId ?? "";
+        }
         Dataset.workflowExecution.FuelPre = Dataset.veichle?.ActualFuelPercentage;
         Dataset.workflowExecution.KmPre = Dataset.veichle?.ActualKilometers;
         Dataset.workflowExecution.ExecutionStatus = executionStatus;
@@ -536,7 +536,10 @@
         if (Dataset.workflowExecution.IsCompleted)
             Dataset.workflowExecution.ClosedAt ??= DateTime.Now;
 
-        await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(Dataset.workflowExecution);
+        if (isNew)
+            await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(Dataset.workflowExecution);
+        else
+            await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(Dataset.workflowExecution);
     }
 
     private async Task UpdateVeichle(WorkflowTask nextTask, WorkflowExecutionStatus executionStatus, bool repeat)

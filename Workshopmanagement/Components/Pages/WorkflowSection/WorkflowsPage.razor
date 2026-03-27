@@ -157,6 +157,14 @@
                                                                        Icon="@Icons.Material.Filled.Edit" Variant="Variant.Outlined"
                                                                        Disabled="@(!IsTrackingActive(context.Item.Entry.WorkflowExecutionSeriesId))" />
                                                     }
+                                                    @if (step.Execution != null && step.Task.AllowLoop && CanEditStep(step))
+                                                    {
+                                                        <MudIconButton OnClick="@(() => DuplicateStepAsync(context.Item, step))"
+                                                                       Color="Color.Success" Size="@Size.Small"
+                                                                       Icon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined"
+                                                                       Disabled="@(!IsTrackingActive(context.Item.Entry.WorkflowExecutionSeriesId))"
+                                                                       Title="Duplica" />
+                                                    }
                                                     @if (step.Execution != null && !CanEditStep(step))
                                                     {
                                                         <MudIconButton OnClick="@(() => OpenViewStepAsync(context.Item, step))"
@@ -875,6 +883,75 @@
                 }
             }
         };
+
+            var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            var result = await dialog.Result;
+
+            if (!result?.Canceled ?? false)
+            {
+                processing = true;
+                await GetVeichles();
+                await GetWorkflowExecutions();
+                await LoadTimeTrackingStates();
+            }
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task DuplicateStepAsync(VeichleWorkflowView item, WorkflowStepView step)
+    {
+        try
+        {
+            if (step.Execution == null) return;
+
+            var veichle = item.Veichle;
+            var currentCustomer = customers.FirstOrDefault(x => x.Id.Equals(veichle.UserId)) ?? new Customer();
+            var currentWorkflow = workflows.FirstOrDefault(x => x.Id.Equals(item.Entry.WorkflowId)) ?? new Workflow();
+            var components = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent()) ?? new List<Component>();
+
+            var freshExecution = new WorkflowExecution
+            {
+                Id = Guid.NewGuid().ToString(),
+                EmployeeId = employee.Id,
+                UserId = step.Execution.UserId,
+                VeichleId = step.Execution.VeichleId,
+                WorkflowId = step.Execution.WorkflowId,
+                WorkflowTaskId = step.Task.Id,
+                WorkflowExecutionSeriesId = step.Execution.WorkflowExecutionSeriesId,
+                ExecutionStatus = WorkflowExecutionStatus.Todo,
+                StartDate = step.Execution.StartDate,
+                EstimatedHours = step.Execution.EstimatedHours,
+                AssignedEmployeeIds = step.Execution.AssignedEmployeeIds != null
+                    ? new List<string>(step.Execution.AssignedEmployeeIds)
+                    : new List<string>()
+            };
+
+            var parameters = new DialogParameters<ResumeWorkflow>
+            {
+                {
+                    x => x.Dataset,
+                    new ResumeWorkflowDialogParameter()
+                    {
+                        employee = employee,
+                        customer = currentCustomer,
+                        veichle = veichle,
+                        workflow = currentWorkflow,
+                        workflowTask = step.Task,
+                        workflowExecution = freshExecution,
+                        components = components,
+                        editOneExecution = true,
+                        viewOneExecution = false,
+                        isNewExecution = true
+                    }
+                }
+            };
 
             var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
             var result = await dialog.Result;
