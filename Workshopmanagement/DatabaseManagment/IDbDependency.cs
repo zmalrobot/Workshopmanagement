@@ -12,5 +12,6 @@ namespace Workshopmanagement.DatabaseManagment
         public DataAccessWorkflowExecution GetDataAccessWorkflowExecution();
         public DataAccessComponent GetDataAccessComponent();
         public DataAccessTimeTracking GetDataAccessTimeTracking();
+        public DataAccessCompanySettings GetDataAccessCompanySettings();
     }
 }

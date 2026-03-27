@@ -275,3 +275,27 @@ WorkflowEditScheduleSaved: Pianificazione aggiornata con successo
 WorkflowFutureScheduled: Flusso pianificato per data futura
 WorkflowColAssigned: Assegnato a
 WorkflowDashboardAssigned: Operatori
+CalendarioTitle: Calendario
+CalendarioAppuntamenti: Calendario appuntamenti
+CalendarioLavorazioni: Calendario lavorazioni
+CalendarioPrev: Prec
+CalendarioNext: Succ
+CalendarioOggi: Oggi
+CalendarioLegendaAperto: Aperto
+CalendarioLegendaInLavoro: In lavorazione
+CalendarioLegendaChiuso: Chiuso
+GestioneAzienda: Gestione azienda
+GestioneAziendaDesc: Configurazione dati azienda e orari di lavoro
+CompanyInfo: Dati azienda
+CompanyName: Ragione sociale
+CompanyVatNumber: Partita IVA
+CompanyPhone: Telefono
+CompanyLogo: Logo aziendale
+CompanyLogoUpload: Carica logo
+CompanyLogoUploaded: Logo caricato con successo
+CompanySettingsSaved: Impostazioni azienda salvate
+WorkingHoursConfig: Orari di lavoro
+WorkingHoursMorning: Mattina
+WorkingHoursAfternoon: Pomeriggio
+WorkingHoursStart: Inizio
+WorkingHoursEnd: Fine

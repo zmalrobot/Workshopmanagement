@@ -1,0 +1,274 @@
+@page "/gestioneazienda"
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+@inject IWebHostEnvironment webHostEnvironment
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h5">@languageContainer.Keys["GestioneAzienda"]</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@languageContainer.Keys["GestioneAziendaDesc"]</MudText>
+    </MudItem>
+
+    @if (!processing)
+    {
+        <!-- Company Info Card -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Business" Class="mr-2" />
+                            @languageContainer.Keys["CompanyInfo"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="settings.CompanyName"
+                                          Label="@languageContainer.Keys["CompanyName"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="settings.CompanyVatNumber"
+                                          Label="@languageContainer.Keys["CompanyVatNumber"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="settings.CompanyPhone"
+                                          Label="@languageContainer.Keys["CompanyPhone"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.body2" Class="mb-2">@languageContainer.Keys["CompanyLogo"]</MudText>
+                            @if (settings.HasLogo)
+                            {
+                                <div style="margin-bottom:8px;">
+                                    <img src="@logoUrl" alt="Logo" style="max-height:80px; max-width:200px; border-radius:4px;" />
+                                </div>
+                            }
+                            <MudFileUpload T="IBrowserFile" Accept="image/*" FilesChanged="OnLogoChanged">
+                                <ActivatorContent>
+                                    <MudButton Variant="Variant.Outlined"
+                                               StartIcon="@Icons.Material.Filled.CloudUpload"
+                                               Color="Color.Info"
+                                               Size="Size.Small">
+                                        @languageContainer.Keys["CompanyLogoUpload"]
+                                    </MudButton>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                            @if (logoFile != null)
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Success">@logoFile.Name</MudText>
+                            }
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Working Hours Card -->
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.Schedule" Class="mr-2" />
+                            @languageContainer.Keys["WorkingHoursConfig"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.subtitle2">@languageContainer.Keys["WorkingHoursMorning"]</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTimePicker Label="@languageContainer.Keys["WorkingHoursStart"]"
+                                           Time="@morningStart"
+                                           TimeChanged="@(t => morningStart = t)"
+                                           AmPm="false"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTimePicker Label="@languageContainer.Keys["WorkingHoursEnd"]"
+                                           Time="@morningEnd"
+                                           TimeChanged="@(t => morningEnd = t)"
+                                           AmPm="false"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudDivider Class="my-2" />
+                            <MudText Typo="Typo.subtitle2">@languageContainer.Keys["WorkingHoursAfternoon"]</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTimePicker Label="@languageContainer.Keys["WorkingHoursStart"]"
+                                           Time="@afternoonStart"
+                                           TimeChanged="@(t => afternoonStart = t)"
+                                           AmPm="false"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTimePicker Label="@languageContainer.Keys["WorkingHoursEnd"]"
+                                           Time="@afternoonEnd"
+                                           TimeChanged="@(t => afternoonEnd = t)"
+                                           AmPm="false"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Success"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveSettings">
+                @languageContainer.Keys["Save"]
+            </MudButton>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    private Employee? employee;
+    private bool processing = true;
+    private CompanySettings settings = new();
+    private IBrowserFile? logoFile;
+    private string logoUrl = "/images/companylogo.png";
+
+    // MudTimePicker binds to TimeSpan?
+    private TimeSpan? morningStart;
+    private TimeSpan? morningEnd;
+    private TimeSpan? afternoonStart;
+    private TimeSpan? afternoonEnd;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                processing = true;
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo("login");
+                    return;
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+                if (employee?.EmployeeRole != EmployeeRole.Manager)
+                {
+                    snackbar.Add(@languageContainer.Keys["UserNotAutorized"], Severity.Warning);
+                    navigationManager.NavigateTo("dashboard");
+                    return;
+                }
+                await LoadSettings();
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if (firstRender) StateHasChanged();
+            }
+        }
+    }
+
+    private async Task LoadSettings()
+    {
+        var list = await dbDependency.GetDataAccessCompanySettings().FindAsync(new SearcherCompanySettings());
+        settings = list.FirstOrDefault() ?? new CompanySettings();
+
+        morningStart = settings.MorningStart.ToTimeSpan();
+        morningEnd = settings.MorningEnd.ToTimeSpan();
+        afternoonStart = settings.AfternoonStart.ToTimeSpan();
+        afternoonEnd = settings.AfternoonEnd.ToTimeSpan();
+
+        if (settings.HasLogo)
+            logoUrl = $"/images/companylogo?v={DateTime.Now.Ticks}";
+    }
+
+    private void OnLogoChanged(IBrowserFile? file)
+    {
+        logoFile = file;
+    }
+
+    private async Task SaveSettings()
+    {
+        processing = true;
+        try
+        {
+            // Apply time pickers back to settings
+            if (morningStart.HasValue)
+                settings.MorningStart = TimeOnly.FromTimeSpan(morningStart.Value);
+            if (morningEnd.HasValue)
+                settings.MorningEnd = TimeOnly.FromTimeSpan(morningEnd.Value);
+            if (afternoonStart.HasValue)
+                settings.AfternoonStart = TimeOnly.FromTimeSpan(afternoonStart.Value);
+            if (afternoonEnd.HasValue)
+                settings.AfternoonEnd = TimeOnly.FromTimeSpan(afternoonEnd.Value);
+
+            // Handle logo upload
+            if (logoFile != null)
+            {
+                var imagesDir = Path.Combine(webHostEnvironment.WebRootPath, "images");
+                Directory.CreateDirectory(imagesDir);
+                var ext = Path.GetExtension(logoFile.Name);
+                var logoPath = Path.Combine(imagesDir, $"companylogo{ext}");
+
+                // Remove old logo files with different extensions
+                foreach (var old in Directory.GetFiles(imagesDir, "companylogo.*"))
+                    File.Delete(old);
+
+                using var stream = logoFile.OpenReadStream(maxAllowedSize: 5 * 1024 * 1024);
+                using var fs = File.Create(logoPath);
+                await stream.CopyToAsync(fs);
+
+                settings.HasLogo = true;
+                logoUrl = $"/images/companylogo{ext}?v={DateTime.Now.Ticks}";
+                snackbar.Add(@languageContainer.Keys["CompanyLogoUploaded"], Severity.Info);
+            }
+
+            await dbDependency.GetDataAccessCompanySettings().UpsertAsync(settings, new SearcherCompanySettings { Id = settings.Id });
+
+            snackbar.Add(@languageContainer.Keys["CompanySettingsSaved"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+            StateHasChanged();
+        }
+    }
+}
