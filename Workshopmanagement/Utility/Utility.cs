@@ -11,6 +11,7 @@ using static MudBlazor.CategoryTypes;
 using System.Text.RegularExpressions;
 using VetCV.HtmlRendererCore.PdfSharpCore;
 using PdfSharpCore;
+using PdfSharpCore.Fonts;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Processing;
 
@@ -21,6 +22,9 @@ namespace Workshopmanagement.Utility
         public static List<string> imageBasePath = GetPathFromEnv("ImageBasePath", ["wwwroot","images","upload"]);
         public static string templateBasePath = Environment.GetEnvironmentVariable("TemplateBasePath") ?? @"Templates";
         public static List<string> templateSavePath = GetPathFromEnv("TemplateSavePath", ["wwwroot","templates"]);
+
+        private static bool _fontResolverRegistered = false;
+        private static readonly object _fontResolverLock = new();
 
         public static int[] pageSizeOptions = [10, 20, 50];
 
@@ -478,6 +482,15 @@ namespace Workshopmanagement.Utility
                 var key = $"--{m.Groups[1].Value}";
                 return cssVars.TryGetValue(key, out var val) ? val : m.Value;
             });
+
+            lock (_fontResolverLock)
+            {
+                if (!_fontResolverRegistered)
+                {
+                    GlobalFontSettings.FontResolver = new PdfFontResolver();
+                    _fontResolverRegistered = true;
+                }
+            }
 
             var config = new PdfGenerateConfig { PageSize = PageSize.A4 };
             config.SetMargins(15);
