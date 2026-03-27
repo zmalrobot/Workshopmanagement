@@ -7,6 +7,7 @@
 @inject ILanguageContainerService languageContainer
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IWebHostEnvironment webHostEnvironment
 
 <PageTitle>@languageContainer.Keys["ApplicationName"]</PageTitle>
 
@@ -14,15 +15,25 @@
     <MudCardHeader>    
         <MudGrid>
             <MudItem xs="12" Style="text-align: center;">
-                @*  <MudIcon Style="margin: auto;" Icon="@Icons.Material.Filled.AirportShuttle" Size="Size.Large" /> *@
-                <MudImage Alt="Missing logo.png" Src="../logo.png" Height="100">
-
-                </MudImage>
+                @if (companySettings?.HasLogo == true)
+                {
+                    <img src="/images/companylogo.png" alt="Logo" style="max-height:100px; max-width:200px; object-fit:contain;" />
+                }
+                else
+                {
+                    <MudImage Alt="Missing logo.png" Src="../logo.png" Height="100" />
+                }
             </MudItem>
             <MudItem xs="12">
                 <MudText Typo="Typo.h4" Style="text-align: center;">
                     @languageContainer.Keys["LoginTitle"]
                 </MudText>
+                @if (!string.IsNullOrWhiteSpace(companySettings?.CompanyName))
+                {
+                    <MudText Typo="Typo.subtitle1" Align="Align.Center" Color="Color.Secondary">
+                        @companySettings.CompanyName
+                    </MudText>
+                }
             </MudItem>
         </MudGrid>
 
@@ -68,6 +79,7 @@
     private bool processing = false;
     private bool reloading = false;
     private bool isFirstUser = false;
+    private CompanySettings? companySettings;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,6 +87,9 @@
         {
             var allEmployees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
             isFirstUser = allEmployees == null || allEmployees.Count == 0;
+
+            var settingsList = await dbDependency.GetDataAccessCompanySettings().FindAsync(new SearcherCompanySettings());
+            companySettings = settingsList?.FirstOrDefault();
         }
         catch { }
     }

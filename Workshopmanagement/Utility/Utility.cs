@@ -11,6 +11,8 @@ using static MudBlazor.CategoryTypes;
 using System.Text.RegularExpressions;
 using VetCV.HtmlRendererCore.PdfSharpCore;
 using PdfSharpCore;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace Workshopmanagement.Utility
 {
@@ -460,6 +462,19 @@ namespace Workshopmanagement.Utility
             using var ms = new MemoryStream();
             pdf.Save(ms, false);
             return ms.ToArray();
+        }
+
+        public static async Task ResizeAndSaveLogoPngAsync(byte[] imageBytes, string outputPath)
+        {
+            using var inputMs = new MemoryStream(imageBytes);
+            using var image = await SixLabors.ImageSharp.Image.LoadAsync(inputMs);
+            image.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Size = new SixLabors.ImageSharp.Size(512, 512),
+                Mode = ResizeMode.Pad,
+                PadColor = SixLabors.ImageSharp.Color.Transparent
+            }));
+            await image.SaveAsPngAsync(outputPath);
         }
 
         public static async Task<string> GeneretaFileForDownloadFile(string template)

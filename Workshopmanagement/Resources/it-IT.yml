@@ -149,6 +149,7 @@ HomeSelectFlow: Quale flusso vuoi riprendere?
 HomeNoFlowSelected: Devi selezionare un flusso per procedere
 HomeNoOpenFlows: Nessun flusso aperto per questo veicolo
 HomeNoVeichlesForCustomer: Nessun veicolo con flussi aperti per questo cliente
+HomeNoAppointmentScheduled: Nessun appuntamento schedulato
 ReportTitle: Resoconto lavorativo
 ReportCustomerInformationTitle: Informazioni sul cliente
 ReportCustomerInformationNameTitle: Nome e Cognome

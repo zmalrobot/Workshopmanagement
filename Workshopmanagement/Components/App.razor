@@ -28,6 +28,16 @@
             document.body.removeChild(link);
         };
     </script>
+    <script>
+        (function () {
+            var img = new Image();
+            img.onload = function () {
+                var link = document.querySelector('link[rel="icon"]');
+                if (link) link.href = '/images/companylogo.png?v=' + Date.now();
+            };
+            img.src = '/images/companylogo.png';
+        })();
+    </script>
 </body>
 
 </html>

@@ -93,6 +93,17 @@
     </YesButton>
 </MudMessageBox>
 
+@if (showNoAppointmentBanner)
+{
+    <MudGrid Class="mt-4">
+        <MudItem xs="12">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.EventBusy">
+                @languageContainer.Keys["HomeNoAppointmentScheduled"]
+            </MudAlert>
+        </MudItem>
+    </MudGrid>
+}
+
 @if (showStepTable && selectedResumeItem != null)
 {
     <MudGrid Class="mt-4">
@@ -116,16 +127,28 @@
                                 <MudText Typo="Typo.body2" Color="Color.Default">
                                     @languageContainer.Keys["TimeTrackingHoursSpent"]: @FormatDashboardTotalTime()
                                 </MudText>
-                                <MudButton OnClick="@(() => DashboardStartTrackingAsync())"
-                                           StartIcon="@Icons.Material.Filled.PlayArrow" Variant="Variant.Filled"
-                                           Color="Color.Success" Size="Size.Small"
-                                           Disabled="@isDashboardTrackingActive"
-                                           Style="@(isDashboardTrackingActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
-                                <MudButton OnClick="@(() => DashboardStopTrackingAsync())"
-                                           StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled"
-                                           Color="Color.Error" Size="Size.Small"
-                                           Disabled="@(!isDashboardTrackingActive)"
-                                           Style="@(!isDashboardTrackingActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                                @{
+                                    var isDashFuture = IsDashboardStartDateInFuture();
+                                }
+                                @if (isDashFuture)
+                                {
+                                    <MudTooltip Text="@languageContainer.Keys["WorkflowFutureScheduled"]">
+                                        <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small" Style="font-size:0.7rem;">@Utility.GetDateFormatted(GetDashboardStartDate(), Utility.DateFormat.OnlyDate)</MudChip>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudButton OnClick="@(() => DashboardStartTrackingAsync())"
+                                               StartIcon="@Icons.Material.Filled.PlayArrow" Variant="Variant.Filled"
+                                               Color="Color.Success" Size="Size.Small"
+                                               Disabled="@isDashboardTrackingActive"
+                                               Style="@(isDashboardTrackingActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                                    <MudButton OnClick="@(() => DashboardStopTrackingAsync())"
+                                               StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled"
+                                               Color="Color.Error" Size="Size.Small"
+                                               Disabled="@(!isDashboardTrackingActive)"
+                                               Style="@(!isDashboardTrackingActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                                }
                             </MudStack>
                         </MudStack>
                     </CardHeaderContent>
@@ -269,6 +292,7 @@
 
     private bool processing = true;
     private bool showStepTable = false;
+    private bool showNoAppointmentBanner = false;
     private List<WorkflowExecution> dashboardExecutions = new List<WorkflowExecution>();
 
     // Time tracking
@@ -331,14 +355,20 @@
                 .SelectMany(v => v.OpenWorkflows.Select(e => new { Veichle = v, Entry = e }))
                 .ToList();
 
-            if (!allEntries.Any()) return;
+            // If no open entries at all → show banner
+            if (!allEntries.Any())
+            {
+                showNoAppointmentBanner = true;
+                StateHasChanged();
+                return;
+            }
 
-            // Check if there is an active tracking session for the current employee
-            ResumeWorkflowItem bestItem = null;
+            ResumeWorkflowItem? bestItem = null;
             List<WorkflowExecution> bestExecutions = new();
 
             if (employee != null)
             {
+                // --- Priority 1: Active tracking session for the current employee ---
                 var activeTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
                     new SearcherTimeTracking { EmployeeId = employee.Id, IsActive = true });
                 var activeTracking = activeTrackings.FirstOrDefault();
@@ -365,12 +395,47 @@
                         bestExecutions = executions;
                     }
                 }
+
+                // --- Priority 2: Most recent series where the user has tracked time (not active, series still open) ---
+                if (bestItem == null)
+                {
+                    var allTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(
+                        new SearcherTimeTracking { EmployeeId = employee.Id });
+
+                    var recentTracking = allTrackings
+                        .Where(t => allEntries.Any(e => e.Entry.WorkflowExecutionSeriesId == t.WorkflowExecutionSeriesId))
+                        .OrderByDescending(t => t.Sessions.LastOrDefault()?.StartTime ?? DateTime.MinValue)
+                        .FirstOrDefault();
+
+                    if (recentTracking != null)
+                    {
+                        var matchedEntry = allEntries.FirstOrDefault(
+                            e => e.Entry.WorkflowExecutionSeriesId == recentTracking.WorkflowExecutionSeriesId);
+
+                        if (matchedEntry != null)
+                        {
+                            var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                                new SearcherWorkflowExecution { WorkflowExecutionSeriesId = matchedEntry.Entry.WorkflowExecutionSeriesId });
+                            var wf = allWorkflows.FirstOrDefault(w => w.Id == matchedEntry.Entry.WorkflowId);
+                            var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == matchedEntry.Entry.WorkflowTaskId);
+                            bestItem = new ResumeWorkflowItem
+                            {
+                                Veichle = matchedEntry.Veichle,
+                                Entry = matchedEntry.Entry,
+                                WorkflowTitle = wf?.Title ?? "",
+                                WorkflowColor = wf?.Color ?? "#607D8B",
+                                WorkflowTaskTitle = wfTask?.Title ?? ""
+                            };
+                            bestExecutions = executions;
+                        }
+                    }
+                }
             }
 
-            // Fall back to most recent workflow if no active tracking found
+            // --- Priority 3: Next available open execution (nearest StartDate to today) ---
             if (bestItem == null)
             {
-                DateTime bestOpenAt = DateTime.MinValue;
+                double bestDistance = double.MaxValue;
 
                 foreach (var item in allEntries)
                 {
@@ -379,14 +444,14 @@
                     var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
                         new SearcherWorkflowExecution { WorkflowExecutionSeriesId = item.Entry.WorkflowExecutionSeriesId });
 
-                    var firstExecution = executions
-                        .Where(e => e.OpenAt.HasValue && e.OpenAt.Value <= DateTime.Now)
-                        .OrderBy(e => e.OpenAt)
-                        .FirstOrDefault();
+                    var startDate = executions.FirstOrDefault()?.StartDate;
+                    double distance = startDate.HasValue
+                        ? Math.Abs((startDate.Value.Date - DateTime.Today).TotalDays)
+                        : double.MaxValue - 1; // no StartDate: prefer over entries with no executions, but after dated ones
 
-                    if (firstExecution != null && firstExecution.OpenAt.HasValue && firstExecution.OpenAt.Value > bestOpenAt)
+                    if (distance < bestDistance)
                     {
-                        bestOpenAt = firstExecution.OpenAt.Value;
+                        bestDistance = distance;
                         var wf = allWorkflows.FirstOrDefault(w => w.Id == item.Entry.WorkflowId);
                         var wfTask = allWorkflowTasks.FirstOrDefault(t => t.Id == item.Entry.WorkflowTaskId);
                         bestItem = new ResumeWorkflowItem
@@ -408,6 +473,11 @@
                 dashboardExecutions = bestExecutions;
                 showStepTable = true;
                 await LoadDashboardTrackingState();
+                StateHasChanged();
+            }
+            else
+            {
+                showNoAppointmentBanner = true;
                 StateHasChanged();
             }
         }
@@ -650,6 +720,19 @@
 
             isDashboardTrackingActive = true;
             snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
+
+            // Add employee to AssignedEmployeeIds on the current execution
+            var startExecution = dashboardExecutions.FirstOrDefault(e => e.Id == selectedResumeItem.Entry.WorkflowExecutionId);
+            if (startExecution != null)
+            {
+                if (startExecution.AssignedEmployeeIds == null)
+                    startExecution.AssignedEmployeeIds = new List<string>();
+                if (!startExecution.AssignedEmployeeIds.Contains(employeeId))
+                {
+                    startExecution.AssignedEmployeeIds.Add(employeeId);
+                    await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(startExecution);
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -671,6 +754,18 @@
             await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
 
             isDashboardTrackingActive = false;
+
+            // Remove employee from AssignedEmployeeIds on the current execution
+            if (employee != null && selectedResumeItem != null)
+            {
+                var stopExecution = dashboardExecutions.FirstOrDefault(e => e.Id == selectedResumeItem.Entry.WorkflowExecutionId);
+                if (stopExecution != null && stopExecution.AssignedEmployeeIds != null)
+                {
+                    stopExecution.AssignedEmployeeIds.Remove(employee.Id);
+                    await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(stopExecution);
+                }
+            }
+
             StateHasChanged();
             snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
         }
@@ -687,6 +782,17 @@
             .Where(s => s.EndTime.HasValue)
             .Sum(s => (s.EndTime!.Value - s.StartTime).Ticks));
         return $"{(int)total.TotalHours:D2}:{total.Minutes:D2}:{total.Seconds:D2}";
+    }
+
+    private DateTime? GetDashboardStartDate()
+    {
+        return dashboardExecutions.FirstOrDefault()?.StartDate;
+    }
+
+    private bool IsDashboardStartDateInFuture()
+    {
+        var startDate = GetDashboardStartDate();
+        return startDate.HasValue && startDate.Value.Date > DateTime.Today;
     }
 
     private string GetDashboardEmployeeNames()

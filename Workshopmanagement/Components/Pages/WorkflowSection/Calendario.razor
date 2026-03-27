@@ -41,7 +41,7 @@
                         </MudGrid>
                     </MudItem>
                     <MudItem xs="12">
-                        @RenderWeekCalendar(BuildAppuntamentiEvents(), currentWeekStart, true)
+                        @RenderWeekCalendar(BuildAppuntamentiEvents(), currentWeekStart, false, true)
                     </MudItem>
                 </MudGrid>
             </MudTabPanel>
@@ -504,6 +504,24 @@
         return current.Date.AddDays(1).Add(ms.ToTimeSpan());
     }
 
+    // Returns the portions of [evStart, evEnd] that fall within working hours on the given day
+    private static List<(DateTime, DateTime)> GetWorkingSegmentsForDay(
+        DateTime evStart, DateTime evEnd, DateTime day,
+        TimeOnly ms, TimeOnly me, TimeOnly as_, TimeOnly ae)
+    {
+        var result = new List<(DateTime, DateTime)>();
+        var d = day.Date;
+        var s1 = d.Add(ms.ToTimeSpan());
+        var e1 = d.Add(me.ToTimeSpan());
+        if (s1 < evEnd && e1 > evStart)
+            result.Add((s1 > evStart ? s1 : evStart, e1 < evEnd ? e1 : evEnd));
+        var s2 = d.Add(as_.ToTimeSpan());
+        var e2 = d.Add(ae.ToTimeSpan());
+        if (s2 < evEnd && e2 > evStart)
+            result.Add((s2 > evStart ? s2 : evStart, e2 < evEnd ? e2 : evEnd));
+        return result;
+    }
+
     // ──────────────────────────────────────────────────
     // Navigation helpers
     // ──────────────────────────────────────────────────
@@ -537,7 +555,7 @@
     // Shared 24h week-calendar renderer (Google Calendar style)
     // ──────────────────────────────────────────────────
 
-    private RenderFragment RenderWeekCalendar(List<CalEvent> events, DateTime weekStart, bool workingHoursOnly = false) => builder =>
+    private RenderFragment RenderWeekCalendar(List<CalEvent> events, DateTime weekStart, bool workingHoursOnly = false, bool splitNonWorking = false) => builder =>
     {
         var ms  = settings.MorningStart;
         var me  = settings.MorningEnd;
@@ -671,41 +689,58 @@
                 .ThenByDescending(e => e.End)
                 .ToList();
 
-            var colOf   = new int[dayEvents.Count];
-            var colEnds = new List<DateTime>();
-
-            for (int i = 0; i < dayEvents.Count; i++)
+            // Expand events into render entries: either one per event, or one per working segment
+            var renderEntries = new List<(CalEvent ev, DateTime segStart, DateTime segEnd)>();
+            if (splitNonWorking)
             {
-                var evStart = dayEvents[i].Start < dayStart ? dayStart : dayEvents[i].Start;
-                int col = 0;
-                while (col < colEnds.Count && colEnds[col] > evStart) col++;
-                colOf[i] = col;
-                var evEnd = dayEvents[i].End > dayEnd ? dayEnd : dayEvents[i].End;
-                if (col == colEnds.Count) colEnds.Add(evEnd);
-                else colEnds[col] = evEnd;
+                foreach (var ev in dayEvents)
+                {
+                    var segs = GetWorkingSegmentsForDay(ev.Start, ev.End, day, ms, me, as_, ae);
+                    foreach (var (ss, se) in segs)
+                        renderEntries.Add((ev, ss, se));
+                }
+            }
+            else
+            {
+                foreach (var ev in dayEvents)
+                {
+                    var cs = ev.Start < dayStart ? dayStart : ev.Start;
+                    var ce = ev.End > dayEnd ? dayEnd : ev.End;
+                    if (ce > cs) renderEntries.Add((ev, cs, ce));
+                }
             }
 
-            for (int i = 0; i < dayEvents.Count; i++)
+            var colOfEntry = new int[renderEntries.Count];
+            var colEnds    = new List<DateTime>();
+
+            for (int i = 0; i < renderEntries.Count; i++)
             {
-                var ev      = dayEvents[i];
-                var evStart = ev.Start < dayStart ? dayStart : ev.Start;
-                var evEnd   = ev.End   > dayEnd   ? dayEnd   : ev.End;
+                var (_, eStart, eEnd) = renderEntries[i];
+                int col = 0;
+                while (col < colEnds.Count && colEnds[col] > eStart) col++;
+                colOfEntry[i] = col;
+                if (col == colEnds.Count) colEnds.Add(eEnd);
+                else colEnds[col] = eEnd;
+            }
+
+            for (int i = 0; i < renderEntries.Count; i++)
+            {
+                var (ev, evStart, evEnd) = renderEntries[i];
                 if (evEnd <= evStart) continue;
 
                 double topPx = (evStart - dayStart).TotalMinutes / 30.0 * slotH;
                 double hPx   = Math.Max((evEnd - evStart).TotalMinutes / 30.0 * slotH, 14.0);
 
-                // count total columns active in this event's time window
+                // count total columns active in this entry's time window
                 int totalCols = 1;
-                for (int j = 0; j < dayEvents.Count; j++)
+                for (int j = 0; j < renderEntries.Count; j++)
                 {
-                    var sj = dayEvents[j].Start < dayStart ? dayStart : dayEvents[j].Start;
-                    var ej = dayEvents[j].End   > dayEnd   ? dayEnd   : dayEvents[j].End;
+                    var (_, sj, ej) = renderEntries[j];
                     if (sj < evEnd && ej > evStart)
-                        totalCols = Math.Max(totalCols, colOf[j] + 1);
+                        totalCols = Math.Max(totalCols, colOfEntry[j] + 1);
                 }
 
-                double leftPct = 100.0 * colOf[i] / totalCols;
+                double leftPct = 100.0 * colOfEntry[i] / totalCols;
                 double wPct    = 100.0 / totalCols;
                 double opacity = (ev.IsCompleted || ev.IsInFuture) && !ev.HasActiveTracking ? 0.6 : 1.0;
 

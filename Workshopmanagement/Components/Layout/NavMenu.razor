@@ -3,17 +3,20 @@
 @inject ILanguageContainerService languageContainer
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IWebHostEnvironment webHostEnvironment
 
 <MudPaper Width="100%" Class="d-inline-flex py-3" Elevation="0">
     <MudNavMenu Class="mud-width-full">
         <MudGrid>
-            <MudItem xs="12" Style="text-align: center;">
-                <MudIcon Style="margin: auto;" Icon="@Icons.Material.Filled.AirportShuttle" Size="Size.Large" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudText Typo="Typo.h6" Style="text-align: center;">
-                    @languageContainer.Keys["ApplicationName"]
-                </MudText>
+            <MudItem xs="12" Style="text-align: center; padding: 8px;">
+                @if (hasCompanyLogo)
+                {
+                    <img src="/images/companylogo.png" alt="Logo" style="max-height:80px; max-width:160px; object-fit:contain;" />
+                }
+                else
+                {
+                    <MudIcon Style="margin: auto;" Icon="@Icons.Material.Filled.AirportShuttle" Size="Size.Large" />
+                }
             </MudItem>
         </MudGrid>
         <MudDivider Class="my-2" />
@@ -75,6 +78,7 @@
 
 @code {
     private Employee employee;
+    private bool hasCompanyLogo;
     private System.Diagnostics.FileVersionInfo fileVersionInfo = System.Diagnostics.FileVersionInfo.GetVersionInfo(System.Reflection.Assembly.GetExecutingAssembly().Location);
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -90,8 +94,11 @@
 
             employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
 
-            if(firstRender)
+            if (firstRender)
+            {
+                hasCompanyLogo = File.Exists(Path.Combine(webHostEnvironment.WebRootPath, "images", "companylogo.png"));
                 StateHasChanged();
+            }
         }catch(Exception ex)
         {
             if (ex.Message.Contains("was not found in the key ring. For more information go to https://aka.ms/aspnet/dataprotectionwarning"))
