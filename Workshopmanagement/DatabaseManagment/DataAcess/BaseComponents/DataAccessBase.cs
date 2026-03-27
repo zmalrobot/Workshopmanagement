@@ -86,8 +86,8 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents
             var limit = size;
 
             var filter = FilterBuilder(searcher);
-            var result = (await collection.Find(filter)?.Skip(skip)?.Limit(limit)?.ToListAsync()) ?? new List<Table>();
-            var isLastPage = !(collection.Find(filter)?.Skip((page + 1) * size)?.Limit(1)?.ToList()?.Count() > 0);
+            var result = (await collection.Find(filter).Skip(skip).Limit(limit).ToListAsync()) ?? new List<Table>();
+            var isLastPage = !(collection.Find(filter).Skip((page + 1) * size).Limit(1).ToList().Count > 0);
 
             return (result, isLastPage);
         }
@@ -129,7 +129,7 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents
                 if (ex is MongoWriteException && retry < 5)
                 {
                     Thread.Sleep(retry * 100);
-                    IncrementCounterValueAsync(searcher, isIncrement, retry++);
+                    await IncrementCounterValueAsync(searcher, isIncrement, retry++);
                 }
                 else
                     throw;

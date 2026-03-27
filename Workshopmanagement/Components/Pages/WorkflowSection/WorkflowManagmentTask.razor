@@ -174,11 +174,11 @@
 
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private Workflow selectedWorkflow = new Workflow();
     private List<Workflow> workflows = new List<Workflow>();
     private List<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask> workflowTasks = new List<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask>();
-    public MudDataGrid<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask> dataGrid { get; set; }
+    public MudDataGrid<Workshopmanagement.DatabaseManagment.DataObject.WorkflowTask> dataGrid { get; set; } = null!;
 
     private bool processing = true;
     private bool isViewMode = true;
@@ -330,14 +330,14 @@
             var lastTask = workflowTasks?.OrderBy(x => x.TaskOrder)?.LastOrDefault(x => x.IsSignTask == false);
             if (lastTask != null)
             {
-                firstTask.IsStartingTask = false;
+                if (firstTask != null) firstTask.IsStartingTask = false;
                 lastTask.IsFinalTask = true;
                 await dbDependency.GetDataAccessWorkflowTask().UpdateAsync(lastTask);
             }
 
             if(firstTask != null && lastTask != null)
             {
-                foreach (var task in workflowTasks.Where(x => !x.Id.Equals(firstTask.Id) && !x.Id.Equals(lastTask.Id)))
+                foreach (var task in workflowTasks!.Where(x => !x.Id.Equals(firstTask.Id) && !x.Id.Equals(lastTask.Id)))
                 {
                     task.IsStartingTask = false;
                     task.IsFinalTask = false;

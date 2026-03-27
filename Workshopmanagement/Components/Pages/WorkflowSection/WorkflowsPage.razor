@@ -180,7 +180,7 @@
                                                                        Color="Color.Success" Size="@Size.Small"
                                                                        Icon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined"
                                                                        Disabled="@(!IsTrackingActive(context.Item.Entry.WorkflowExecutionSeriesId))"
-                                                                       Title="Duplica" />
+                                                                       title="Duplica" />
                                                     }
                                                     @if (step.Execution != null && !CanEditStep(step))
                                                     {
@@ -273,7 +273,7 @@
 
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private List<Customer> customers = new List<Customer>();
     private List<Employee> employees = new List<Employee>();
     private List<Veichle> veichles = new List<Veichle>();
@@ -281,7 +281,7 @@
     private List<Workflow> workflows = new List<Workflow>();
     private List<WorkflowTask> workflowTasks = new List<WorkflowTask>();
     private List<WorkflowExecution> workflowExecutions = new List<WorkflowExecution>();
-    private MudDataGrid<VeichleWorkflowView> dataGrid { get; set; }
+    private MudDataGrid<VeichleWorkflowView> dataGrid { get; set; } = null!;
     private DialogOptions dialogOptions = new DialogOptions 
     { 
         FullScreen = true,
@@ -420,7 +420,7 @@
         try
         {
             var seriesId = item.Entry.WorkflowExecutionSeriesId;
-            var employeeId = employee.Id;
+            var employeeId = employee!.Id;
 
             // Check if user has another active tracking
             var otherActive = trackingsBySeriesId.Values.FirstOrDefault(t => t.IsActive && t.WorkflowExecutionSeriesId != seriesId);
@@ -506,7 +506,7 @@
             var stopExecution = workflowExecutions.FirstOrDefault(e => e.Id == item.Entry.WorkflowExecutionId);
             if (stopExecution != null && stopExecution.AssignedEmployeeIds != null)
             {
-                stopExecution.AssignedEmployeeIds.Remove(employee.Id);
+                stopExecution.AssignedEmployeeIds.Remove(employee!.Id);
                 await dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(stopExecution);
             }
 
@@ -524,8 +524,8 @@
     #region GetGridData
     private class VeichleWorkflowView
     {
-        public Veichle Veichle { get; set; }
-        public OpenWorkflowEntry Entry { get; set; }
+        public Veichle Veichle { get; set; } = null!;
+        public OpenWorkflowEntry Entry { get; set; } = null!;
     }
 
     private class WorkflowStepView
@@ -632,7 +632,7 @@
 
         var item = customers.FirstOrDefault(x => x.Id.Equals(userId)) ?? new Customer();
 
-        return ($"{item.Name} {item.Surname}", item.IsCompany ? item.VatNumber : item.FiscalCode);
+        return ($"{item.Name} {item.Surname}", (item.IsCompany ? item.VatNumber : item.FiscalCode) ?? "");
     }
 
     private double GetPercentageOfCompleteness(string? seriesId, string? currentWorkflowId)
@@ -746,7 +746,7 @@
                     x => x.Dataset,
                     new StartWorkflowDialogParameter()
                     {
-                        employee = employee,
+                        employee = employee!,
                         customers = customers,
                         veichles = veichles,
                         workflows = workflows,
@@ -840,12 +840,12 @@
                 x => x.Dataset,
                 new ResumeWorkflowDialogParameter()
                 {
-                    employee = employee,
+                    employee = employee!,
                     customer = currentCustomer,
                     veichle = veichle,
                     workflow = currentWorkflow,
                     workflowTask = currentWorkflowTask,
-                    workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(entry.WorkflowExecutionId),
+                    workflowExecution = await dbDependency.GetDataAccessWorkflowExecution().FindByIdAsync(entry.WorkflowExecutionId) ?? new WorkflowExecution(),
                     components = components
                 }
             }
@@ -894,7 +894,7 @@
                 x => x.Dataset,
                 new ResumeWorkflowDialogParameter()
                 {
-                    employee = employee,
+                    employee = employee!,
                     customer = currentCustomer,
                     veichle = veichle,
                     workflow = currentWorkflow,
@@ -942,7 +942,7 @@
             var freshExecution = new WorkflowExecution
             {
                 Id = Guid.NewGuid().ToString(),
-                EmployeeId = employee.Id,
+                EmployeeId = employee!.Id,
                 UserId = step.Execution.UserId,
                 VeichleId = step.Execution.VeichleId,
                 WorkflowId = step.Execution.WorkflowId,
@@ -964,7 +964,7 @@
                     x => x.Dataset,
                     new ResumeWorkflowDialogParameter()
                     {
-                        employee = employee,
+                        employee = employee!,
                         customer = currentCustomer,
                         veichle = veichle,
                         workflow = currentWorkflow,
@@ -1057,7 +1057,7 @@
                 x => x.Dataset,
                 new ResumeWorkflowDialogParameter()
                 {
-                    employee = employee,
+                    employee = employee!,
                     customer = currentCustomer,
                     veichle = veichle,
                     workflow = currentWorkflow,

@@ -87,7 +87,7 @@
     {
         try
         {
-            await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, null);
+            await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, null!);
             snackbar.Add(@languageContainer.Keys["Logout"], Severity.Warning);
             navigationManager.NavigateTo($"login");
         }

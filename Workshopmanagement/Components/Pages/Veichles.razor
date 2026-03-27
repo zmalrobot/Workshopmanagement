@@ -92,11 +92,11 @@
 
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private Customer selectedCustomers = new Customer();
     private List<Customer> customers = new List<Customer>();
     private List<Veichle> veichles = new List<Veichle>();
-    public MudDataGrid<Veichle> dataGrid { get; set; }
+    public MudDataGrid<Veichle> dataGrid { get; set; } = null!;
 
     private bool processing = true;
     private bool isViewMode = true;
@@ -148,7 +148,7 @@
         selectedCustomers = customers.FirstOrDefault() ?? new Customer();
     }
 
-    private string GetCustomersFromList(string userId)
+    private string GetCustomersFromList(string? userId)
     {
         if (String.IsNullOrEmpty(userId))
             return "";

@@ -13,9 +13,9 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
     public class TimeTracking
     {
         [BsonId]
-        public string Id { get; set; }
-        public string EmployeeId { get; set; }
-        public string WorkflowExecutionSeriesId { get; set; }
+        public string Id { get; set; } = null!;
+        public string EmployeeId { get; set; } = null!;
+        public string WorkflowExecutionSeriesId { get; set; } = null!;
         public List<TimeTrackingSession> Sessions { get; set; } = new List<TimeTrackingSession>();
         public bool IsActive { get; set; }
 

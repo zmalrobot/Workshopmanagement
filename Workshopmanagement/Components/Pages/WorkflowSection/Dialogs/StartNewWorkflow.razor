@@ -378,7 +378,7 @@
 
 @code {
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter]
     public StartWorkflowDialogParameter Dataset { get; set; } = new StartWorkflowDialogParameter();
 

@@ -219,7 +219,7 @@
 </MudGrid>
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private Customer selectedCustomer = new Customer();
     private Veichle selectedVeichle = new Veichle();
     private List<Customer> customers = new List<Customer>();
@@ -228,7 +228,7 @@
     private List<WorkflowTask> workflowTasks = new List<WorkflowTask>();
     private List<WorkflowExecution> workflowExecutions = new List<WorkflowExecution>();
     private List<HistoryWorkflowView> gridItems = new List<HistoryWorkflowView>();
-    private MudDataGrid<HistoryWorkflowView> dataGrid { get; set; }
+    private MudDataGrid<HistoryWorkflowView> dataGrid { get; set; } = null!;
     private Dictionary<string, TimeTracking> trackingsBySeriesId = new Dictionary<string, TimeTracking>();
 
     private DialogOptions dialogOptions = new DialogOptions
@@ -242,9 +242,9 @@
 
     private class HistoryWorkflowView
     {
-        public Veichle Veichle { get; set; }
-        public string WorkflowExecutionSeriesId { get; set; }
-        public string WorkflowId { get; set; }
+        public Veichle Veichle { get; set; } = null!;
+        public string WorkflowExecutionSeriesId { get; set; } = null!;
+        public string WorkflowId { get; set; } = null!;
     }
 
     private class WorkflowStepView
@@ -378,7 +378,7 @@
                                     || (x.VatNumber?.Contains(value, StringComparison.InvariantCultureIgnoreCase) ?? false));
     }
 
-    private string GetCustomersFromList(string userId)
+    private string GetCustomersFromList(string? userId)
     {
         if (string.IsNullOrEmpty(userId))
             return "";
@@ -613,7 +613,7 @@
             var wft = workflowTasks.Where(x => x.WorkflowId.Equals(wf.Id));
 
             var report = await Utility.FillTemplate(languageContainer,
-                                                    employee, selectedCustomer, selectedVeichle,
+                                                    employee ?? new Employee(), selectedCustomer, selectedVeichle,
                                                     wf, wft, elements, dbDependency);
 
             var color = wf.Color ?? "";
@@ -625,10 +625,10 @@
                     {
                         worflowReport = report,
                         worflowTitle = wf.Title ?? "",
-                        worflowDate = elements.Min(x => x.OpenAt).HasValue ? elements.Min(x => x.OpenAt).Value : DateTime.Now,
+                        worflowDate = elements.Min(x => x.OpenAt) ?? DateTime.Now,
                         worflowStyle = $"color: {color};",
-                        images = elements?.SelectMany(x => x.Images)?.ToList() ?? new List<Image>(),
-                        components = elements?.SelectMany(x => x.Components)?.ToList() ?? new List<Component>(),
+                        images = elements?.SelectMany(x => x.Images ?? new List<Image>()).ToList() ?? new List<Image>(),
+                        components = elements?.SelectMany(x => x.Components ?? new List<Component>()).ToList() ?? new List<Component>(),
                         useComponents = false,
                         useImages = false,
                         useReports = true
@@ -665,7 +665,7 @@
                     x => x.Dataset,
                     new ResumeWorkflowDialogParameter()
                     {
-                        employee = employee,
+                        employee = employee!,
                         customer = selectedCustomer,
                         veichle = item.Veichle,
                         workflow = currentWorkflow,

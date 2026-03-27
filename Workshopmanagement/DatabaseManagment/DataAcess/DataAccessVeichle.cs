@@ -71,14 +71,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<Veichle> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override Veichle GetDefaultIncrementObject(SearcherVeichle searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }

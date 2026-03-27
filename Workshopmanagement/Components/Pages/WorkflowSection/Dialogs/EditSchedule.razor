@@ -62,7 +62,7 @@
 
 @code {
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    private IMudDialogInstance MudDialog { get; set; } = null!;
 
     [Parameter]
     public EditScheduleDialogParameter Dataset { get; set; } = new EditScheduleDialogParameter();

@@ -13,6 +13,7 @@ using VetCV.HtmlRendererCore.PdfSharpCore;
 using PdfSharpCore;
 using PdfSharpCore.Fonts;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
 namespace Workshopmanagement.Utility
@@ -48,7 +49,7 @@ namespace Workshopmanagement.Utility
                 return false;
             if (String.IsNullOrEmpty(localStorageData.Value.Replace("null", "")))
                 return false;
-            if (JsonConvert.DeserializeObject<Employee>(localStorageData.Value).EmployeeRole == EmployeeRole.None)
+            if ((JsonConvert.DeserializeObject<Employee>(localStorageData.Value)?.EmployeeRole ?? EmployeeRole.None) == EmployeeRole.None)
                 return false;
 
             var localStorageDate = await protectedLocalStorage.GetAsync<string>(nameof(DateTime));
@@ -59,7 +60,7 @@ namespace Workshopmanagement.Utility
 
             if (DateTime.Now.Date != JsonConvert.DeserializeObject<DateTime>(localStorageDate.Value).Date) //Login 1 volta al giorno
             {
-                await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, null);
+                await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, null!);
                 return false;
             }
 
@@ -73,9 +74,7 @@ namespace Workshopmanagement.Utility
                 return new Employee();
 
             var localStorageData = await protectedLocalStorage.GetAsync<string>(nameof(Employee));
-            #pragma warning disable CS8603 // Possible null reference return.
-            return JsonConvert.DeserializeObject<Employee>(localStorageData.Value);
-            #pragma warning restore CS8603 // Possible null reference return.
+            return JsonConvert.DeserializeObject<Employee>(localStorageData.Value ?? string.Empty) ?? new Employee();
         }
 
         public static async Task SaveCurrentLoggedEmployee(ProtectedLocalStorage protectedLocalStorage, Employee employee)
@@ -293,6 +292,13 @@ namespace Workshopmanagement.Utility
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationName}}", companySettings.CompanyName ?? "");
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationVatNumber}}", companySettings.CompanyVatNumber ?? "");
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationPhone}}", companySettings.CompanyPhone ?? "");
+            if (string.IsNullOrWhiteSpace(companySettings.CompanyName) &&
+                string.IsNullOrWhiteSpace(companySettings.CompanyVatNumber) &&
+                string.IsNullOrWhiteSpace(companySettings.CompanyPhone) &&
+                !companySettings.HasLogo)
+            {
+                reportTemplate = RemoveElement(reportTemplate, "CompanyInformationSection");
+            }
 
             //Customer
             reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationName}}", $"{customer.Name} {customer.Surname}");
@@ -342,7 +348,7 @@ namespace Workshopmanagement.Utility
             #endregion
 
             #region Components         
-            var components = workflowExecutions.SelectMany(x => x.Components ?? new List<Component>());
+            var components = (workflowExecutions ?? Enumerable.Empty<WorkflowExecution>()).SelectMany(x => x.Components ?? new List<Component>());
 
             var compTable = "";
             decimal tableTot = 0;
@@ -373,7 +379,7 @@ namespace Workshopmanagement.Utility
             #endregion
 
             #region TimeTable
-            var seriesIdForTracking = workflowExecutions.FirstOrDefault()?.WorkflowExecutionSeriesId ?? "";
+            var seriesIdForTracking = workflowExecutions?.FirstOrDefault()?.WorkflowExecutionSeriesId ?? "";
             var timeTrackings = new List<TimeTracking>();
             if (!string.IsNullOrEmpty(seriesIdForTracking))
             {
@@ -460,7 +466,7 @@ namespace Workshopmanagement.Utility
                     if (File.GetCreationTime(file) > DateTime.Now.AddDays(1))
                         File.Delete(file);
                 }
-            }catch(Exception ex)
+            }catch(Exception)
             {
 
             };
@@ -492,12 +498,63 @@ namespace Workshopmanagement.Utility
                 }
             }
 
-            var config = new PdfGenerateConfig { PageSize = PageSize.A4 };
-            config.SetMargins(15);
-            var pdf = PdfGenerator.GeneratePdf(htmlContent, config);
-            using var ms = new MemoryStream();
-            pdf.Save(ms, false);
-            return ms.ToArray();
+            var tempFiles = new List<string>();
+            try
+            {
+                htmlContent = ExtractDataUrisToTempFiles(htmlContent, tempFiles);
+
+                var config = new PdfGenerateConfig { PageSize = PageSize.A4 };
+                config.SetMargins(15);
+                var pdf = PdfGenerator.GeneratePdf(htmlContent, config);
+                using var ms = new MemoryStream();
+                pdf.Save(ms, false);
+                return ms.ToArray();
+            }
+            finally
+            {
+                foreach (var f in tempFiles) { try { File.Delete(f); } catch { } }
+            }
+        }
+
+        private static string ExtractDataUrisToTempFiles(string html, List<string> tempFiles)
+        {
+            return Regex.Replace(html, @"src=""data:image/([^;""]+);base64,([^""]*)""" , m =>
+            {
+                var mimeSubtype = m.Groups[1].Value;
+                var ext = mimeSubtype.Split('+')[0]; // e.g., "png" from "png", "svg" from "svg+xml"
+                var base64 = m.Groups[2].Value;
+                try
+                {
+                    var imgBytes = Convert.FromBase64String(base64);
+                    var flatBytes = ext == "png" ? FlattenPngTransparency(imgBytes) : imgBytes;
+                    var tempPath = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.png");
+                    File.WriteAllBytes(tempPath, flatBytes);
+                    tempFiles.Add(tempPath);
+                    return $"src=\"{tempPath}\"";
+                }
+                catch
+                {
+                    return m.Value;
+                }
+            });
+        }
+
+        private static byte[] FlattenPngTransparency(byte[] pngBytes)
+        {
+            try
+            {
+                using var inStream = new MemoryStream(pngBytes);
+                using var img = SixLabors.ImageSharp.Image.Load<Rgba32>(inStream);
+                using var bg = new SixLabors.ImageSharp.Image<Rgba32>(img.Width, img.Height, new Rgba32(255, 255, 255, 255));
+                bg.Mutate(ctx => ctx.DrawImage(img, 1f));
+                using var outStream = new MemoryStream();
+                bg.SaveAsPng(outStream);
+                return outStream.ToArray();
+            }
+            catch
+            {
+                return pngBytes;
+            }
         }
 
         public static async Task ResizeAndSaveLogoPngAsync(byte[] imageBytes, string outputPath)
@@ -534,9 +591,9 @@ namespace Workshopmanagement.Utility
 
         private static T CloneOject<T>(T obj) {
             if (obj == null)
-                return default(T);
+                return default!;
 
-            return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj));
+            return JsonConvert.DeserializeObject<T>(JsonConvert.SerializeObject(obj))!;
         }
 
         private static List<string> GetPathFromEnv(string envVar, List<string> defaultPath)

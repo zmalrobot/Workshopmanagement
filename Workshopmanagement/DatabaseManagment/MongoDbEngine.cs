@@ -4,7 +4,7 @@ namespace Workshopmanagement.DatabaseManagment
 {
     public class MongoDbEngine
     {
-        private static MongoClient mongoClient { get; set; }
+        private static MongoClient? mongoClient { get; set; }
 
         #region GetClient
         /// <summary>
@@ -16,7 +16,7 @@ namespace Workshopmanagement.DatabaseManagment
             if (mongoClient == null)
                 mongoClient = InitializeClient();
 
-            return mongoClient;
+            return mongoClient!;
         }
         #endregion
 
@@ -30,7 +30,7 @@ namespace Workshopmanagement.DatabaseManagment
             if (mongoClient == null)
                 mongoClient = InitializeClient();
 
-            return mongoClient.GetDatabase(Environment.GetEnvironmentVariable("MongoDatabase"));
+            return mongoClient!.GetDatabase(Environment.GetEnvironmentVariable("MongoDatabase"));
         }
         #endregion
 

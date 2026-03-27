@@ -80,14 +80,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<Customer> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override Customer GetDefaultIncrementObject(SearcherCustomer searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }

@@ -61,14 +61,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<Component> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override Component GetDefaultIncrementObject(SearcherComponent searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }

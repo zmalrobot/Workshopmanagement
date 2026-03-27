@@ -76,7 +76,7 @@
                         InputType="InputType.Password" @bind-Value="context.Item.Password" />
                     </EditTemplate>
                 </TemplateColumn>
-                <TemplateColumn Property="x => x.EmployeeRole" Title="@languageContainer.Keys["EmployeeRole"]" Sortable="false">
+                <TemplateColumn Title="@languageContainer.Keys["EmployeeRole"]" Sortable="false">
                     <CellTemplate>
                         @if(context.Item.EmployeeRole == EmployeeRole.Manager){
                             @languageContainer.Keys["Manager"]
@@ -115,9 +115,9 @@
 </MudGrid>
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private List<Employee> employees = new List<Employee>();
-    public MudDataGrid<Employee> dataGrid { get; set; }
+    public MudDataGrid<Employee> dataGrid { get; set; } = null!;
 
     private bool processing = true;
     private bool isViewMode = true;
@@ -220,7 +220,7 @@
             {
                 var epmlpye = await dbDependency.GetDataAccessEmployee().FindByIdAsync(item.Id);
 
-                if(!item.Password.Equals(employee.Password))
+                if(!item.Password.Equals(employee!.Password))
                     item.Password = Cypher.Encrypt(item.Password);
 
                 await dbDependency.GetDataAccessEmployee().UpdateAsync(item);

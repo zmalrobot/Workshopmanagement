@@ -129,9 +129,9 @@
 
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private List<Workflow> workflows = new List<Workflow>();
-    public MudDataGrid<Workflow> dataGrid { get; set; }
+    public MudDataGrid<Workflow> dataGrid { get; set; } = null!;
 
     private string[] colors =
     {
@@ -262,7 +262,7 @@
                 var oldItem = await dbDependency.GetDataAccessWorkflow().FindByIdAsync(item.Id);
                 await dbDependency.GetDataAccessWorkflow().UpdateAsync(item);
 
-                if(item.RequireDisclaimer && !oldItem.RequireDisclaimer)
+                if(item.RequireDisclaimer && !(oldItem?.RequireDisclaimer ?? false))
                 {
                     var h = await dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask()
                         {

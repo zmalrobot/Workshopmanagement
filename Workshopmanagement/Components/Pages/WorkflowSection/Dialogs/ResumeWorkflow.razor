@@ -185,7 +185,7 @@
                         </TitleContent>
                         <ChildContent>
                             <MudStack Spacing="2" Class="pa-2">
-                                <MudGrid Spacing="2" AlignItems="AlignItems.Center">
+                                <MudGrid Spacing="2" Class="align-items-center">
                                     @if (!Dataset.viewOneExecution)
                                     {
                                         <MudItem xs="12" sm="4">
@@ -274,10 +274,10 @@
 
 @code {
     [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
+    private IMudDialogInstance MudDialog { get; set; } = null!;
     [Parameter]
     public ResumeWorkflowDialogParameter Dataset { get; set; } = new ResumeWorkflowDialogParameter();
-    public MudDataGrid<Component> dataGrid { get; set; }
+    public MudDataGrid<Component> dataGrid { get; set; } = null!;
     private DialogOptions dialogOptions = new() { BackdropClick = false };
     private Component selectedComponent = new Component();
 
@@ -658,7 +658,7 @@
     {
         if (string.IsNullOrEmpty(value))
             return Dataset.components;
-        return Dataset.components.Where(x => x.Barcode.Contains(value, StringComparison.InvariantCultureIgnoreCase)
+        return Dataset.components.Where(x => (x.Barcode?.Contains(value, StringComparison.InvariantCultureIgnoreCase) ?? false)
                                     || x.Name.Contains(value, StringComparison.InvariantCultureIgnoreCase));
     }
 

@@ -39,10 +39,7 @@ namespace Workshopmanagement.Utility
         public static string GetUniqueKey(int size)
         {
             byte[] data = new byte[4 * size];
-            using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
-            {
-                crypto.GetBytes(data);
-            }
+            RandomNumberGenerator.Fill(data);
             StringBuilder result = new StringBuilder(size);
             for (int i = 0; i < size; i++)
             {
@@ -59,10 +56,7 @@ namespace Workshopmanagement.Utility
         {
             char[] chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890".ToCharArray();
             byte[] data = new byte[size];
-            using (RNGCryptoServiceProvider crypto = new RNGCryptoServiceProvider())
-            {
-                crypto.GetBytes(data);
-            }
+            RandomNumberGenerator.Fill(data);
             StringBuilder result = new StringBuilder(size);
             foreach (byte b in data)
             {

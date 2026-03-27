@@ -188,7 +188,7 @@
                                                                Color="Color.Success" Size="@Size.Small"
                                                                Icon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined"
                                                                Disabled="@(!isDashboardTrackingActive)"
-                                                               Title="Duplica" />
+                                                               title="Duplica" />
                                             }
                                             @if (step.Execution != null && !CanEditStep(step))
                                             {
@@ -273,33 +273,35 @@
 }
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private DialogOptions dialogOptions = new DialogOptions
         {
             FullScreen = true,
             CloseButton = true,
             CloseOnEscapeKey = true
         };
-    private MudMessageBox mudMessageBoxCustomer;
-    private MudMessageBox mudMessageBoxVeichle;
-    private MudMessageBox mudMessageBoxFlow;
+    private MudMessageBox? mudMessageBoxCustomer;
+    private MudMessageBox? mudMessageBoxVeichle;
+    private MudMessageBox? mudMessageBoxFlow;
     private DialogOptions mudMessageBoxOption = new() { BackdropClick = false };
 
     private List<Customer> resumeCustomers = new List<Customer>();
-    private Customer selectedResumeCustomer;
+    private Customer? selectedResumeCustomer;
 
     private List<Veichle> resumeVeichles = new List<Veichle>();
-    private Veichle selectedResumeVeichle;
+    private Veichle? selectedResumeVeichle;
 
     private List<ResumeWorkflowItem> resumeItems = new List<ResumeWorkflowItem>();
-    private ResumeWorkflowItem selectedResumeItem;
+    private ResumeWorkflowItem? selectedResumeItem;
 
     private List<Veichle> allOpenVeichles = new List<Veichle>();
     private List<Workflow> allWorkflows = new List<Workflow>();
     private List<WorkflowTask> allWorkflowTasks = new List<WorkflowTask>();
     private List<Employee> allEmployees = new List<Employee>();
 
+#pragma warning disable CS0414
     private bool processing = true;
+#pragma warning restore CS0414
     private bool showStepTable = false;
     private bool showNoAppointmentBanner = false;
     private List<WorkflowExecution> dashboardExecutions = new List<WorkflowExecution>();
@@ -310,11 +312,11 @@
 
     private class ResumeWorkflowItem
     {
-        public Veichle Veichle { get; set; }
-        public OpenWorkflowEntry Entry { get; set; }
-        public string WorkflowTitle { get; set; }
-        public string WorkflowColor { get; set; }
-        public string WorkflowTaskTitle { get; set; }
+        public Veichle Veichle { get; set; } = null!;
+        public OpenWorkflowEntry Entry { get; set; } = null!;
+        public string WorkflowTitle { get; set; } = null!;
+        public string WorkflowColor { get; set; } = null!;
+        public string WorkflowTaskTitle { get; set; } = null!;
     }
 
     private class WorkflowStepView
@@ -507,7 +509,7 @@
                 x => x.Dataset,
                 new StartWorkflowDialogParameter()
                 {
-                    employee = employee,
+                    employee = employee!,
                     customers = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer()),
                     veichles =  await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle()),
                     workflows = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow()),
@@ -562,7 +564,7 @@
             if (customerResult != true)
                 return;
 
-            if (selectedResumeCustomer == null || string.IsNullOrEmpty(selectedResumeCustomer.Id))
+            if (selectedResumeCustomer == null || string.IsNullOrEmpty(selectedResumeCustomer!.Id))
             {
                 snackbar.Add(languageContainer.Keys["HomeNoCustomerSelected"], Severity.Warning);
                 return;
@@ -570,7 +572,7 @@
 
             // Filter vehicles for the selected customer
             resumeVeichles = allOpenVeichles
-                .Where(v => v.UserId == selectedResumeCustomer.Id && v.HasOpenWorkflow && v.OpenWorkflows != null && v.OpenWorkflows.Any())
+                .Where(v => v.UserId == selectedResumeCustomer!.Id && v.HasOpenWorkflow && v.OpenWorkflows != null && v.OpenWorkflows.Any())
                 .ToList();
 
             if (!resumeVeichles.Any())
@@ -588,14 +590,14 @@
             if (veichleResult != true)
                 return;
 
-            if (selectedResumeVeichle == null || string.IsNullOrEmpty(selectedResumeVeichle.Id))
+            if (selectedResumeVeichle == null || string.IsNullOrEmpty(selectedResumeVeichle!.Id))
             {
                 snackbar.Add(languageContainer.Keys["HomeNoVeichleSelected"], Severity.Warning);
                 return;
             }
 
             // Build flow items for the selected vehicle
-            resumeItems = selectedResumeVeichle.OpenWorkflows
+            resumeItems = selectedResumeVeichle!.OpenWorkflows!
                 .Select(entry =>
                 {
                     var wf = allWorkflows.FirstOrDefault(w => w.Id == entry.WorkflowId);
@@ -625,7 +627,7 @@
             if (flowResult != true)
                 return;
 
-            if (selectedResumeItem == null || string.IsNullOrEmpty(selectedResumeItem.Veichle?.Id))
+            if (selectedResumeItem == null || string.IsNullOrEmpty(selectedResumeItem!.Veichle?.Id))
             {
                 snackbar.Add(languageContainer.Keys["HomeNoFlowSelected"], Severity.Warning);
                 return;
@@ -633,10 +635,10 @@
 
             // Load executions for selected workflow and show step table
             dashboardExecutions = new List<WorkflowExecution>();
-            if (!string.IsNullOrEmpty(selectedResumeItem.Entry.WorkflowExecutionSeriesId))
+            if (!string.IsNullOrEmpty(selectedResumeItem!.Entry.WorkflowExecutionSeriesId))
             {
                 dashboardExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
-                    new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
+                    new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem!.Entry.WorkflowExecutionSeriesId });
             }
             showStepTable = true;
             await LoadDashboardTrackingState();
@@ -892,6 +894,7 @@
         try
         {
             if (step.Execution == null) return;
+            if (selectedResumeItem == null) return;
 
             var veichle = selectedResumeItem.Veichle;
             var entry = selectedResumeItem.Entry;
@@ -905,8 +908,8 @@
                 x => x.Dataset,
                 new ResumeWorkflowDialogParameter()
                 {
-                    employee = employee,
-                    customer = customer,
+                    employee = employee ?? new Employee(),
+                    customer = customer ?? new Customer(),
                     veichle = veichle,
                     workflow = workflow,
                     workflowTask = step.Task,
@@ -957,6 +960,7 @@
         try
         {
             if (step.Execution == null) return;
+            if (selectedResumeItem == null) return;
 
             var veichle = selectedResumeItem.Veichle;
             var entry = selectedResumeItem.Entry;
@@ -967,7 +971,7 @@
             var freshExecution = new WorkflowExecution
             {
                 Id = Guid.NewGuid().ToString(),
-                EmployeeId = employee.Id,
+                EmployeeId = employee?.Id ?? string.Empty,
                 UserId = step.Execution.UserId,
                 VeichleId = step.Execution.VeichleId,
                 WorkflowId = step.Execution.WorkflowId,
@@ -989,8 +993,8 @@
                     x => x.Dataset,
                     new ResumeWorkflowDialogParameter()
                     {
-                        employee = employee,
-                        customer = customer,
+                        employee = employee ?? new Employee(),
+                        customer = customer ?? new Customer(),
                         veichle = veichle,
                         workflow = workflow,
                         workflowTask = step.Task,
@@ -1038,6 +1042,7 @@
         try
         {
             if (step.Execution == null) return;
+            if (selectedResumeItem == null) return;
 
             var veichle = selectedResumeItem.Veichle;
             var entry = selectedResumeItem.Entry;
@@ -1050,8 +1055,8 @@
                 x => x.Dataset,
                 new ResumeWorkflowDialogParameter()
                 {
-                    employee = employee,
-                    customer = customer,
+                    employee = employee ?? new Employee(),
+                    customer = customer ?? new Customer(),
                     veichle = veichle,
                     workflow = workflow,
                     workflowTask = step.Task,

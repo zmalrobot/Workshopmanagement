@@ -9,11 +9,11 @@
 
     public class Component
     {
-        public string Id { get; set; }
+        public string Id { get; set; } = null!;
         public string? Barcode { get; set; }
-        public string Name { get; set; }
+        public string Name { get; set; } = null!;
         public decimal Quanity { get; set; }
         public decimal PricePerQuantity { get; set; }
-        public string UnitOfMeasurement { get; set; }
+        public string UnitOfMeasurement { get; set; } = null!;
     }
 }

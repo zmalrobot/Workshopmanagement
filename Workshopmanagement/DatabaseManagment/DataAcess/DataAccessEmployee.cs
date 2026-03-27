@@ -74,14 +74,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<Employee> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override Employee GetDefaultIncrementObject(SearcherEmployee searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }

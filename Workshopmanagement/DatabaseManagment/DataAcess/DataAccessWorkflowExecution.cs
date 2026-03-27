@@ -76,14 +76,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<WorkflowExecution> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override WorkflowExecution GetDefaultIncrementObject(SearcherWorkflowExecution searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }

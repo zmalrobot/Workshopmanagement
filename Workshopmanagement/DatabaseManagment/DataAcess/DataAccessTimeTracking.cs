@@ -64,14 +64,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<TimeTracking> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override TimeTracking GetDefaultIncrementObject(SearcherTimeTracking searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }

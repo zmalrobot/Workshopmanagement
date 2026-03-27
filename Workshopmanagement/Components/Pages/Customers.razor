@@ -102,9 +102,9 @@
 
 
 @code {
-    private Employee employee;
+    private Employee? employee;
     private List<Customer> customers = new List<Customer>();
-    public MudDataGrid<Customer> dataGrid { get; set; }
+    public MudDataGrid<Customer> dataGrid { get; set; } = null!;
 
     private bool processing = true;
     private bool isViewMode = true;

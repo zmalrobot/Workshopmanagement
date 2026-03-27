@@ -12,11 +12,11 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
     public class WorkflowTask
     {
         [BsonId]
-        public string Id { get; set; }
-        public string WorkflowId { get; set; }
+        public string Id { get; set; } = null!;
+        public string WorkflowId { get; set; } = null!;
         public int TaskOrder { get; set; }
-        public string Title { get; set; }
-        public string Subtitle { get; set; }
+        public string Title { get; set; } = null!;
+        public string Subtitle { get; set; } = null!;
         public string? TaskSpecification { get; set; }
         public string? Description { get; set; }
         public string? Note { get; set; }

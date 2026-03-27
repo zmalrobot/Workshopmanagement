@@ -55,14 +55,14 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
         #region GetIncrementFilter
         public override UpdateDefinition<CompanySettings> GetIncrementFilter(bool isIncrement)
         {
-            return null;
+            return null!;
         }
         #endregion
 
         #region GetDefaultIncrementObject
         public override CompanySettings GetDefaultIncrementObject(SearcherCompanySettings searcher)
         {
-            return null;
+            return null!;
         }
         #endregion
     }
