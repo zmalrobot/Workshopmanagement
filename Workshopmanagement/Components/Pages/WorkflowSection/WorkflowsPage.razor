@@ -33,22 +33,43 @@
                         @{
                             var seriesId = context.Item.Entry.WorkflowExecutionSeriesId;
                             var isActive = IsTrackingActive(seriesId);
+                            var isScheduledFuture = IsStartDateInFuture(seriesId);
                         }
                         <MudStack Row="true" Spacing="1" AlignItems="AlignItems.Center" Justify="Justify.Center">
-                            <MudButton OnClick="@(() => StartTrackingAsync(context.Item))"
-                                       StartIcon="@Icons.Material.Filled.PlayArrow" Variant="Variant.Filled"
-                                       Color="Color.Success" Size="Size.Small"
-                                       Disabled="@isActive"
-                                       Style="@(isActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
-                            <MudButton OnClick="@(() => StopTrackingAsync(context.Item))"
-                                       StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled"
-                                       Color="Color.Error" Size="Size.Small"
-                                       Disabled="@(!isActive)"
-                                       Style="@(!isActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                            @if (isScheduledFuture)
+                            {
+                                <MudTooltip Text="@languageContainer.Keys["WorkflowFutureScheduled"]">
+                                    <MudChip T="string" Icon="@Icons.Material.Filled.Schedule" Color="Color.Warning" Size="Size.Small" Style="font-size:0.7rem;">@Utility.GetDateFormatted(GetSeriesStartDate(seriesId), Utility.DateFormat.OnlyDate)</MudChip>
+                                </MudTooltip>
+                            }
+                            else
+                            {
+                                <MudButton OnClick="@(() => StartTrackingAsync(context.Item))"
+                                           StartIcon="@Icons.Material.Filled.PlayArrow" Variant="Variant.Filled"
+                                           Color="Color.Success" Size="Size.Small"
+                                           Disabled="@isActive"
+                                           Style="@(isActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                                <MudButton OnClick="@(() => StopTrackingAsync(context.Item))"
+                                           StartIcon="@Icons.Material.Filled.Stop" Variant="Variant.Filled"
+                                           Color="Color.Error" Size="Size.Small"
+                                           Disabled="@(!isActive)"
+                                           Style="@(!isActive ? "opacity: 0.3; min-width: 40px;" : "min-width: 40px;")" />
+                            }
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
                 <HierarchyColumn T="VeichleWorkflowView" />
+
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowColStartDate"]" Sortable="false">
+                    <CellTemplate>
+                        @Utility.GetDateFormatted(GetSeriesStartDate(context.Item.Entry.WorkflowExecutionSeriesId), Utility.DateFormat.OnlyDate)
+                    </CellTemplate>
+                </TemplateColumn>
+                <TemplateColumn Title="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]" Sortable="false">
+                    <CellTemplate>
+                        @(GetSeriesEstimatedHours(context.Item.Entry.WorkflowExecutionSeriesId)?.ToString() ?? "-")
+                    </CellTemplate>
+                </TemplateColumn>
 
                 <PropertyColumn Property="x => x.Veichle.LicensePlate" Title="@languageContainer.Keys["LicensePlate"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <TemplateColumn Title="@languageContainer.Keys["TimeTrackingHoursSpent"]" Sortable="false">
@@ -78,8 +99,22 @@
 
                 <TemplateColumn Title="Complete" Hidden="false" CellClass="justify-end">
                     <CellTemplate>
+                        @{
+                            var isFutureClose = IsStartDateInFuture(context.Item.Entry.WorkflowExecutionSeriesId);
+                            var closeStyle = isFutureClose ? "opacity: 0.3;" : "";
+                        }
                         <MudIconButton OnClick="@(() => CloseWorkflowAsync(context.Item))"
-                            Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Filled.BlindsClosed" Variant="Variant.Filled"  />
+                            Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Filled.BlindsClosed" Variant="Variant.Filled"
+                            Disabled="@isFutureClose" Style="@closeStyle" />
+                    </CellTemplate>
+                </TemplateColumn>
+
+                <TemplateColumn Title="" Sortable="false" HeaderStyle="width: 50px;" Hidden="@(employee == null || employee.EmployeeRole != EmployeeRole.Manager)">
+                    <CellTemplate>
+                        <MudTooltip Text="@languageContainer.Keys["WorkflowEditSchedule"]">
+                            <MudIconButton OnClick="@(() => OpenEditScheduleAsync(context.Item))"
+                                Color="Color.Info" Size="@Size.Small" Icon="@Icons.Material.Filled.EditCalendar" Variant="Variant.Outlined" />
+                        </MudTooltip>
                     </CellTemplate>
                 </TemplateColumn>
                     
@@ -303,6 +338,12 @@
                 new SearcherWorkflowExecution { WorkflowExecutionSeriesId = seriesId });
             workflowExecutions.AddRange(executions);
         }
+
+        // Sort grid items by StartDate ascending (oldest first, items without date go last)
+        gridItems = gridItems
+            .OrderBy(x => workflowExecutions
+                .FirstOrDefault(e => e.WorkflowExecutionSeriesId == x.Entry.WorkflowExecutionSeriesId)?.StartDate ?? DateTime.MaxValue)
+            .ToList();
     }
     #endregion
 
@@ -594,6 +635,25 @@
 
         return item.Title;
     }
+
+    private DateTime? GetSeriesStartDate(string? seriesId)
+    {
+        if (string.IsNullOrEmpty(seriesId)) return null;
+        return workflowExecutions.FirstOrDefault(e => e.WorkflowExecutionSeriesId == seriesId)?.StartDate;
+    }
+
+    private int? GetSeriesEstimatedHours(string? seriesId)
+    {
+        if (string.IsNullOrEmpty(seriesId)) return null;
+        return workflowExecutions.FirstOrDefault(e => e.WorkflowExecutionSeriesId == seriesId)?.EstimatedHours;
+    }
+
+    private bool IsStartDateInFuture(string? seriesId)
+    {
+        if (string.IsNullOrEmpty(seriesId)) return false;
+        var startDate = GetSeriesStartDate(seriesId);
+        return startDate.HasValue && startDate.Value.Date > DateTime.Today;
+    }
     #endregion
 
     #region Dialogs
@@ -784,6 +844,50 @@
         }
         finally
         {
+            StateHasChanged();
+        }
+    }
+
+    private async Task OpenEditScheduleAsync(VeichleWorkflowView item)
+    {
+        try
+        {
+            var seriesId = item.Entry.WorkflowExecutionSeriesId;
+            var parameters = new DialogParameters<EditSchedule>
+            {
+                {
+                    x => x.Dataset,
+                    new EditScheduleDialogParameter()
+                    {
+                        WorkflowExecutionSeriesId = seriesId,
+                        StartDate = GetSeriesStartDate(seriesId),
+                        EstimatedHours = GetSeriesEstimatedHours(seriesId)
+                    }
+                }
+            };
+
+            var dialog = await dialogService.ShowAsync<EditSchedule>(languageContainer.Keys["WorkflowEditScheduleTitle"], parameters, new DialogOptions
+            {
+                MaxWidth = MaxWidth.Small,
+                FullWidth = true,
+                CloseButton = true,
+                CloseOnEscapeKey = true
+            });
+            var result = await dialog.Result;
+
+            if (!result?.Canceled ?? false)
+            {
+                processing = true;
+                await GetWorkflowExecutions();
+            }
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
             StateHasChanged();
         }
     }

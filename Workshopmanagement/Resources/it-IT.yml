@@ -268,3 +268,8 @@ ReopenWorkflowDescription: Sei sicuro di voler riaprire questo workflow?
 ReopenWorkflowSuccess: Workflow riaperto con successo
 ExecutionTitle: Titolo esecuzione
 ExecutionSubtitle: Sottotitolo esecuzione
+WorkflowColStartDate: Data di inizio
+WorkflowEditSchedule: Modifica pianificazione
+WorkflowEditScheduleTitle: Modifica data di inizio e ore stimate
+WorkflowEditScheduleSaved: Pianificazione aggiornata con successo
+WorkflowFutureScheduled: Flusso pianificato per data futura

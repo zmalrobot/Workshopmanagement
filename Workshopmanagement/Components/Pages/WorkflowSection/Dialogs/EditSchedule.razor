@@ -1,0 +1,100 @@
+@using Workshopmanagement.DatabaseManagment.DataObject
+@using Workshopmanagement.DatabaseManagment
+@using Workshopmanagement.Utility.DialogParameter
+
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Info">
+            <MudIcon Icon="@Icons.Material.Filled.EditCalendar" Class="mr-3 mb-n1" />
+            @languageContainer.Keys["WorkflowEditScheduleTitle"]
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (processing)
+        {
+            <MudContainer Style="text-align: center; margin-top: 50px;">
+                <MudProgressLinear Color="Color.Tertiary" Size="Size.Large" Indeterminate="true" />
+            </MudContainer>
+        }
+        else
+        {
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudDatePicker Label="@languageContainer.Keys["WorkkflowStartStep5Date"]"
+                                   @bind-Date="startDate"
+                                   Variant="Variant.Outlined"
+                                   Culture="@(new System.Globalization.CultureInfo("it-IT"))" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]"
+                                     @bind-Value="estimatedHours"
+                                     Variant="Variant.Outlined"
+                                     Min="1" />
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Variant="Variant.Outlined" Color="Color.Default" Disabled="@processing">
+            @languageContainer.Keys["Cancel"]
+        </MudButton>
+        <MudButton OnClick="SaveAsync" Variant="Variant.Filled" Color="Color.Info" Disabled="@processing">
+            @languageContainer.Keys["SaveChanges"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public EditScheduleDialogParameter Dataset { get; set; } = new EditScheduleDialogParameter();
+
+    private DateTime? startDate;
+    private int? estimatedHours;
+    private bool processing = false;
+
+    protected override void OnInitialized()
+    {
+        startDate = Dataset.StartDate;
+        estimatedHours = Dataset.EstimatedHours;
+    }
+
+    private async Task SaveAsync()
+    {
+        try
+        {
+            processing = true;
+
+            var executions = await dbDependency.GetDataAccessWorkflowExecution()
+                .FindAsync(new SearcherWorkflowExecution { WorkflowExecutionSeriesId = Dataset.WorkflowExecutionSeriesId });
+
+            var tasks = executions.Select(exec =>
+            {
+                exec.StartDate = startDate;
+                exec.EstimatedHours = estimatedHours;
+                return dbDependency.GetDataAccessWorkflowExecution().UpdateAsync(exec);
+            });
+
+            await Task.WhenAll(tasks);
+
+            snackbar.Add(languageContainer.Keys["WorkflowEditScheduleSaved"], Severity.Success);
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            processing = false;
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

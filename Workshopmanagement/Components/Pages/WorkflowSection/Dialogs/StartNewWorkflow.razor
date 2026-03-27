@@ -207,10 +207,10 @@
                                         <MudText>@Utility.GetDescriptionFromVeichle(selectedVeichle, languageContainer)</MudText>
                                     </MudItem>
                                     <MudItem xs="12">
-                                        <MudDatePicker Label="@languageContainer.Keys["WorkkflowStartStep5Date"]" MinDate="DateTime.Today" @bind-Date="startDate" Variant="Variant.Outlined" />
+                                        <MudDatePicker Label="@languageContainer.Keys["WorkkflowStartStep5Date"]" MinDate="DateTime.Today" @bind-Date="startDate" Variant="Variant.Outlined" Culture="@(new System.Globalization.CultureInfo("it-IT"))" />
                                     </MudItem>
                                     <MudItem xs="12">
-                                        <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]" @bind-Value="estimatedHours" Variant="Variant.Outlined" Min="0" />
+                                        <MudNumericField T="int?" Label="@languageContainer.Keys["WorkkflowStartStep5EstimatedHours"]" @bind-Value="estimatedHours" Variant="Variant.Outlined" Min="1" />
                                     </MudItem>
                                     @if (selectedWorkflow.RequireDisclaimer && !isDisclamerAleadySign)
                                     {
