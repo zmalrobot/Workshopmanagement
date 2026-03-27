@@ -95,11 +95,8 @@ WorkkflowStartStep5Abort: Annulla la creazione del flusso
 WorkkflowStartStep5AbortMessage: Creazione flusso annullata
 WorkkflowStartStep5ConfirmMessage: Flusso creato con successo
 WorkkflowStartStep5Date: Data inizio pianificata
-WorkkflowStartStep5Time: Ora di inizio
 WorkkflowStartStep5EstimatedHours: Ore stimate
-WorkkflowStartStep5EstimatedMinutes: Minuti stimati
-WorkflowEstimatedHours: Tempo di esecuzione (ore)
-WorkflowEstimatedMinutes: Tempo di esecuzione (min)
+WorkflowEstimatedHours: Tempo di esecuzione
 WorkkflowStartStepGoBack: Vai allo step precedente
 WorkkflowStartStepGoForward: Vai allo step successivo
 Search: Cerca
@@ -309,17 +306,3 @@ WorkingHoursMorning: Mattina
 WorkingHoursAfternoon: Pomeriggio
 WorkingHoursStart: Inizio
 WorkingHoursEnd: Fine
-AppearanceSettings: Aspetto
-AppearanceSettingsDesc: Scegli il tema dell'applicazione
-ThemeMaterialExpressiveDark: Expressive Dark
-ThemeMaterialExpressiveLight: Expressive Light
-ThemeAppleLiquidGlassDark: Liquid Glass Dark
-ThemeAppleLiquidGlassLight: Liquid Glass Light
-ThemeFluentDesignDark: Fluent Dark
-ThemeFluentDesignLight: Fluent Light
-ThemeDesignMd3: Material Design 3
-ThemeDesignApple: Apple Design
-ThemeDesignFluent: Microsoft Fluent
-ThemeDark: Scuro
-ThemeLight: Chiaro
-ThemeDefault: Predefinito

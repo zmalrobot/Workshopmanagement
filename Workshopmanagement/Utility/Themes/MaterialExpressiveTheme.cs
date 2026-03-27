@@ -45,7 +45,7 @@ namespace Workshopmanagement.Utility.Themes
             {
                 Default = new DefaultTypography
                 {
-                    FontFamily   = new[] { "Google Sans", "Roboto", "Helvetica", "sans-serif" },
+                    FontFamily   = new[] { "Inter", "Roboto", "Helvetica", "sans-serif" },
                     FontSize     = "0.875rem",
                     FontWeight   = "400",
                     LineHeight   = "1.5",
@@ -105,7 +105,7 @@ namespace Workshopmanagement.Utility.Themes
             {
                 Default = new DefaultTypography
                 {
-                    FontFamily   = new[] { "Google Sans", "Roboto", "Helvetica", "sans-serif" },
+                    FontFamily   = new[] { "Inter", "Roboto", "Helvetica", "sans-serif" },
                     FontSize     = "0.875rem",
                     FontWeight   = "400",
                     LineHeight   = "1.5",
