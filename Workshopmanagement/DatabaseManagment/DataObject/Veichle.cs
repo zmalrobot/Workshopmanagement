@@ -20,7 +20,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string WorkflowExecutionSeriesId { get; set; } = null!;
     }
 
-    public class Veichle
+    public class Veichle : ISanitizable
     {
         [BsonId]
         public string Id { get; set; } = null!;
@@ -43,5 +43,15 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public List<OpenWorkflowEntry> OpenWorkflows { get; set; } = new List<OpenWorkflowEntry>();
         public List<string> WorkflowExecutionsCompleted { get; set; } = new List<string>();
 
+        public void Sanitize()
+        {
+            LicensePlate = LicensePlate?.Trim()!;
+            Brand        = Brand?.Trim();
+            Model        = Model?.Trim();
+            FrameType    = FrameType?.Trim();
+            EngineType   = EngineType?.Trim();
+            FrameNumber  = FrameNumber?.Trim();
+            Note         = Note?.Trim();
+        }
     }
 }

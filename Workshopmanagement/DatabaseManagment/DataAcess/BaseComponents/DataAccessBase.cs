@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using Workshopmanagement.DatabaseManagment.DataObject;
 
 namespace Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents
 {
@@ -16,11 +17,13 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents
         #region Insert
         public async Task InsertAsync(Table obj)
         {
+            (obj as ISanitizable)?.Sanitize();
             await collection.InsertOneAsync(obj);
         }
 
         public async Task InsertAsync(List<Table> objs)
         {
+            foreach (var obj in objs) (obj as ISanitizable)?.Sanitize();
             await collection.InsertManyAsync(objs);
         }
         #endregion
@@ -28,6 +31,7 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents
         #region Update
         public async Task UpdateAsync(Table obj)
         {
+            (obj as ISanitizable)?.Sanitize();
             var id = GetIdValue(obj);
             var filter = FilterBuilder(id);
 

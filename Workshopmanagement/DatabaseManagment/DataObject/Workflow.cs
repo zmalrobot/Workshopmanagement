@@ -11,7 +11,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime? InsertDateTo { get; set; }
     }
 
-    public class Workflow
+    public class Workflow : ISanitizable
     {
         [BsonId]
         public string Id { get; set; } = null!;
@@ -26,5 +26,13 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime UpdateDate { get; set; }
         public int? EstimatedHours { get; set; }
         public int? EstimatedMinutes { get; set; }
+
+        public void Sanitize()
+        {
+            Title       = Title?.Trim()!;
+            Subtitle    = Subtitle?.Trim();
+            Description = Description?.Trim();
+            Note        = Note?.Trim();
+        }
     }
 }

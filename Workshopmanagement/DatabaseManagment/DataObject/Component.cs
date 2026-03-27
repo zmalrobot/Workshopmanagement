@@ -7,7 +7,7 @@
         public string? Name { get; set; }
     }
 
-    public class Component
+    public class Component : ISanitizable
     {
         public string Id { get; set; } = null!;
         public string? Barcode { get; set; }
@@ -15,5 +15,12 @@
         public decimal Quanity { get; set; }
         public decimal PricePerQuantity { get; set; }
         public string UnitOfMeasurement { get; set; } = null!;
+
+        public void Sanitize()
+        {
+            Barcode           = Barcode?.Trim();
+            Name              = Name?.Trim()!;
+            UnitOfMeasurement = UnitOfMeasurement?.Trim()!;
+        }
     }
 }

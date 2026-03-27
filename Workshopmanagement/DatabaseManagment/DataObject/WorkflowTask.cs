@@ -9,7 +9,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? Title { get; set; }
     }
 
-    public class WorkflowTask
+    public class WorkflowTask : ISanitizable
     {
         [BsonId]
         public string Id { get; set; } = null!;
@@ -32,5 +32,14 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public bool CanBeSkipped { get; set; }             //Permette di skippare il task
         public bool HasOutcome { get; set; }               //Permette di inserire un outcome
         public bool IsFinalTask { get; set; }              //Task di fine
+
+        public void Sanitize()
+        {
+            Title             = Title?.Trim()!;
+            Subtitle          = Subtitle?.Trim()!;
+            TaskSpecification = TaskSpecification?.Trim();
+            Description       = Description?.Trim();
+            Note              = Note?.Trim();
+        }
     }
 }

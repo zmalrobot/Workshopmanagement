@@ -15,7 +15,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime? InsertDateTo { get; set; }
     }
 
-    public class Customer
+    public class Customer : ISanitizable
     {
         [BsonId]
         public string Id { get; set; } = null!;
@@ -34,5 +34,20 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime InsertDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public bool IsActive { get; set; }
+
+        public void Sanitize()
+        {
+            Name             = Name?.Trim()!;
+            Surname          = Surname?.Trim()!;
+            Username         = Username?.Trim()!;
+            Password         = Password?.Trim()!;
+            BusinessName     = BusinessName?.Trim();
+            PhoneNumber      = PhoneNumber?.Trim();
+            PhonePrefix      = PhonePrefix?.Trim();
+            Email            = Email?.Trim();
+            Address          = Address?.Trim();
+            VatNumber        = VatNumber?.Trim();
+            FiscalCode       = FiscalCode?.Trim();
+        }
     }
 }

@@ -13,7 +13,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime? InsertDateTo { get; set; }
     }
 
-    public class Employee
+    public class Employee : ISanitizable
     {
         [BsonId]
         public string Id { get; set; } = null!;
@@ -28,6 +28,17 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime InsertDate { get; set; }
         public DateTime UpdateDate { get; set; }
         public bool IsActive { get; set; }
+
+        public void Sanitize()
+        {
+            Username    = Username?.Trim()!;
+            Password    = Password?.Trim()!;
+            Name        = Name?.Trim()!;
+            Surname     = Surname?.Trim()!;
+            PhoneNumber = PhoneNumber?.Trim();
+            PhonePrefix = PhonePrefix?.Trim();
+            Email       = Email?.Trim();
+        }
     }
 
     public enum EmployeeRole

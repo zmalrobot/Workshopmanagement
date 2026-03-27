@@ -7,7 +7,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? Id { get; set; }
     }
 
-    public class CompanySettings
+    public class CompanySettings : ISanitizable
     {
         [BsonId]
         public string Id { get; set; } = "default";
@@ -26,5 +26,12 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public TimeOnly MorningEnd { get; set; } = new TimeOnly(13, 0);
         public TimeOnly AfternoonStart { get; set; } = new TimeOnly(14, 0);
         public TimeOnly AfternoonEnd { get; set; } = new TimeOnly(18, 0);
+
+        public void Sanitize()
+        {
+            CompanyName      = CompanyName?.Trim();
+            CompanyVatNumber = CompanyVatNumber?.Trim();
+            CompanyPhone     = CompanyPhone?.Trim();
+        }
     }
 }

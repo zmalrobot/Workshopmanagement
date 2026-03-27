@@ -14,7 +14,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? WorkflowExecutionSeriesId { get; set; }
     }
 
-    public class WorkflowExecution
+    public class WorkflowExecution : ISanitizable
     {
         public WorkflowExecution()
         {
@@ -54,6 +54,15 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public bool IsDisclamerAleadySign { set; get; }
         public string DisclamierSign { get; set; } = null!;
         public DateTime DisclamierSignDate { get; set; }
+
+        public void Sanitize()
+        {
+            Titile         = Titile?.Trim();
+            Note           = Note?.Trim();
+            DisclamierSign = DisclamierSign?.Trim()!;
+            foreach (var c in Components ?? Enumerable.Empty<Component>())
+                c.Sanitize();
+        }
     }
 
     public enum WorkflowExecutionStatus
