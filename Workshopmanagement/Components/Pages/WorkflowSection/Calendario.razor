@@ -89,6 +89,76 @@
     </MudItem>
 </MudGrid>
 
+@if (showEventPopup && selectedEvent != null)
+{
+    <div style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; align-items:center; justify-content:center;"
+         @onclick="@(() => showEventPopup = false)">
+        <MudCard Style="min-width:300px; max-width:460px; width:90%;" @onclick:stopPropagation="true">
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">@selectedEvent.Label</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small"
+                                   OnClick="@(() => showEventPopup = false)" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudGrid Spacing="2">
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">Inizio</MudText>
+                        <MudText Typo="Typo.body2">@selectedEvent.Start.ToString("ddd dd/MM HH:mm")</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">Fine</MudText>
+                        <MudText Typo="Typo.body2">@selectedEvent.End.ToString("ddd dd/MM HH:mm")</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">Durata</MudText>
+                        <MudText Typo="Typo.body2">@($"{(int)(selectedEvent.End - selectedEvent.Start).TotalHours}h {(selectedEvent.End - selectedEvent.Start).Minutes:D2}m")</MudText>
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.caption">Stato</MudText>
+                        <MudChip T="string" Size="Size.Small" Style="@($"background:{selectedEvent.Color}; color:white; margin:0; height:22px;")">
+                            @selectedEvent.StatusLabel
+                        </MudChip>
+                    </MudItem>
+                    @if (!string.IsNullOrEmpty(selectedEvent.LicensePlate))
+                    {
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption">Veicolo</MudText>
+                            <MudText Typo="Typo.body2">@selectedEvent.LicensePlate</MudText>
+                        </MudItem>
+                    }
+                    @if (!string.IsNullOrEmpty(selectedEvent.EmployeeNames))
+                    {
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption">Operatore/i</MudText>
+                            <MudText Typo="Typo.body2">@selectedEvent.EmployeeNames</MudText>
+                        </MudItem>
+                    }
+                    @if (selectedEvent.EstimatedHours.HasValue)
+                    {
+                        <MudItem xs="12">
+                            <MudText Typo="Typo.caption">Ore stimate</MudText>
+                            <MudText Typo="Typo.body2">@selectedEvent.EstimatedHours.Value.ToString("F1") h</MudText>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.History"
+                           OnClick="@OpenSelectedEventDetailPage">
+                    @EventDetailButtonLabel
+                </MudButton>
+                <MudSpacer />
+                <MudButton Variant="Variant.Text" OnClick="@(() => showEventPopup = false)">Chiudi</MudButton>
+            </MudCardActions>
+        </MudCard>
+    </div>
+}
+
 @code {
     private Employee? employee;
     private bool processing = true;
@@ -98,6 +168,18 @@
     // Tab 2 state
     private DateTime currentWeekStartL = GetMonday(DateTime.Today);
     private string selectedEmployeeId = "";
+    private CalEvent? selectedEvent;
+    private bool showEventPopup;
+
+    private string EventDetailButtonLabel =>
+        selectedEvent?.IsCompleted == true ? "Vai allo storico" : "Vai a lavorazioni";
+
+    private void OpenSelectedEventDetailPage()
+    {
+        if (selectedEvent == null) return;
+        showEventPopup = false;
+        navigationManager.NavigateTo(selectedEvent.IsCompleted ? "workflowshistory" : "workflows");
+    }
 
     // Data
     private List<WorkflowExecution> allExecutions = new();
@@ -198,6 +280,10 @@
         public string EmployeeTag { get; set; } = "";
         public string Label { get; set; } = "";
         public string SubLabel { get; set; } = "";
+        public string LicensePlate { get; set; } = "";
+        public string EmployeeNames { get; set; } = "";
+        public double? EstimatedHours { get; set; }
+        public string StatusLabel { get; set; } = "";
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
         public bool IsCompleted { get; set; }
@@ -252,12 +338,20 @@
             var wfExec = execs.FirstOrDefault();
             var wf = wfExec != null ? workflows.FirstOrDefault(w => w.Id == wfExec.WorkflowId) : null;
             var veichle = wfExec?.VeichleId != null ? veichles.FirstOrDefault(v => v.Id == wfExec.VeichleId) : null;
+            var plate = veichle?.LicensePlate ?? "";
+            var empIds1 = allTrackings.Where(t => t.WorkflowExecutionSeriesId == seriesId).Select(t => t.EmployeeId).Distinct().ToList();
+            var empNames1 = string.Join(", ", employees.Where(e => empIds1.Contains(e.Id)).Select(e => $"{e.Name} {e.Surname}"));
+            var statusLabel1 = isCompleted ? "Completato" : (hasActive ? "In Lavorazione" : (isInFuture ? "Programmato" : "Aperto"));
 
             events.Add(new CalEvent
             {
                 SeriesId = seriesId,
                 Label = wf?.Title ?? seriesId,
-                SubLabel = veichle?.LicensePlate ?? "",
+                SubLabel = plate,
+                LicensePlate = plate,
+                EmployeeNames = empNames1,
+                EstimatedHours = estimatedHours,
+                StatusLabel = statusLabel1,
                 Start = startDate,
                 End = logicalEnd,
                 IsCompleted = isCompleted,
@@ -302,12 +396,19 @@
                 var end = session.EndTime ?? DateTime.Now;
                 var isActive = !session.EndTime.HasValue;
 
+                var plate2 = veichle?.LicensePlate ?? "";
+                var empName2 = emp != null ? $"{emp.Name} {emp.Surname}" : "";
+                var statusLabel2 = isActive ? "In Corso" : "Completato";
+
                 events.Add(new CalEvent
                 {
                     SeriesId = tracking.WorkflowExecutionSeriesId,
                     EmployeeTag = tracking.EmployeeId,
                     Label = wf?.Title ?? tracking.WorkflowExecutionSeriesId,
-                    SubLabel = $"{veichle?.LicensePlate ?? ""} {empLabel}".Trim(),
+                    SubLabel = $"{plate2} {empLabel}".Trim(),
+                    LicensePlate = plate2,
+                    EmployeeNames = empName2,
+                    StatusLabel = statusLabel2,
                     Start = start,
                     End = end,
                     IsCompleted = !isActive,
@@ -618,14 +719,17 @@
                     $" background:{ev.Color}; color:{ev.TextColor};" +
                     " border-radius:3px; z-index:1; padding:2px 4px; box-sizing:border-box;" +
                     $" font-size:0.65rem; overflow:hidden; line-height:1.3;" +
-                    $" opacity:{opacity.ToString("F2", ic)}; cursor:default;");
+                    $" opacity:{opacity.ToString("F2", ic)}; cursor:pointer;");
+                builder.AddAttribute(seq++, "onclick",
+                    EventCallback.Factory.Create<Microsoft.AspNetCore.Components.Web.MouseEventArgs>(
+                        this, () => { selectedEvent = ev; showEventPopup = true; InvokeAsync(StateHasChanged); }));
 
                 builder.OpenElement(seq++, "div");
                 builder.AddAttribute(seq++, "style", "white-space:nowrap; overflow:hidden; text-overflow:ellipsis;");
                 builder.AddContent(seq++, ev.Label);
                 builder.CloseElement();
 
-                if (!string.IsNullOrEmpty(ev.SubLabel) && hPx > 28)
+                if (!string.IsNullOrEmpty(ev.SubLabel) && hPx >= 28)
                 {
                     builder.OpenElement(seq++, "div");
                     builder.AddAttribute(seq++, "style",
