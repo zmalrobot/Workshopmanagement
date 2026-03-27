@@ -41,7 +41,7 @@
                         </MudGrid>
                     </MudItem>
                     <MudItem xs="12">
-                        @RenderWeekCalendar(BuildAppuntamentiEvents(), currentWeekStart)
+                        @RenderWeekCalendar(BuildAppuntamentiEvents(), currentWeekStart, true)
                     </MudItem>
                 </MudGrid>
             </MudTabPanel>
@@ -195,6 +195,7 @@
     private class CalEvent
     {
         public string SeriesId { get; set; } = "";
+        public string EmployeeTag { get; set; } = "";
         public string Label { get; set; } = "";
         public string SubLabel { get; set; } = "";
         public DateTime Start { get; set; }
@@ -304,6 +305,7 @@
                 events.Add(new CalEvent
                 {
                     SeriesId = tracking.WorkflowExecutionSeriesId,
+                    EmployeeTag = tracking.EmployeeId,
                     Label = wf?.Title ?? tracking.WorkflowExecutionSeriesId,
                     SubLabel = $"{veichle?.LicensePlate ?? ""} {empLabel}".Trim(),
                     Start = start,
@@ -315,7 +317,30 @@
             }
         }
 
-        return events;
+        // Compact nearby sessions per employee (gap ≤ 15 min → merge into one visual block)
+        const int compactGapMin = 15;
+        var compacted = new List<CalEvent>();
+        foreach (var empGroup in events.GroupBy(e => e.EmployeeTag))
+        {
+            var sorted = empGroup.OrderBy(e => e.Start).ToList();
+            var cur = sorted[0];
+            for (int i = 1; i < sorted.Count; i++)
+            {
+                if ((sorted[i].Start - cur.End).TotalMinutes <= compactGapMin)
+                {
+                    if (sorted[i].End > cur.End) cur.End = sorted[i].End;
+                    if (sorted[i].HasActiveTracking) cur.HasActiveTracking = true;
+                    if (!sorted[i].IsCompleted) cur.IsCompleted = false;
+                }
+                else
+                {
+                    compacted.Add(cur);
+                    cur = sorted[i];
+                }
+            }
+            compacted.Add(cur);
+        }
+        return compacted;
     }
 
     // ──────────────────────────────────────────────────
@@ -411,7 +436,7 @@
     // Shared 24h week-calendar renderer (Google Calendar style)
     // ──────────────────────────────────────────────────
 
-    private RenderFragment RenderWeekCalendar(List<CalEvent> events, DateTime weekStart) => builder =>
+    private RenderFragment RenderWeekCalendar(List<CalEvent> events, DateTime weekStart, bool workingHoursOnly = false) => builder =>
     {
         var ms  = settings.MorningStart;
         var me  = settings.MorningEnd;
@@ -424,7 +449,10 @@
         const double hdrH    = 36;    // header height
         const double dayMinW = 120;   // min day column width
         const int    totalSlots = 48;
-        double totalH = totalSlots * slotH;
+        int firstSlot = workingHoursOnly ? (ms.Hour * 60 + ms.Minute) / 30 : 0;
+        int lastSlot  = workingHoursOnly ? (ae.Hour * 60 + ae.Minute) / 30 : totalSlots;
+        int slotCount = lastSlot - firstSlot;
+        double totalH = slotCount * slotH;
         var ic = System.Globalization.CultureInfo.InvariantCulture;
         DateTime now = DateTime.Now;
         int seq = 0;
@@ -450,7 +478,7 @@
             $"height:{hdrH}px; position:sticky; top:0; z-index:4; background:#1e1e2e; border-bottom:1px solid #444;");
         builder.CloseElement();
 
-        for (int si = 0; si < totalSlots; si++)
+        for (int si = firstSlot; si < lastSlot; si++)
         {
             int startMin = si * 30;
             var t = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(startMin));
@@ -495,8 +523,8 @@
         foreach (var day in days)
         {
             bool isToday = day.Date == DateTime.Today;
-            DateTime dayStart = day.Date;
-            DateTime dayEnd   = day.Date.AddDays(1);
+            DateTime dayStart = workingHoursOnly ? day.Date.Add(ms.ToTimeSpan()) : day.Date;
+            DateTime dayEnd   = workingHoursOnly ? day.Date.Add(ae.ToTimeSpan()) : day.Date.AddDays(1);
 
             builder.OpenElement(seq++, "div");
             builder.AddAttribute(seq++, "style",
@@ -505,7 +533,7 @@
                 $" background:{(isToday ? "rgba(25,118,210,0.04)" : "transparent")};");
 
             // grid lines
-            for (int si = 0; si < totalSlots; si++)
+            for (int si = firstSlot; si < lastSlot; si++)
             {
                 int startMin = si * 30;
                 var t = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(startMin));
@@ -515,7 +543,7 @@
                 string bg  = isWork ? "rgba(255,255,255,0.025)" : "transparent";
                 builder.OpenElement(seq++, "div");
                 builder.AddAttribute(seq++, "style",
-                    $"position:absolute; top:{(si * slotH).ToString("F0", ic)}px;" +
+                    $"position:absolute; top:{((si - firstSlot) * slotH).ToString("F0", ic)}px;" +
                     $" left:0; right:0; height:{slotH}px; {bdr} background:{bg}; pointer-events:none;");
                 builder.CloseElement();
             }
@@ -523,12 +551,16 @@
             // current-time line
             if (isToday)
             {
-                double nowTop = (now.Hour * 60.0 + now.Minute) / 30.0 * slotH;
-                builder.OpenElement(seq++, "div");
-                builder.AddAttribute(seq++, "style",
-                    $"position:absolute; top:{nowTop.ToString("F1", ic)}px;" +
-                    " left:0; right:0; height:2px; background:#ff5722; z-index:2; pointer-events:none;");
-                builder.CloseElement();
+                double nowMin = now.Hour * 60.0 + now.Minute;
+                double nowTop = (nowMin / 30.0 - firstSlot) * slotH;
+                if (nowTop >= 0 && nowTop <= totalH)
+                {
+                    builder.OpenElement(seq++, "div");
+                    builder.AddAttribute(seq++, "style",
+                        $"position:absolute; top:{nowTop.ToString("F1", ic)}px;" +
+                        " left:0; right:0; height:2px; background:#ff5722; z-index:2; pointer-events:none;");
+                    builder.CloseElement();
+                }
             }
 
             // ── event layout: greedy column assignment ──────────────

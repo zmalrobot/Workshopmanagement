@@ -101,19 +101,15 @@
                 <MudCardHeader>
                     <CardHeaderContent>
                         <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
-                            <MudStack Spacing="1">
-                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                                    <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
-                                    <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
-                                </MudStack>
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                <MudChip T="string" Style="@($"background-color:{selectedResumeItem.WorkflowColor}; color:white;")" Size="Size.Small">@selectedResumeItem.WorkflowTitle</MudChip>
+                                <MudText Typo="Typo.subtitle1">@($"{selectedResumeItem.Veichle.LicensePlate} - {selectedResumeItem.Veichle.Brand} {selectedResumeItem.Veichle.Model}")</MudText>
                                 @{
                                     var dashEmpNames = GetDashboardEmployeeNames();
                                 }
                                 @if (!string.IsNullOrEmpty(dashEmpNames))
                                 {
-                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
-                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Style="vertical-align: middle; margin-right: 4px;" />@languageContainer.Keys["WorkflowDashboardAssigned"]: @dashEmpNames
-                                    </MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@languageContainer.Keys["WorkflowColAssigned"]: @dashEmpNames</MudText>
                                 }
                             </MudStack>
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
