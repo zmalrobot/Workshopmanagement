@@ -55,6 +55,8 @@ namespace Workshopmanagement.Utility.Themes
             ThemeVariant.FluentDesignLight       => FluentDesignTheme.Light,
             ThemeVariant.CarbonDark              => CarbonTheme.Dark,
             ThemeVariant.CarbonLight             => CarbonTheme.Light,
+            ThemeVariant.RetroWebDark            => RetroWebTheme.Dark,
+            ThemeVariant.RetroWebLight           => RetroWebTheme.Light,
             _                                    => MaterialExpressiveTheme.Dark
         };
 
@@ -64,6 +66,7 @@ namespace Workshopmanagement.Utility.Themes
             ThemeVariant.AppleLiquidGlassLight   => false,
             ThemeVariant.FluentDesignLight       => false,
             ThemeVariant.CarbonLight             => false,
+            ThemeVariant.RetroWebLight           => false,
             _                                    => true
         };
 
@@ -78,6 +81,8 @@ namespace Workshopmanagement.Utility.Themes
             ThemeVariant.FluentDesignLight       => "theme-fluent-light",
             ThemeVariant.CarbonDark              => "theme-carbon-dark",
             ThemeVariant.CarbonLight             => "theme-carbon-light",
+            ThemeVariant.RetroWebDark            => "theme-retro-dark",
+            ThemeVariant.RetroWebLight           => "theme-retro-light",
             _                                    => "theme-md3-dark"
         };
     }

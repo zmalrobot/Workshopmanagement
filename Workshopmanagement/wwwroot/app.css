@@ -580,3 +580,148 @@ h1:focus {
     border: 1px solid #E0E0E0 !important;
     border-radius: 2px !important;
 }
+
+/* =====================================================
+   RETRO WEB 2000 — DARK (Cyber / Matrix phosphor)
+   ===================================================== */
+.theme-retro-dark {
+    background: #000000;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+.theme-retro-dark .mud-appbar {
+    background: #000000 !important;
+    border-bottom: 1px solid #00FF41 !important;
+    box-shadow: 0 0 12px rgba(0,255,65,0.25) !important;
+}
+.theme-retro-dark .mud-card,
+.theme-retro-dark .mud-paper {
+    background: #0A0A0A !important;
+    border: 1px solid #00FF41 !important;
+    border-radius: 0 !important;
+    box-shadow: 0 0 6px rgba(0,255,65,0.12), inset 0 0 2px rgba(0,255,65,0.04) !important;
+}
+.theme-retro-dark .mud-card:hover {
+    box-shadow: 0 0 16px rgba(0,255,65,0.35) !important;
+    border-color: #00FF41 !important;
+}
+.theme-retro-dark .mud-drawer {
+    background: #050505 !important;
+    border-right: 1px solid #00FF41 !important;
+}
+.theme-retro-dark .mud-nav-link {
+    border-radius: 0 !important;
+    margin: 0 !important;
+}
+.theme-retro-dark .mud-nav-link:hover {
+    background: rgba(0,255,65,0.08) !important;
+}
+.theme-retro-dark .mud-nav-link.active {
+    background: rgba(0,255,65,0.14) !important;
+    color: #00FF41 !important;
+    border-left: 3px solid #00FF41 !important;
+}
+.theme-retro-dark .mud-button-filled,
+.theme-retro-dark .mud-button-outlined {
+    border-radius: 0 !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    letter-spacing: 0.08em !important;
+}
+.theme-retro-dark .mud-input,
+.theme-retro-dark .mud-input-outlined,
+.theme-retro-dark .mud-input-filled {
+    border-radius: 0 !important;
+}
+.theme-retro-dark .mud-typography-h4,
+.theme-retro-dark .mud-typography-h5,
+.theme-retro-dark .mud-typography-h6 {
+    text-shadow: 0 0 8px rgba(0,255,65,0.55) !important;
+    font-family: 'Courier New', Courier, monospace !important;
+}
+.theme-retro-dark .mud-expansion-panel {
+    background: #0A0A0A !important;
+    border: 1px solid #00FF41 !important;
+    border-radius: 0 !important;
+}
+.theme-retro-dark .mud-chip {
+    border-radius: 0 !important;
+}
+.theme-retro-dark .mud-table {
+    border: 1px solid #00FF41 !important;
+}
+.theme-retro-dark .mud-table-row:hover td {
+    background: rgba(0,255,65,0.07) !important;
+}
+
+/* =====================================================
+   RETRO WEB 2000 — LIGHT (Windows XP / IE6 era)
+   ===================================================== */
+.theme-retro-light {
+    background: #ECE9D8;
+    font-family: Verdana, Arial, sans-serif !important;
+}
+.theme-retro-light .mud-appbar {
+    background: linear-gradient(to bottom, #245EDC 0%, #003399 60%, #1A4CB5 100%) !important;
+    border-bottom: 2px solid #001f7a !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.45) !important;
+}
+.theme-retro-light .mud-card,
+.theme-retro-light .mud-paper {
+    background: #FFFFFF !important;
+    border: 2px outset #D4D0C8 !important;
+    border-radius: 0 !important;
+    box-shadow: 2px 2px 0 #808080 !important;
+}
+.theme-retro-light .mud-card:hover {
+    border-color: #003399 !important;
+    box-shadow: 2px 2px 0 #003399 !important;
+}
+.theme-retro-light .mud-drawer {
+    background: #D4D0C8 !important;
+    border-right: 2px solid #ACA899 !important;
+}
+.theme-retro-light .mud-nav-link {
+    border-radius: 0 !important;
+    margin: 0 !important;
+    font-family: Verdana, Arial, sans-serif !important;
+    font-size: 0.8125rem !important;
+}
+.theme-retro-light .mud-nav-link:hover {
+    background: rgba(0,51,153,0.07) !important;
+}
+.theme-retro-light .mud-nav-link.active {
+    background: rgba(0,51,153,0.12) !important;
+    color: #003399 !important;
+    border-left: 3px solid #003399 !important;
+    font-weight: 700 !important;
+}
+.theme-retro-light .mud-button-filled {
+    border-radius: 0 !important;
+    border: 2px outset #D4D0C8 !important;
+    font-family: Verdana, Arial, sans-serif !important;
+    font-size: 0.8125rem !important;
+}
+.theme-retro-light .mud-button-filled:active {
+    border-style: inset !important;
+}
+.theme-retro-light .mud-input,
+.theme-retro-light .mud-input-outlined {
+    border-radius: 0 !important;
+    font-family: Verdana, Arial, sans-serif !important;
+    font-size: 0.8125rem !important;
+}
+.theme-retro-light .mud-expansion-panel {
+    background: #ECE9D8 !important;
+    border: 2px outset #D4D0C8 !important;
+    border-radius: 0 !important;
+}
+.theme-retro-light .mud-chip {
+    border-radius: 0 !important;
+}
+.theme-retro-light .mud-table {
+    border: 2px inset #D4D0C8 !important;
+    font-family: Verdana, Arial, sans-serif !important;
+    font-size: 0.8125rem !important;
+}
+.theme-retro-light .mud-table-row:hover td {
+    background: rgba(0,51,153,0.06) !important;
+}

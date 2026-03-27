@@ -9,6 +9,8 @@ namespace Workshopmanagement.Utility.Themes
         FluentDesignDark,
         FluentDesignLight,
         CarbonDark,
-        CarbonLight
+        CarbonLight,
+        RetroWebDark,
+        RetroWebLight
     }
 }
