@@ -696,10 +696,13 @@
     private string GetDashboardEmployeeNames()
     {
         if (dashboardExecutions == null || !dashboardExecutions.Any()) return "";
-        var names = dashboardExecutions
-            .Where(e => !string.IsNullOrEmpty(e.EmployeeId))
-            .Select(e => e.EmployeeId)
+        var employeeIds = dashboardExecutions
+            .Where(e => e.AssignedEmployeeIds != null)
+            .SelectMany(e => e.AssignedEmployeeIds!)
             .Distinct()
+            .ToList();
+        if (!employeeIds.Any()) return "";
+        var names = employeeIds
             .Select(id => allEmployees.FirstOrDefault(emp => emp.Id == id))
             .Where(emp => emp != null)
             .Select(emp => $"{emp!.Name} {emp.Surname}")

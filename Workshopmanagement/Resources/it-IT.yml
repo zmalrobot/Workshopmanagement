@@ -284,6 +284,8 @@ CalendarioOggi: Oggi
 CalendarioLegendaAperto: Aperto
 CalendarioLegendaInLavoro: In lavorazione
 CalendarioLegendaChiuso: Chiuso
+CalendarioFiltroOperatore: Filtra per operatore
+CalendarioTuttiOperatori: Tutti gli operatori
 GestioneAzienda: Gestione azienda
 GestioneAziendaDesc: Configurazione dati azienda e orari di lavoro
 CompanyInfo: Dati azienda

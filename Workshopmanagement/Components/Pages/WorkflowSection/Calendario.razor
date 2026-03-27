@@ -17,11 +17,13 @@
     </MudItem>
     <MudItem xs="12">
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+
+            <!-- ═══ TAB 1 — Calendario appuntamenti ═══ -->
             <MudTabPanel Text="@languageContainer.Keys["CalendarioAppuntamenti"]">
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudGrid>
-                            <MudItem xs="4" Style="text-align:left;">
+                        <MudGrid AlignItems="AlignItems.Center">
+                            <MudItem xs="4">
                                 <MudButtonGroup Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small">
                                     <MudButton OnClick="PrevWeek" StartIcon="@Icons.Material.Filled.ChevronLeft">@languageContainer.Keys["CalendarioPrev"]</MudButton>
                                     <MudButton OnClick="GoToToday">@languageContainer.Keys["CalendarioOggi"]</MudButton>
@@ -39,32 +41,50 @@
                         </MudGrid>
                     </MudItem>
                     <MudItem xs="12">
-                        @RenderCalendar()
+                        @RenderWeekCalendar(BuildAppuntamentiEvents(), currentWeekStart)
                     </MudItem>
                 </MudGrid>
             </MudTabPanel>
+
+            <!-- ═══ TAB 2 — Calendario lavorazioni ═══ -->
             <MudTabPanel Text="@languageContainer.Keys["CalendarioLavorazioni"]">
                 <MudGrid>
                     <MudItem xs="12">
-                        <MudGrid>
-                            <MudItem xs="4" Style="text-align:left;">
+                        <MudGrid AlignItems="AlignItems.Center">
+                            <MudItem xs="3">
                                 <MudButtonGroup Variant="Variant.Outlined" Color="Color.Info" Size="Size.Small">
                                     <MudButton OnClick="PrevWeekL" StartIcon="@Icons.Material.Filled.ChevronLeft">@languageContainer.Keys["CalendarioPrev"]</MudButton>
                                     <MudButton OnClick="GoToTodayL">@languageContainer.Keys["CalendarioOggi"]</MudButton>
                                     <MudButton OnClick="NextWeekL" EndIcon="@Icons.Material.Filled.ChevronRight">@languageContainer.Keys["CalendarioNext"]</MudButton>
                                 </MudButtonGroup>
                             </MudItem>
-                            <MudItem xs="4" Style="text-align:center;">
+                            <MudItem xs="3" Style="text-align:center;">
                                 <MudText Typo="Typo.h6">@GetWeekLabelL()</MudText>
                             </MudItem>
-                            <MudItem xs="4"></MudItem>
+                            <MudItem xs="3">
+                                <MudSelect T="string" Dense="true" Margin="Margin.Dense" Variant="Variant.Outlined"
+
+                                           Value="selectedEmployeeId"
+                                           ValueChanged="@(v => { selectedEmployeeId = v; StateHasChanged(); })">
+                                    <MudSelectItem T="string" Value="@("")">— @languageContainer.Keys["CalendarioTuttiOperatori"] —</MudSelectItem>
+                                    @foreach (var emp in employees.OrderBy(e => e.Surname))
+                                    {
+                                        <MudSelectItem T="string" Value="@emp.Id">@emp.Name @emp.Surname</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="3" Style="text-align:right;">
+                                <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Circle" Style="background-color:#2e7d32;color:white;">@languageContainer.Keys["CalendarioLegendaInLavoro"]</MudChip>
+                                <MudChip T="string" Size="Size.Small" Icon="@Icons.Material.Filled.Circle" Style="background-color:#1976d2;color:white;">@languageContainer.Keys["CalendarioLegendaChiuso"]</MudChip>
+                            </MudItem>
                         </MudGrid>
                     </MudItem>
                     <MudItem xs="12">
-                        @RenderCalendarioLavorazioni()
+                        @RenderWeekCalendar(BuildLavorazioniEvents(selectedEmployeeId), currentWeekStartL)
                     </MudItem>
                 </MudGrid>
             </MudTabPanel>
+
         </MudTabs>
     </MudItem>
 </MudGrid>
@@ -73,11 +93,11 @@
     private Employee? employee;
     private bool processing = true;
 
-    // Appuntamenti calendar state  
+    // Tab 1 state
     private DateTime currentWeekStart = GetMonday(DateTime.Today);
-
-    // Lavorazioni calendar state
+    // Tab 2 state
     private DateTime currentWeekStartL = GetMonday(DateTime.Today);
+    private string selectedEmployeeId = "";
 
     // Data
     private List<WorkflowExecution> allExecutions = new();
@@ -136,7 +156,6 @@
         employees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee());
         allTrackings = await dbDependency.GetDataAccessTimeTracking().FindAsync(new SearcherTimeTracking());
 
-        // Load all executions that have a StartDate set
         var allSeriesIds = veichles
             .Where(v => v.OpenWorkflows != null)
             .SelectMany(v => v.OpenWorkflows!.Select(e => e.WorkflowExecutionSeriesId))
@@ -152,10 +171,7 @@
             allExecutions.AddRange(execs);
         }
 
-        // Also load closed executions from history for the calendar range (± 30 days)
-        // We use veichle history for closed ones
-        var historyVeichles = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle());
-        foreach (var v in historyVeichles)
+        foreach (var v in veichles)
         {
             if (v.WorkflowExecutionsCompleted == null) continue;
             foreach (var completedSeriesId in v.WorkflowExecutionsCompleted)
@@ -186,24 +202,24 @@
         public bool IsCompleted { get; set; }
         public bool IsInFuture { get; set; }
         public bool HasActiveTracking { get; set; }
-        public string Color => IsCompleted ? "#9e9e9e" : (IsInFuture ? "#bdbdbd" : (HasActiveTracking ? "#2e7d32" : "#1976d2"));
+        public string Color => IsCompleted
+            ? "#1976d2"  // tracking session completed = blue
+            : (IsInFuture ? "#bdbdbd" : (HasActiveTracking ? "#2e7d32" : "#1976d2"));
         public string TextColor => "#ffffff";
     }
 
     // ──────────────────────────────────────────────────
-    // Calendar event building
+    // Tab 1 — Appuntamenti events (StartDate + EstimatedHours via working-hours algorithm)
     // ──────────────────────────────────────────────────
 
-    private List<CalEvent> BuildEvents()
+    private List<CalEvent> BuildAppuntamentiEvents()
     {
         var events = new List<CalEvent>();
-        var morningStart = settings.MorningStart;
-        var morningEnd = settings.MorningEnd;
-        var afternoonStart = settings.AfternoonStart;
-        var afternoonEnd = settings.AfternoonEnd;
-        double dailyWorkMinutes = (morningEnd - morningStart).TotalMinutes + (afternoonEnd - afternoonStart).TotalMinutes;
+        var ms = settings.MorningStart;
+        var me = settings.MorningEnd;
+        var as_ = settings.AfternoonStart;
+        var ae = settings.AfternoonEnd;
 
-        // Group executions by series
         var bySeriesId = allExecutions
             .Where(e => e.StartDate.HasValue)
             .GroupBy(e => e.WorkflowExecutionSeriesId)
@@ -216,41 +232,31 @@
 
             var startDate = execs.Min(e => e.StartDate)!.Value;
             var estimatedHours = execs.FirstOrDefault()?.EstimatedHours;
-            var isCompleted = execs.All(e => e.ExecutionStatus == WorkflowExecutionStatus.Closed || e.ExecutionStatus == WorkflowExecutionStatus.Skipped);
+            var isCompleted = execs.All(e =>
+                e.ExecutionStatus == WorkflowExecutionStatus.Closed ||
+                e.ExecutionStatus == WorkflowExecutionStatus.Skipped);
             var closedAt = isCompleted ? execs.Max(e => e.ClosedAt) : null;
 
-            // Determine logical end
             DateTime logicalEnd;
             if (isCompleted && closedAt.HasValue)
-            {
                 logicalEnd = closedAt.Value;
-            }
             else if (estimatedHours.HasValue && estimatedHours.Value > 0)
-            {
-                logicalEnd = AddWorkingMinutes(startDate, estimatedHours.Value * 60, morningStart, morningEnd, afternoonStart, afternoonEnd);
-            }
+                logicalEnd = AddWorkingMinutes(startDate, estimatedHours.Value * 60, ms, me, as_, ae);
             else
-            {
-                // No estimate: show as a 1-hour slot
-                logicalEnd = AddWorkingMinutes(startDate, 60, morningStart, morningEnd, afternoonStart, afternoonEnd);
-            }
+                logicalEnd = AddWorkingMinutes(startDate, 60, ms, me, as_, ae);
 
             var hasActive = allTrackings.Any(t => t.WorkflowExecutionSeriesId == seriesId && t.IsActive);
             var isInFuture = startDate.Date > DateTime.Today;
 
-            // Label from workflow
             var wfExec = execs.FirstOrDefault();
             var wf = wfExec != null ? workflows.FirstOrDefault(w => w.Id == wfExec.WorkflowId) : null;
-            var veichleId = wfExec?.VeichleId;
-            var veichle = veichleId != null ? veichles.FirstOrDefault(v => v.Id == veichleId) : null;
-            var label = wf?.Title ?? seriesId;
-            var subLabel = veichle?.LicensePlate ?? "";
+            var veichle = wfExec?.VeichleId != null ? veichles.FirstOrDefault(v => v.Id == wfExec.VeichleId) : null;
 
             events.Add(new CalEvent
             {
                 SeriesId = seriesId,
-                Label = label,
-                SubLabel = subLabel,
+                Label = wf?.Title ?? seriesId,
+                SubLabel = veichle?.LicensePlate ?? "",
                 Start = startDate,
                 End = logicalEnd,
                 IsCompleted = isCompleted,
@@ -263,23 +269,71 @@
     }
 
     // ──────────────────────────────────────────────────
-    // Working-hours helpers
+    // Tab 2 — Lavorazioni events (actual tracking sessions)
+    // ──────────────────────────────────────────────────
+
+    private List<CalEvent> BuildLavorazioniEvents(string? employeeId)
+    {
+        var events = new List<CalEvent>();
+
+        var trackingsToShow = string.IsNullOrEmpty(employeeId)
+            ? allTrackings
+            : allTrackings.Where(t => t.EmployeeId == employeeId).ToList();
+
+        foreach (var tracking in trackingsToShow)
+        {
+            if (tracking.Sessions == null) continue;
+
+            var wfExec = allExecutions.FirstOrDefault(e =>
+                e.WorkflowExecutionSeriesId == tracking.WorkflowExecutionSeriesId);
+            var wf = wfExec != null ? workflows.FirstOrDefault(w => w.Id == wfExec.WorkflowId) : null;
+            var veichle = wfExec?.VeichleId != null ? veichles.FirstOrDefault(v => v.Id == wfExec.VeichleId) : null;
+
+            // Find employee name for subtitle when showing all employees
+            var emp = employees.FirstOrDefault(e => e.Id == tracking.EmployeeId);
+            var empLabel = (emp != null && string.IsNullOrEmpty(employeeId))
+                ? $"[{emp.Name} {emp.Surname}]"
+                : "";
+
+            foreach (var session in tracking.Sessions)
+            {
+                var start = session.StartTime;
+                var end = session.EndTime ?? DateTime.Now;
+                var isActive = !session.EndTime.HasValue;
+
+                events.Add(new CalEvent
+                {
+                    SeriesId = tracking.WorkflowExecutionSeriesId,
+                    Label = wf?.Title ?? tracking.WorkflowExecutionSeriesId,
+                    SubLabel = $"{veichle?.LicensePlate ?? ""} {empLabel}".Trim(),
+                    Start = start,
+                    End = end,
+                    IsCompleted = !isActive,
+                    IsInFuture = false,
+                    HasActiveTracking = isActive
+                });
+            }
+        }
+
+        return events;
+    }
+
+    // ──────────────────────────────────────────────────
+    // Working-hours helpers (used only for event END calculation)
     // ──────────────────────────────────────────────────
 
     private static DateTime AddWorkingMinutes(DateTime from, double minutes,
         TimeOnly ms, TimeOnly me, TimeOnly as_, TimeOnly ae)
     {
-        // Snap start to next valid working minute
         from = SnapToWorkingTime(from, ms, me, as_, ae);
         var remaining = minutes;
         var current = from;
-
-        while (remaining > 0)
+        int safety = 0;
+        while (remaining > 0 && safety++ < 10000)
         {
-            var slotEnd = GetSlotEnd(current, ms, me, as_, ae);
+            var slotEnd = GetWorkSlotEnd(current, ms, me, as_, ae);
             if (slotEnd == null)
             {
-                // Move to next day morning
                 current = current.Date.AddDays(1).Add(ms.ToTimeSpan());
                 continue;
             }
@@ -293,7 +347,6 @@
             {
                 remaining -= available;
                 current = slotEnd.Value;
-                // Move to next slot or next day
                 current = SnapForwardFromSlotEnd(current, ms, me, as_, ae);
             }
         }
@@ -307,11 +360,10 @@
         if (t >= as_ && t < ae) return dt;
         if (t < ms) return dt.Date.Add(ms.ToTimeSpan());
         if (t >= me && t < as_) return dt.Date.Add(as_.ToTimeSpan());
-        // After afternoon end: next day morning
         return dt.Date.AddDays(1).Add(ms.ToTimeSpan());
     }
 
-    private static DateTime? GetSlotEnd(DateTime current, TimeOnly ms, TimeOnly me, TimeOnly as_, TimeOnly ae)
+    private static DateTime? GetWorkSlotEnd(DateTime current, TimeOnly ms, TimeOnly me, TimeOnly as_, TimeOnly ae)
     {
         var t = TimeOnly.FromDateTime(current);
         if (t >= ms && t < me) return current.Date.Add(me.ToTimeSpan());
@@ -323,16 +375,18 @@
     {
         var t = TimeOnly.FromDateTime(current);
         if (t >= me && t <= as_) return current.Date.Add(as_.ToTimeSpan());
-        // After afternoon end: next day morning
         return current.Date.AddDays(1).Add(ms.ToTimeSpan());
     }
 
     // ──────────────────────────────────────────────────
-    // Calendar rendering — week view
+    // Navigation helpers
     // ──────────────────────────────────────────────────
 
-    private static DateTime GetMonday(DateTime date) =>
-        date.AddDays(-(int)date.DayOfWeek == 0 ? 6 : (int)date.DayOfWeek - 1);
+    private static DateTime GetMonday(DateTime date)
+    {
+        int dow = (int)date.DayOfWeek;
+        return date.AddDays(dow == 0 ? -6 : -(dow - 1));
+    }
 
     private void PrevWeek() { currentWeekStart = currentWeekStart.AddDays(-7); }
     private void NextWeek() { currentWeekStart = currentWeekStart.AddDays(7); }
@@ -347,223 +401,216 @@
         var end = currentWeekStart.AddDays(6);
         return $"{currentWeekStart:dd MMM} – {end:dd MMM yyyy}";
     }
-
     private string GetWeekLabelL()
     {
         var end = currentWeekStartL.AddDays(6);
         return $"{currentWeekStartL:dd MMM} – {end:dd MMM yyyy}";
     }
 
-    private RenderFragment RenderCalendar() => builder =>
+    // ──────────────────────────────────────────────────
+    // Shared 24h week-calendar renderer (Google Calendar style)
+    // ──────────────────────────────────────────────────
+
+    private RenderFragment RenderWeekCalendar(List<CalEvent> events, DateTime weekStart) => builder =>
     {
-        var events = BuildEvents();
-        var ms = settings.MorningStart;
-        var me = settings.MorningEnd;
+        var ms  = settings.MorningStart;
+        var me  = settings.MorningEnd;
         var as_ = settings.AfternoonStart;
-        var ae = settings.AfternoonEnd;
+        var ae  = settings.AfternoonEnd;
 
-        // Time slots: every 30 min within working hours
-        var slots = new List<TimeOnly>();
-        for (var t = ms; t < me; t = t.AddMinutes(30)) slots.Add(t);
-        for (var t = as_; t < ae; t = t.AddMinutes(30)) slots.Add(t);
-        slots.Add(ae); // sentinel
-
-        var days = Enumerable.Range(0, 7).Select(i => currentWeekStart.AddDays(i)).ToList();
-        double slotHeight = 40;
-        double timeColWidth = 55;
-        double dayColWidth = 120;
-
+        var days = Enumerable.Range(0, 7).Select(i => weekStart.AddDays(i)).ToList();
+        const double slotH   = 28;    // px per 30-min slot
+        const double timeW   = 52;    // time column width
+        const double hdrH    = 36;    // header height
+        const double dayMinW = 120;   // min day column width
+        const int    totalSlots = 48;
+        double totalH = totalSlots * slotH;
+        var ic = System.Globalization.CultureInfo.InvariantCulture;
+        DateTime now = DateTime.Now;
         int seq = 0;
 
+        // ── outer scroll container ──────────────────────────────────────
         builder.OpenElement(seq++, "div");
-        builder.AddAttribute(seq++, "style", "overflow-x:auto;");
+        builder.AddAttribute(seq++, "style",
+            "overflow:auto; max-height:70vh; border:1px solid #333; border-radius:4px;");
 
-        builder.OpenElement(seq++, "table");
-        builder.AddAttribute(seq++, "style", "border-collapse:collapse; width:100%; min-width:700px;");
+        // ── inner flex row ──────────────────────────────────────────────
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "style",
+            $"display:flex; min-width:{timeW + dayMinW * 7}px;");
 
-        // Header row
-        builder.OpenElement(seq++, "thead");
-        builder.OpenElement(seq++, "tr");
+        // ═══ TIME COLUMN ═══════════════════════════════════════════════
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "style",
+            $"width:{timeW}px; flex-shrink:0; position:sticky; left:0; z-index:3; background:#1e1e2e;");
 
-        // Time column header
-        builder.OpenElement(seq++, "th");
-        builder.AddAttribute(seq++, "style", $"width:{timeColWidth}px; min-width:{timeColWidth}px; background:#1e1e2e; border:1px solid #333; padding:4px;");
-        builder.CloseElement(); // th
+        // blank header cell aligned with day headers
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "style",
+            $"height:{hdrH}px; position:sticky; top:0; z-index:4; background:#1e1e2e; border-bottom:1px solid #444;");
+        builder.CloseElement();
+
+        for (int si = 0; si < totalSlots; si++)
+        {
+            int startMin = si * 30;
+            var t = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(startMin));
+            bool isWork = (t >= ms && t < me) || (t >= as_ && t < ae);
+            bool onHour = startMin % 60 == 0;
+            string bdr = onHour ? "border-top:1px solid #383838;" : "border-top:1px solid #282828;";
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "style",
+                $"height:{slotH}px; {bdr} padding:2px 4px 0; font-size:0.68rem;" +
+                $" color:{(isWork ? "#ccc" : "#555")}; white-space:nowrap;");
+            if (onHour) builder.AddContent(seq++, t.ToString("HH:mm"));
+            builder.CloseElement();
+        }
+        builder.CloseElement(); // time column
+
+        // ═══ DAYS WRAPPER ═══════════════════════════════════════════════
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "style", "flex:1; overflow-x:hidden; position:relative;");
+
+        // sticky day headers
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "style",
+            $"display:flex; position:sticky; top:0; z-index:2; height:{hdrH}px;");
+        foreach (var day in days)
+        {
+            bool isToday = day.Date == DateTime.Today;
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "style",
+                $"flex:1; min-width:{dayMinW}px;" +
+                $" background:{(isToday ? "#1565c0" : "#2a2a3a")}; border-left:1px solid #333;" +
+                " display:flex; align-items:center; justify-content:center;" +
+                " color:white; font-size:0.78rem; font-weight:500;");
+            builder.AddContent(seq++, day.ToString("ddd dd/MM"));
+            builder.CloseElement();
+        }
+        builder.CloseElement(); // day headers
+
+        // days body (event columns)
+        builder.OpenElement(seq++, "div");
+        builder.AddAttribute(seq++, "style", $"display:flex; height:{totalH}px;");
 
         foreach (var day in days)
         {
             bool isToday = day.Date == DateTime.Today;
-            builder.OpenElement(seq++, "th");
-            builder.AddAttribute(seq++, "style", $"width:{dayColWidth}px; min-width:{dayColWidth}px; background:{(isToday ? "#1976d2" : "#1e1e2e")}; border:1px solid #333; padding:4px; text-align:center; color:white; font-size:0.78rem;");
-            builder.AddContent(seq++, day.ToString("ddd dd/MM"));
-            builder.CloseElement(); // th
-        }
-        builder.CloseElement(); // tr
-        builder.CloseElement(); // thead
+            DateTime dayStart = day.Date;
+            DateTime dayEnd   = day.Date.AddDays(1);
 
-        builder.OpenElement(seq++, "tbody");
+            builder.OpenElement(seq++, "div");
+            builder.AddAttribute(seq++, "style",
+                $"flex:1; min-width:{dayMinW}px; position:relative; height:{totalH}px; overflow:hidden;" +
+                $" border-left:1px solid #333;" +
+                $" background:{(isToday ? "rgba(25,118,210,0.04)" : "transparent")};");
 
-        for (int si = 0; si < slots.Count - 1; si++)
-        {
-            var slotStart = slots[si];
-            var slotEnd = slots[si + 1];
-            bool isBreak = slotStart >= me && slotStart < as_;
-
-            if (slotStart == me)
+            // grid lines
+            for (int si = 0; si < totalSlots; si++)
             {
-                // Break row
-                builder.OpenElement(seq++, "tr");
-                builder.OpenElement(seq++, "td");
-                builder.AddAttribute(seq++, "colspan", "8");
-                builder.AddAttribute(seq++, "style", "background:#111118; border:1px solid #333; height:12px; font-size:0.6rem; color:#555; text-align:center;");
-                builder.AddContent(seq++, "⎯ pausa ⎯");
+                int startMin = si * 30;
+                var t = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(startMin));
+                bool isWork = (t >= ms && t < me) || (t >= as_ && t < ae);
+                bool onHour = startMin % 60 == 0;
+                string bdr = onHour ? "border-top:1px solid #383838;" : "border-top:1px solid #282828;";
+                string bg  = isWork ? "rgba(255,255,255,0.025)" : "transparent";
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "style",
+                    $"position:absolute; top:{(si * slotH).ToString("F0", ic)}px;" +
+                    $" left:0; right:0; height:{slotH}px; {bdr} background:{bg}; pointer-events:none;");
                 builder.CloseElement();
-                builder.CloseElement();
-                continue;
             }
 
-            builder.OpenElement(seq++, "tr");
-
-            // Time label
-            builder.OpenElement(seq++, "td");
-            builder.AddAttribute(seq++, "style", $"width:{timeColWidth}px; background:#1e1e2e; border:1px solid #333; padding:2px 4px; vertical-align:top; font-size:0.7rem; color:#aaa; white-space:nowrap;");
-            builder.AddContent(seq++, slotStart.ToString("HH:mm"));
-            builder.CloseElement();
-
-            foreach (var day in days)
+            // current-time line
+            if (isToday)
             {
-                var slotStartDt = day.Date.Add(slotStart.ToTimeSpan());
-                var slotEndDt = day.Date.Add(slotEnd.ToTimeSpan());
+                double nowTop = (now.Hour * 60.0 + now.Minute) / 30.0 * slotH;
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "style",
+                    $"position:absolute; top:{nowTop.ToString("F1", ic)}px;" +
+                    " left:0; right:0; height:2px; background:#ff5722; z-index:2; pointer-events:none;");
+                builder.CloseElement();
+            }
 
-                // Find events overlapping this slot
-                var overlap = events.Where(e =>
-                    e.Start < slotEndDt && e.End > slotStartDt).ToList();
+            // ── event layout: greedy column assignment ──────────────
+            var dayEvents = events
+                .Where(e => e.Start < dayEnd && e.End > dayStart)
+                .OrderBy(e => e.Start)
+                .ThenByDescending(e => e.End)
+                .ToList();
 
-                builder.OpenElement(seq++, "td");
-                builder.AddAttribute(seq++, "style", $"width:{dayColWidth}px; border:1px solid #333; padding:2px; vertical-align:top; min-height:{slotHeight}px; height:{slotHeight}px; position:relative; background:{(day.Date == DateTime.Today ? "rgba(25,118,210,0.05)" : "transparent")};");
+            var colOf   = new int[dayEvents.Count];
+            var colEnds = new List<DateTime>();
 
-                foreach (var ev in overlap)
+            for (int i = 0; i < dayEvents.Count; i++)
+            {
+                var evStart = dayEvents[i].Start < dayStart ? dayStart : dayEvents[i].Start;
+                int col = 0;
+                while (col < colEnds.Count && colEnds[col] > evStart) col++;
+                colOf[i] = col;
+                var evEnd = dayEvents[i].End > dayEnd ? dayEnd : dayEvents[i].End;
+                if (col == colEnds.Count) colEnds.Add(evEnd);
+                else colEnds[col] = evEnd;
+            }
+
+            for (int i = 0; i < dayEvents.Count; i++)
+            {
+                var ev      = dayEvents[i];
+                var evStart = ev.Start < dayStart ? dayStart : ev.Start;
+                var evEnd   = ev.End   > dayEnd   ? dayEnd   : ev.End;
+                if (evEnd <= evStart) continue;
+
+                double topPx = (evStart - dayStart).TotalMinutes / 30.0 * slotH;
+                double hPx   = Math.Max((evEnd - evStart).TotalMinutes / 30.0 * slotH, 14.0);
+
+                // count total columns active in this event's time window
+                int totalCols = 1;
+                for (int j = 0; j < dayEvents.Count; j++)
+                {
+                    var sj = dayEvents[j].Start < dayStart ? dayStart : dayEvents[j].Start;
+                    var ej = dayEvents[j].End   > dayEnd   ? dayEnd   : dayEvents[j].End;
+                    if (sj < evEnd && ej > evStart)
+                        totalCols = Math.Max(totalCols, colOf[j] + 1);
+                }
+
+                double leftPct = 100.0 * colOf[i] / totalCols;
+                double wPct    = 100.0 / totalCols;
+                double opacity = (ev.IsCompleted || ev.IsInFuture) && !ev.HasActiveTracking ? 0.6 : 1.0;
+
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "style",
+                    $"position:absolute;" +
+                    $" top:{topPx.ToString("F1", ic)}px;" +
+                    $" height:{hPx.ToString("F1", ic)}px;" +
+                    $" left:calc({leftPct.ToString("F1", ic)}% + 1px);" +
+                    $" width:calc({wPct.ToString("F1", ic)}% - 2px);" +
+                    $" background:{ev.Color}; color:{ev.TextColor};" +
+                    " border-radius:3px; z-index:1; padding:2px 4px; box-sizing:border-box;" +
+                    $" font-size:0.65rem; overflow:hidden; line-height:1.3;" +
+                    $" opacity:{opacity.ToString("F2", ic)}; cursor:default;");
+
+                builder.OpenElement(seq++, "div");
+                builder.AddAttribute(seq++, "style", "white-space:nowrap; overflow:hidden; text-overflow:ellipsis;");
+                builder.AddContent(seq++, ev.Label);
+                builder.CloseElement();
+
+                if (!string.IsNullOrEmpty(ev.SubLabel) && hPx > 28)
                 {
                     builder.OpenElement(seq++, "div");
                     builder.AddAttribute(seq++, "style",
-                        $"background:{ev.Color}; color:{ev.TextColor}; border-radius:3px; padding:1px 4px; font-size:0.68rem; margin-bottom:1px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; opacity:{(ev.IsCompleted || ev.IsInFuture ? "0.5" : "1")};");
-                    builder.AddContent(seq++, $"{ev.Label} {ev.SubLabel}");
+                        "white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:0.6rem; opacity:0.85;");
+                    builder.AddContent(seq++, ev.SubLabel);
                     builder.CloseElement();
                 }
 
-                builder.CloseElement(); // td
+                builder.CloseElement(); // event div
             }
 
-            builder.CloseElement(); // tr
+            builder.CloseElement(); // day column
         }
 
-        builder.CloseElement(); // tbody
-        builder.CloseElement(); // table
-        builder.CloseElement(); // div
-    };
-
-    // ──────────────────────────────────────────────────
-    // Lavorazioni tab — employee × day matrix
-    // ──────────────────────────────────────────────────
-
-    private RenderFragment RenderCalendarioLavorazioni() => builder =>
-    {
-        var events = BuildEvents();
-        var days = Enumerable.Range(0, 7).Select(i => currentWeekStartL.AddDays(i)).ToList();
-        int seq = 0;
-
-        if (!employees.Any())
-        {
-            builder.OpenElement(seq++, "div");
-            builder.AddContent(seq++, "-");
-            builder.CloseElement();
-            return;
-        }
-
-        builder.OpenElement(seq++, "div");
-        builder.AddAttribute(seq++, "style", "overflow-x:auto;");
-
-        builder.OpenElement(seq++, "table");
-        builder.AddAttribute(seq++, "style", "border-collapse:collapse; width:100%; min-width:600px;");
-
-        // Header
-        builder.OpenElement(seq++, "thead");
-        builder.OpenElement(seq++, "tr");
-
-        builder.OpenElement(seq++, "th");
-        builder.AddAttribute(seq++, "style", "background:#1e1e2e; border:1px solid #333; padding:6px; color:white; min-width:120px;");
-        builder.AddContent(seq++, languageContainer.Keys["Employee"]);
-        builder.CloseElement();
-
-        foreach (var day in days)
-        {
-            bool isToday = day.Date == DateTime.Today;
-            builder.OpenElement(seq++, "th");
-            builder.AddAttribute(seq++, "style", $"background:{(isToday ? "#1976d2" : "#1e1e2e")}; border:1px solid #333; padding:6px; color:white; text-align:center; font-size:0.78rem; min-width:110px;");
-            builder.AddContent(seq++, day.ToString("ddd dd/MM"));
-            builder.CloseElement();
-        }
-        builder.CloseElement(); // tr
-        builder.CloseElement(); // thead
-
-        builder.OpenElement(seq++, "tbody");
-
-        foreach (var emp in employees.OrderBy(e => e.Surname))
-        {
-            builder.OpenElement(seq++, "tr");
-
-            builder.OpenElement(seq++, "td");
-            builder.AddAttribute(seq++, "style", "background:#1e1e2e; border:1px solid #333; padding:4px 8px; color:white; font-size:0.8rem; white-space:nowrap;");
-            builder.AddContent(seq++, $"{emp.Name} {emp.Surname}");
-            builder.CloseElement();
-
-            foreach (var day in days)
-            {
-                // Find events where this employee has a tracking session on this day
-                var empTrackings = allTrackings
-                    .Where(t => t.EmployeeId == emp.Id && t.Sessions.Any(s =>
-                        s.StartTime.Date == day.Date || (s.EndTime.HasValue && s.EndTime.Value.Date == day.Date)))
-                    .ToList();
-
-                var eventsForDay = events.Where(ev =>
-                {
-                    var tracking = empTrackings.FirstOrDefault(t => t.WorkflowExecutionSeriesId == ev.SeriesId);
-                    return tracking != null;
-                }).ToList();
-
-                builder.OpenElement(seq++, "td");
-                builder.AddAttribute(seq++, "style", $"border:1px solid #333; padding:3px; vertical-align:top; min-height:50px; background:{(day.Date == DateTime.Today ? "rgba(25,118,210,0.05)" : "transparent")};");
-
-                foreach (var ev in eventsForDay)
-                {
-                    var tracking = empTrackings.FirstOrDefault(t => t.WorkflowExecutionSeriesId == ev.SeriesId);
-                    var totalMinutes = tracking?.Sessions
-                        .Where(s => s.StartTime.Date == day.Date || (s.EndTime.HasValue && s.EndTime.Value.Date == day.Date))
-                        .Sum(s =>
-                        {
-                            var start = s.StartTime.Date == day.Date ? s.StartTime : day.Date;
-                            var end = (s.EndTime ?? DateTime.Now).Date == day.Date ? (s.EndTime ?? DateTime.Now) : day.Date.AddDays(1);
-                            return (end - start).TotalMinutes;
-                        }) ?? 0;
-
-                    var hours = (int)(totalMinutes / 60);
-                    var mins = (int)(totalMinutes % 60);
-                    var timeStr = hours > 0 ? $"{hours}h {mins:00}m" : $"{mins}m";
-
-                    builder.OpenElement(seq++, "div");
-                    builder.AddAttribute(seq++, "style", $"background:{ev.Color}; color:white; border-radius:3px; padding:2px 5px; font-size:0.68rem; margin-bottom:2px; overflow:hidden; white-space:nowrap; text-overflow:ellipsis;");
-                    builder.AddContent(seq++, $"{ev.Label} ({timeStr})");
-                    builder.CloseElement();
-                }
-
-                builder.CloseElement(); // td
-            }
-
-            builder.CloseElement(); // tr
-        }
-
-        builder.CloseElement(); // tbody
-        builder.CloseElement(); // table
-        builder.CloseElement(); // div
+        builder.CloseElement(); // days body
+        builder.CloseElement(); // days wrapper
+        builder.CloseElement(); // inner flex row
+        builder.CloseElement(); // outer scroll container
     };
 }
