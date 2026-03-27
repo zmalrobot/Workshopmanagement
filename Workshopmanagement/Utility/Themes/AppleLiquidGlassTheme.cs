@@ -12,29 +12,29 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteDark = new PaletteDark
             {
-                Primary             = "#0A84FF",          // iOS Blue (dark)
-                PrimaryContrastText = "#FFFFFF",
-                Secondary           = "#30D158",           // iOS Green (dark)
+                Primary               = "#0A84FF",        // iOS Blue dark
+                PrimaryContrastText   = "#FFFFFF",
+                Secondary             = "#FF375F",        // iOS Pink dark
                 SecondaryContrastText = "#FFFFFF",
-                Tertiary            = "#FF9F0A",           // iOS Orange (dark)
-                Background          = "#000000",           // OLED black
-                Surface             = "#1C1C1E",           // iOS grouped background level 2
-                DrawerBackground    = "#1C1C1E",
-                AppbarBackground    = "rgba(28,28,30,0.78)",
-                DrawerText          = "rgba(255,255,255, 0.87)",
-                AppbarText          = "rgba(255,255,255, 0.87)",
-                TextPrimary         = "rgba(255,255,255, 0.87)",
-                TextSecondary       = "rgba(255,255,255, 0.55)",
-                Success             = "#30D158",
-                Warning             = "#FF9F0A",
-                Error               = "#FF453A",
-                Info                = "#0A84FF",
-                ActionDefault       = "rgba(255,255,255,0.70)",
-                ActionDisabled      = "rgba(255,255,255,0.28)",
+                Tertiary              = "#30D158",        // iOS Green dark
+                Background            = "#000000",        // True OLED black
+                Surface               = "#1C1C1E",        // iOS grouped background
+                DrawerBackground      = "#2C2C2E",        // iOS elevated background
+                AppbarBackground      = "rgba(28,28,30,0.82)",
+                DrawerText            = "rgba(255,255,255,0.90)",
+                AppbarText            = "rgba(255,255,255,0.90)",
+                TextPrimary           = "rgba(255,255,255,0.90)",
+                TextSecondary         = "rgba(235,235,245,0.55)",
+                Success               = "#30D158",
+                Warning               = "#FF9F0A",
+                Error                 = "#FF453A",
+                Info                  = "#64D2FF",        // iOS Cyan
+                ActionDefault         = "rgba(255,255,255,0.70)",
+                ActionDisabled        = "rgba(255,255,255,0.28)",
                 ActionDisabledBackground = "rgba(255,255,255,0.08)",
-                LinesDefault        = "rgba(255,255,255,0.10)",
-                LinesInputs         = "rgba(255,255,255,0.18)",
-                TableHover          = "rgba(10,132,255,0.08)",
+                LinesDefault          = "rgba(255,255,255,0.10)",
+                LinesInputs           = "rgba(255,255,255,0.20)",
+                TableHover            = "rgba(10,132,255,0.08)",
             },
             LayoutProperties = new LayoutProperties
             {
@@ -75,26 +75,26 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteLight = new PaletteLight
             {
-                Primary             = "#007AFF",          // iOS Blue (light)
-                PrimaryContrastText = "#FFFFFF",
-                Secondary           = "#34C759",           // iOS Green (light)
+                Primary               = "#007AFF",        // iOS Blue
+                PrimaryContrastText   = "#FFFFFF",
+                Secondary             = "#FF2D55",        // iOS Pink
                 SecondaryContrastText = "#FFFFFF",
-                Tertiary            = "#FF9500",           // iOS Orange (light)
-                Background          = "#F2F2F7",           // iOS primary background
-                Surface             = "#FFFFFF",
-                DrawerBackground    = "rgba(242,242,247,0.82)",
-                AppbarBackground    = "rgba(242,242,247,0.78)",
-                DrawerText          = "rgba(0,0,0, 0.87)",
-                AppbarText          = "rgba(0,0,0, 0.87)",
-                TextPrimary         = "rgba(0,0,0, 0.87)",
-                TextSecondary       = "rgba(0,0,0, 0.50)",
-                Success             = "#34C759",
-                Warning             = "#FF9500",
-                Error               = "#FF3B30",
-                Info                = "#007AFF",
-                LinesDefault        = "rgba(60,60,67,0.10)",
-                LinesInputs         = "rgba(60,60,67,0.18)",
-                TableHover          = "rgba(0,122,255,0.06)",
+                Tertiary              = "#34C759",        // iOS Green
+                Background            = "#F2F2F7",        // iOS systemGroupedBackground
+                Surface               = "#FFFFFF",
+                DrawerBackground      = "rgba(242,242,247,0.90)",
+                AppbarBackground      = "rgba(242,242,247,0.82)",
+                DrawerText            = "rgba(0,0,0,0.87)",
+                AppbarText            = "rgba(0,0,0,0.87)",
+                TextPrimary           = "rgba(0,0,0,0.87)",
+                TextSecondary         = "rgba(60,60,67,0.55)",
+                Success               = "#34C759",
+                Warning               = "#FF9500",
+                Error                 = "#FF3B30",
+                Info                  = "#32ADE6",        // iOS Cyan/Teal
+                LinesDefault          = "rgba(60,60,67,0.10)",
+                LinesInputs           = "rgba(60,60,67,0.20)",
+                TableHover            = "rgba(0,122,255,0.06)",
             },
             LayoutProperties = new LayoutProperties
             {

@@ -12,28 +12,29 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteDark = new PaletteDark
             {
-                Primary             = "#60CDFF",          // Windows 11 accent (light variant for dark mode)
-                PrimaryContrastText = "#00242D",
-                Secondary           = "#74B4C8",
+                Primary               = "#4CC2FF",        // Windows 11 precise accent in dark
+                PrimaryContrastText   = "#002040",
+                Secondary             = "#9C7EF0",        // Fluent/Copilot purple
                 SecondaryContrastText = "#FFFFFF",
-                Background          = "#202020",           // Windows 11 Base
-                Surface             = "#2C2C2C",           // Windows 11 Layer
-                DrawerBackground    = "#252525",           // Subtle overlay
-                AppbarBackground    = "#1F1F1F",
-                DrawerText          = "rgba(255,255,255, 0.87)",
-                AppbarText          = "rgba(255,255,255, 0.87)",
-                TextPrimary         = "rgba(255,255,255, 0.87)",
-                TextSecondary       = "rgba(255,255,255, 0.60)",
-                Success             = "#6CCB5F",
-                Warning             = "#FCE100",
-                Error               = "#FF99A4",
-                Info                = "#60CDFF",
-                ActionDefault       = "rgba(255,255,255,0.70)",
-                ActionDisabled      = "rgba(255,255,255,0.28)",
+                Tertiary              = "#6BD5E1",        // Fluent teal
+                Background            = "#1C1C1C",        // Win11 Mica base
+                Surface               = "#282828",        // Win11 Layer
+                DrawerBackground      = "#222222",
+                AppbarBackground      = "#1C1C1C",
+                DrawerText            = "rgba(255,255,255,0.87)",
+                AppbarText            = "rgba(255,255,255,0.87)",
+                TextPrimary           = "rgba(255,255,255,0.87)",
+                TextSecondary         = "rgba(255,255,255,0.60)",
+                Success               = "#6CCB5F",
+                Warning               = "#FCE100",
+                Error                 = "#FF99A4",
+                Info                  = "#4CC2FF",
+                ActionDefault         = "rgba(255,255,255,0.70)",
+                ActionDisabled        = "rgba(255,255,255,0.28)",
                 ActionDisabledBackground = "rgba(255,255,255,0.06)",
-                LinesDefault        = "rgba(255,255,255,0.08)",
-                LinesInputs         = "rgba(255,255,255,0.15)",
-                TableHover          = "rgba(96,205,255,0.06)",
+                LinesDefault          = "rgba(255,255,255,0.08)",
+                LinesInputs           = "rgba(255,255,255,0.15)",
+                TableHover            = "rgba(76,194,255,0.06)",
             },
             LayoutProperties = new LayoutProperties
             {
@@ -75,25 +76,26 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteLight = new PaletteLight
             {
-                Primary             = "#0078D4",          // Microsoft Blue
-                PrimaryContrastText = "#FFFFFF",
-                Secondary           = "#0099BC",
+                Primary               = "#0067C0",        // Windows 11 system accent blue
+                PrimaryContrastText   = "#FFFFFF",
+                Secondary             = "#5B5FC7",        // Fluent Teams/Copilot purple-blue
                 SecondaryContrastText = "#FFFFFF",
-                Background          = "#F3F3F3",           // Windows 11 background
-                Surface             = "#FFFFFF",
-                DrawerBackground    = "#EEEEEE",           // Subtle layer
-                AppbarBackground    = "#F3F3F3",
-                DrawerText          = "rgba(0,0,0, 0.87)",
-                AppbarText          = "rgba(0,0,0, 0.87)",
-                TextPrimary         = "rgba(0,0,0, 0.87)",
-                TextSecondary       = "rgba(0,0,0, 0.60)",
-                Success             = "#107C10",
-                Warning             = "#D83B01",
-                Error               = "#A4262C",
-                Info                = "#0078D4",
-                LinesDefault        = "rgba(0,0,0,0.08)",
-                LinesInputs         = "rgba(0,0,0,0.15)",
-                TableHover          = "rgba(0,120,212,0.05)",
+                Tertiary              = "#038387",        // Fluent teal
+                Background            = "#F3F3F3",        // Windows 11 background
+                Surface               = "#FFFFFF",
+                DrawerBackground      = "#E9E9E9",
+                AppbarBackground      = "#FFFFFF",
+                DrawerText            = "rgba(0,0,0,0.87)",
+                AppbarText            = "rgba(0,0,0,0.87)",
+                TextPrimary           = "rgba(0,0,0,0.87)",
+                TextSecondary         = "rgba(0,0,0,0.60)",
+                Success               = "#107C10",
+                Warning               = "#D83B01",
+                Error                 = "#A4262C",
+                Info                  = "#0067C0",
+                LinesDefault          = "rgba(0,0,0,0.08)",
+                LinesInputs           = "rgba(0,0,0,0.15)",
+                TableHover            = "rgba(0,103,192,0.05)",
             },
             LayoutProperties = new LayoutProperties
             {

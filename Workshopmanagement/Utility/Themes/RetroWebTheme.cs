@@ -14,31 +14,32 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteDark = new PaletteDark
             {
-                Primary               = "#00FF41",        // green phosphor
+                Primary               = "#00FF41",        // Matrix phosphor green
                 PrimaryContrastText   = "#000000",
-                Secondary             = "#FF00FF",        // magenta
+                Secondary             = "#00FFFF",        // CRT cyan — classic terminal
                 SecondaryContrastText = "#000000",
-                Background            = "#000000",
-                Surface               = "#0D0D0D",
-                DrawerBackground      = "#050505",
+                Tertiary              = "#FFFF00",        // Terminal amber/yellow
+                Background            = "#000000",        // CRT black
+                Surface               = "#080808",        // Barely-elevated surface
+                DrawerBackground      = "#030303",
                 AppbarBackground      = "#000000",
                 DrawerText            = "#00FF41",
                 AppbarText            = "#00FF41",
                 TextPrimary           = "#00FF41",
-                TextSecondary         = "#00CC33",
-                TextDisabled          = "rgba(0,255,65,0.30)",
-                Success               = "#00FF41",
-                Warning               = "#FFFF00",
-                Error                 = "#FF3333",
-                Info                  = "#00FFFF",
+                TextSecondary         = "#00B32D",        // Dimmer phosphor
+                TextDisabled          = "rgba(0,255,65,0.28)",
+                Success               = "#00FF41",        // Phosphor green = success
+                Warning               = "#FFFF00",        // Yellow = warning
+                Error                 = "#FF0000",        // Pure red = error
+                Info                  = "#00FFFF",        // Cyan = info
                 ActionDefault         = "#00FF41",
-                ActionDisabled        = "rgba(0,255,65,0.30)",
+                ActionDisabled        = "rgba(0,255,65,0.28)",
                 ActionDisabledBackground = "rgba(0,255,65,0.04)",
-                LinesDefault          = "rgba(0,255,65,0.20)",
-                LinesInputs           = "rgba(0,255,65,0.40)",
-                TableHover            = "rgba(0,255,65,0.06)",
-                Divider               = "rgba(0,255,65,0.20)",
-                OverlayDark           = "rgba(0,0,0,0.85)",
+                LinesDefault          = "rgba(0,255,65,0.18)",
+                LinesInputs           = "rgba(0,255,65,0.38)",
+                TableHover            = "rgba(0,255,65,0.05)",
+                Divider               = "rgba(0,255,65,0.18)",
+                OverlayDark           = "rgba(0,0,0,0.90)",
             },
             LayoutProperties = new LayoutProperties
             {
@@ -83,29 +84,30 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteLight = new PaletteLight
             {
-                Primary               = "#003399",        // classic web blue
+                Primary               = "#003399",        // Classic IE/Netscape nav blue
                 PrimaryContrastText   = "#FFFFFF",
-                Secondary             = "#CC3300",        // classic orange-red
+                Secondary             = "#006600",        // Classic web green
                 SecondaryContrastText = "#FFFFFF",
-                Background            = "#ECE9D8",        // Windows XP Luna silver
+                Tertiary              = "#990000",        // Classic web dark red
+                Background            = "#ECE9D8",        // Windows XP Luna silver-tan
                 Surface               = "#FFFFFF",
-                DrawerBackground      = "#D4D0C8",        // Windows classic gray
-                AppbarBackground      = "#003399",        // IE6 title bar blue
+                DrawerBackground      = "#C7C5B5",        // Darker XP chrome
+                AppbarBackground      = "#003399",        // IE6 toolbar blue
                 DrawerText            = "#000000",
                 AppbarText            = "#FFFFFF",
                 TextPrimary           = "#000000",
-                TextSecondary         = "#444444",
+                TextSecondary         = "#333333",
                 TextDisabled          = "#999999",
-                Success               = "#008000",
-                Warning               = "#FF6600",
-                Error                 = "#CC0000",
+                Success               = "#006600",
+                Warning               = "#FF6600",        // Classic web orange
+                Error                 = "#CC0000",        // Classic web red
                 Info                  = "#003399",
                 ActionDefault         = "rgba(0,0,0,0.70)",
                 ActionDisabled        = "rgba(0,0,0,0.26)",
                 ActionDisabledBackground = "rgba(0,0,0,0.08)",
-                LinesDefault          = "#ACA899",        // XP border color
+                LinesDefault          = "#ACA899",        // XP border
                 LinesInputs           = "#7F9DB9",        // XP input border
-                TableHover            = "rgba(0,51,153,0.06)",
+                TableHover            = "rgba(0,51,153,0.05)",
                 Divider               = "#ACA899",
             },
             LayoutProperties = new LayoutProperties

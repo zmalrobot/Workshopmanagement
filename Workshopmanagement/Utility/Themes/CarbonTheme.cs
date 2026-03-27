@@ -13,10 +13,11 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteDark = new PaletteDark
             {
-                Primary               = "#0F62FE",        // IBM Blue 60
-                PrimaryContrastText   = "#FFFFFF",
-                Secondary             = "#8A3FFC",        // IBM Purple 60
-                SecondaryContrastText = "#FFFFFF",
+                Primary               = "#78A9FF",        // IBM Blue 40 — readable on dark bg
+                PrimaryContrastText   = "#001D6C",
+                Secondary             = "#BE95FF",        // IBM Purple 40
+                SecondaryContrastText = "#21003D",
+                Tertiary              = "#3DDBD9",        // IBM Teal 40
                 Background            = "#161616",        // IBM Gray 100
                 Surface               = "#262626",        // IBM Gray 90
                 DrawerBackground      = "#1C1C1C",        // IBM Layer 01
@@ -24,20 +25,20 @@ namespace Workshopmanagement.Utility.Themes
                 DrawerText            = "#F4F4F4",
                 AppbarText            = "#F4F4F4",
                 TextPrimary           = "#F4F4F4",        // IBM Gray 10
-                TextSecondary         = "#C6C6C6",        // IBM Gray 30
+                TextSecondary         = "#8D8D8D",        // IBM Gray 40
                 TextDisabled          = "rgba(244,244,244,0.25)",
                 Success               = "#42BE65",        // IBM Green 40
                 Warning               = "#F1C21B",        // IBM Yellow 30
                 Error                 = "#FF8389",        // IBM Red 40
                 Info                  = "#33B1FF",        // IBM Cyan 40
-                ActionDefault         = "#C6C6C6",
+                ActionDefault         = "#A8A8A8",
                 ActionDisabled        = "rgba(244,244,244,0.25)",
                 ActionDisabledBackground = "rgba(244,244,244,0.06)",
-                LinesDefault          = "rgba(255,255,255,0.08)",
-                LinesInputs           = "rgba(255,255,255,0.20)",
-                TableHover            = "rgba(15,98,254,0.10)",
-                Divider               = "rgba(255,255,255,0.08)",
-                OverlayDark           = "rgba(0,0,0,0.60)",
+                LinesDefault          = "#393939",        // IBM Gray 80
+                LinesInputs           = "#525252",        // IBM Gray 60
+                TableHover            = "rgba(120,169,255,0.10)",
+                Divider               = "#393939",
+                OverlayDark           = "rgba(0,0,0,0.65)",
             },
             LayoutProperties = new LayoutProperties
             {
@@ -82,8 +83,9 @@ namespace Workshopmanagement.Utility.Themes
             {
                 Primary               = "#0F62FE",        // IBM Blue 60
                 PrimaryContrastText   = "#FFFFFF",
-                Secondary             = "#8A3FFC",        // IBM Purple 60
+                Secondary             = "#6929C4",        // IBM Purple 70
                 SecondaryContrastText = "#FFFFFF",
+                Tertiary              = "#007D79",        // IBM Teal 60
                 Background            = "#F4F4F4",        // IBM Gray 10
                 Surface               = "#FFFFFF",        // IBM White
                 DrawerBackground      = "#E0E0E0",        // IBM Gray 20
@@ -93,8 +95,8 @@ namespace Workshopmanagement.Utility.Themes
                 TextPrimary           = "#161616",        // IBM Gray 100
                 TextSecondary         = "#525252",        // IBM Gray 60
                 TextDisabled          = "rgba(22,22,22,0.25)",
-                Success               = "#24A148",        // IBM Green 50
-                Warning               = "#F1C21B",        // IBM Yellow 30
+                Success               = "#198038",        // IBM Green 60
+                Warning               = "#B28600",        // IBM Yellow 40 — legible on white
                 Error                 = "#DA1E28",        // IBM Red 60
                 Info                  = "#0043CE",        // IBM Blue 70
                 ActionDefault         = "rgba(22,22,22,0.70)",

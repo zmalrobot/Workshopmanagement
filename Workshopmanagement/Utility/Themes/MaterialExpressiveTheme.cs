@@ -12,29 +12,29 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteDark = new PaletteDark
             {
-                Primary             = "#D0BCFF",          // Lavender 80
-                PrimaryContrastText = "#381E72",
-                Secondary           = "#CCC2DC",           // Secondary 80
-                SecondaryContrastText = "#332D41",
-                Tertiary            = "#EFB8C8",           // Tertiary 80
-                Background          = "#0F0D13",           // Neutral 6
-                Surface             = "#1C1B1F",           // Neutral 12
-                DrawerBackground    = "#16142A",
-                AppbarBackground    = "#1C1B1F",
-                DrawerText          = "rgba(255,255,255, 0.87)",
-                AppbarText          = "rgba(255,255,255, 0.87)",
-                TextPrimary         = "rgba(255,255,255, 0.87)",
-                TextSecondary       = "rgba(255,255,255, 0.60)",
-                Success             = "#78DC77",           // Tonal green
-                Warning             = "#FFB951",           // Tonal amber
-                Error               = "#FFB4AB",           // Error 80
-                Info                = "#97CBFF",           // Tonal blue
-                ActionDefault       = "rgba(202,196,208,0.87)",
-                ActionDisabled      = "rgba(202,196,208,0.38)",
-                ActionDisabledBackground = "rgba(202,196,208,0.12)",
-                LinesDefault        = "rgba(202,196,208,0.12)",
-                LinesInputs         = "rgba(202,196,208,0.23)",
-                TableHover          = "rgba(208,188,255,0.08)",
+                Primary               = "#CE8FFF",        // Expressive vivid violet
+                PrimaryContrastText   = "#1A0040",
+                Secondary             = "#FFB347",        // Expressive amber
+                SecondaryContrastText = "#2A1500",
+                Tertiary              = "#5CF5D0",        // Expressive mint
+                Background            = "#0D0823",        // Deep indigo void
+                Surface               = "#1E1236",        // Elevated indigo surface
+                DrawerBackground      = "#160C2E",
+                AppbarBackground      = "#1E1236",
+                DrawerText            = "rgba(255,255,255,0.92)",
+                AppbarText            = "rgba(255,255,255,0.92)",
+                TextPrimary           = "rgba(255,255,255,0.92)",
+                TextSecondary         = "rgba(255,255,255,0.60)",
+                Success               = "#50FA7B",        // Vivid green
+                Warning               = "#FFD740",        // Vivid amber
+                Error                 = "#FF5370",        // Vivid red
+                Info                  = "#82AAFF",        // Vivid blue
+                ActionDefault         = "rgba(206,143,255,0.87)",
+                ActionDisabled        = "rgba(206,143,255,0.38)",
+                ActionDisabledBackground = "rgba(206,143,255,0.12)",
+                LinesDefault          = "rgba(206,143,255,0.12)",
+                LinesInputs           = "rgba(206,143,255,0.23)",
+                TableHover            = "rgba(206,143,255,0.08)",
             },
             LayoutProperties = new LayoutProperties
             {
@@ -76,25 +76,26 @@ namespace Workshopmanagement.Utility.Themes
         {
             PaletteLight = new PaletteLight
             {
-                Primary             = "#6750A4",          // Primary 40
-                PrimaryContrastText = "#FFFFFF",
-                Secondary           = "#625B71",           // Secondary 40
-                Tertiary            = "#7D5260",           // Tertiary 40
-                Background          = "#FFFBFE",           // Neutral 99
-                Surface             = "#FEF7FF",           // Neutral-variant 99
-                DrawerBackground    = "#ECE6F0",           // Surface-variant
-                AppbarBackground    = "#6750A4",
-                DrawerText          = "rgba(28,27,31, 0.87)",
-                AppbarText          = "#FFFFFF",
-                TextPrimary         = "rgba(28,27,31, 0.87)",
-                TextSecondary       = "rgba(28,27,31, 0.60)",
-                Success             = "#386A20",
-                Warning             = "#7D5700",
-                Error               = "#B3261E",
-                Info                = "#005CBB",
-                LinesDefault        = "rgba(121,116,126,0.12)",
-                LinesInputs         = "rgba(121,116,126,0.23)",
-                TableHover          = "rgba(103,80,164,0.06)",
+                Primary               = "#7209B7",        // Bold expressive violet
+                PrimaryContrastText   = "#FFFFFF",
+                Secondary             = "#C75000",        // Warm amber-orange
+                SecondaryContrastText = "#FFFFFF",
+                Tertiary              = "#006C60",        // Deep teal complement
+                Background            = "#FFFBF5",        // Warm expressive cream
+                Surface               = "#FFF5FF",        // Slight pink bloom
+                DrawerBackground      = "#F3E8FF",        // Light lavender surface
+                AppbarBackground      = "#7209B7",
+                DrawerText            = "rgba(19,0,42,0.87)",
+                AppbarText            = "#FFFFFF",
+                TextPrimary           = "rgba(19,0,42,0.87)",
+                TextSecondary         = "rgba(19,0,42,0.60)",
+                Success               = "#1B6E3D",
+                Warning               = "#8B5000",
+                Error                 = "#C0002A",
+                Info                  = "#0058B7",
+                LinesDefault          = "rgba(114,9,183,0.12)",
+                LinesInputs           = "rgba(114,9,183,0.23)",
+                TableHover            = "rgba(114,9,183,0.06)",
             },
             LayoutProperties = new LayoutProperties
             {
