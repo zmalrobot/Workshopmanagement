@@ -9,6 +9,7 @@
 @inject IDbDependency dbDependency
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IDialogService dialogService
 
 @* Theme + dialog/snackbar providers *@
 <MudThemeProvider Theme="@themeService.GetMudTheme()" IsDarkMode="@themeService.IsDarkMode" />
@@ -29,6 +30,9 @@
                     </MudAlert>
                 }
                 <MudSpacer />
+                <MudButton OnClick="OpenGuide" StartIcon="@Icons.Material.Filled.MenuBook" Color="Color.Inherit" Variant="Variant.Text">
+                    @languageContainer.Keys["GuideTitle"]
+                </MudButton>
                 <MudIconButton OnClick="Logout" Icon="@Icons.Material.Filled.DesktopAccessDisabled" Color="Color.Inherit" />
             </MudAppBar>
 
@@ -81,6 +85,17 @@
     public void Dispose()
     {
         themeService.OnThemeChanged -= HandleThemeChanged;
+    }
+
+    private async Task OpenGuide()
+    {
+        var options = new DialogOptions
+        {
+            CloseOnEscapeKey = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true
+        };
+        await dialogService.ShowAsync<GuideDialog>(string.Empty, options);
     }
 
     private async Task Logout()

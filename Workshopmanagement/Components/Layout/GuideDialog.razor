@@ -1,0 +1,199 @@
+@inject ILanguageContainerService languageContainer
+
+<MudDialog Style="min-width: min(700px, 95vw);">
+    <TitleContent>
+        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.MenuBook" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@languageContainer.Keys["GuideTitle"]</MudText>
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        <MudTabs Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pt-4">
+
+            @* ─── Tab 1: Benvenuto ─── *@
+            <MudTabPanel Text="@languageContainer.Keys["GuideTabWelcome"]"
+                         Icon="@Icons.Material.Filled.Home">
+                <div style="max-height:450px; overflow-y:auto; padding-right:4px;">
+                    <MudText Typo="Typo.h6" GutterBottom="true">
+                        @languageContainer.Keys["GuideWelcomeIntro"]
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mb-5">
+                        @languageContainer.Keys["GuideWelcomeDesc"]
+                    </MudText>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideWelcomeHowItWorks"]</strong></MudText>
+                    </MudStack>
+                    <MudText Typo="Typo.body2">@languageContainer.Keys["GuideWelcomeHowItWorksDesc"]</MudText>
+                </div>
+            </MudTabPanel>
+
+            @* ─── Tab 2: Flussi di lavoro ─── *@
+            <MudTabPanel Text="@languageContainer.Keys["GuideTabWorkflows"]"
+                         Icon="@Icons.Material.Filled.Workspaces">
+                <div style="max-height:450px; overflow-y:auto; padding-right:4px;">
+                    <MudText Typo="Typo.body1" Class="mb-5">
+                        @languageContainer.Keys["GuideWorkflowsIntro"]
+                    </MudText>
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.PlayCircle" Size="Size.Small" Color="Color.Success" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideWorkflowsStartTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true" Class="mb-5">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsStart1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsStart2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks3" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsStart3"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks4" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsStart4"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks5" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsStart5"]</MudListItem>
+                    </MudList>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Small" Color="Color.Warning" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideWorkflowsResumeTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true" Class="mb-5">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsResume1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsResume2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks3" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsResume3"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks4" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsResume4"]</MudListItem>
+                    </MudList>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Size="Size.Small" Color="Color.Default" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideWorkflowsHistoryTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsHistory1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideWorkflowsHistory2"]</MudListItem>
+                    </MudList>
+                </div>
+            </MudTabPanel>
+
+            @* ─── Tab 3: Clienti e Veicoli ─── *@
+            <MudTabPanel Text="@languageContainer.Keys["GuideTabCustomers"]"
+                         Icon="@Icons.Material.Filled.People">
+                <div style="max-height:450px; overflow-y:auto; padding-right:4px;">
+                    <MudText Typo="Typo.body1" Class="mb-5">
+                        @languageContainer.Keys["GuideCustomersIntro"]
+                    </MudText>
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.PersonAdd" Size="Size.Small" Color="Color.Info" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideCustomersAddTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true" Class="mb-5">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideCustomersAdd1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideCustomersAdd2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks3" IconSize="Size.Small">@languageContainer.Keys["GuideCustomersAdd3"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks4" IconSize="Size.Small">@languageContainer.Keys["GuideCustomersAdd4"]</MudListItem>
+                    </MudList>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.DirectionsCar" Size="Size.Small" Color="Color.Info" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideVeichlesAddTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideVeichlesAdd1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideVeichlesAdd2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks3" IconSize="Size.Small">@languageContainer.Keys["GuideVeichlesAdd3"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks4" IconSize="Size.Small">@languageContainer.Keys["GuideVeichlesAdd4"]</MudListItem>
+                    </MudList>
+                </div>
+            </MudTabPanel>
+
+            @* ─── Tab 4: Calendario ─── *@
+            <MudTabPanel Text="@languageContainer.Keys["GuideTabCalendario"]"
+                         Icon="@Icons.Material.Filled.CalendarMonth">
+                <div style="max-height:450px; overflow-y:auto; padding-right:4px;">
+                    <MudText Typo="Typo.body1" Class="mb-5">
+                        @languageContainer.Keys["GuideCalendarioIntro"]
+                    </MudText>
+
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.ArrowCircleLeft" IconSize="Size.Small">@languageContainer.Keys["GuideCalendario1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Today" IconSize="Size.Small">@languageContainer.Keys["GuideCalendario2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.FilterList" IconSize="Size.Small">@languageContainer.Keys["GuideCalendario3"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Palette" IconSize="Size.Small">@languageContainer.Keys["GuideCalendario4"]</MudListItem>
+                    </MudList>
+                </div>
+            </MudTabPanel>
+
+            @* ─── Tab 5: Configurazione ─── *@
+            <MudTabPanel Text="@languageContainer.Keys["GuideTabConfig"]"
+                         Icon="@Icons.Material.Filled.Settings">
+                <div style="max-height:450px; overflow-y:auto; padding-right:4px;">
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Text" Class="mb-4" Dense="true">
+                        @languageContainer.Keys["GuideConfigIntro"]
+                    </MudAlert>
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Color="Color.Secondary" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideConfigCompanyTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true" Class="mb-5">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideConfigCompany1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideConfigCompany2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks3" IconSize="Size.Small">@languageContainer.Keys["GuideConfigCompany3"]</MudListItem>
+                    </MudList>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" Color="Color.Secondary" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideConfigEmployeesTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true" Class="mb-5">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideConfigEmployees1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideConfigEmployees2"]</MudListItem>
+                    </MudList>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Workspaces" Size="Size.Small" Color="Color.Secondary" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideConfigWorkflowsTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true" Class="mb-5">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideConfigWorkflows1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideConfigWorkflows2"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.Looks3" IconSize="Size.Small">@languageContainer.Keys["GuideConfigWorkflows3"]</MudListItem>
+                    </MudList>
+
+                    <MudDivider Class="mb-4" />
+
+                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Small" Color="Color.Secondary" />
+                        <MudText Typo="Typo.subtitle1"><strong>@languageContainer.Keys["GuideConfigComponentsTitle"]</strong></MudText>
+                    </MudStack>
+                    <MudList T="string" Dense="true">
+                        <MudListItem Icon="@Icons.Material.Filled.LooksOne" IconSize="Size.Small">@languageContainer.Keys["GuideConfigComponents1"]</MudListItem>
+                        <MudListItem Icon="@Icons.Material.Filled.LooksTwo" IconSize="Size.Small">@languageContainer.Keys["GuideConfigComponents2"]</MudListItem>
+                    </MudList>
+                </div>
+            </MudTabPanel>
+
+        </MudTabs>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Close" Color="Color.Primary" Variant="Variant.Filled">
+            @languageContainer.Keys["GuideClose"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    private void Close() => MudDialog.Close();
+}

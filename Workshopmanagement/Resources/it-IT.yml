@@ -306,3 +306,61 @@ WorkingHoursMorning: Mattina
 WorkingHoursAfternoon: Pomeriggio
 WorkingHoursStart: Inizio
 WorkingHoursEnd: Fine
+# Guida
+GuideTitle: Guida
+GuideClose: Chiudi guida
+GuideTabWelcome: Benvenuto
+GuideTabWorkflows: Interventi
+GuideTabCustomers: Clienti e Veicoli
+GuideTabCalendario: Calendario
+GuideTabConfig: Configurazione
+GuideWelcomeIntro: Benvenuto nel gestionale!
+GuideWelcomeDesc: "Questa guida ti spiega come usare il programma in modo semplice, senza bisogno di conoscenze informatiche. Puoi aprirla in qualsiasi momento cliccando sul pulsante \"Guida\" nella barra in alto."
+GuideWelcomeHowItWorks: Come funziona il gestionale?
+GuideWelcomeHowItWorksDesc: Il gestionale ti aiuta a organizzare le lavorazioni sui veicoli dei tuoi clienti. Puoi avviare nuovi interventi, seguire quelli in corso, consultare lo storico delle lavorazioni concluse e pianificare gli appuntamenti nel calendario.
+GuideWorkflowsIntro: Un "intervento" (o flusso di lavoro) rappresenta una lavorazione da eseguire su un veicolo. Ogni intervento segue una sequenza di passaggi guidati che l'operatore percorre dall'apertura alla chiusura.
+GuideWorkflowsStartTitle: Come avviare un nuovo intervento
+GuideWorkflowsStart1: "Vai alla sezione \"Flusso di lavoro\" nel menu laterale."
+GuideWorkflowsStart2: "Clicca sul pulsante \"Nuovo flusso\" nella dashboard."
+GuideWorkflowsStart3: Scegli il tipo di intervento, poi seleziona il cliente e il veicolo da lavorare.
+GuideWorkflowsStart4: Se richiesto, fai firmare al cliente lo scarico di responsabilita'.
+GuideWorkflowsStart5: Controlla il riepilogo e conferma per avviare l'intervento.
+GuideWorkflowsResumeTitle: Come riprendere un intervento in corso
+GuideWorkflowsResume1: "Clicca su \"Riprendi flusso\" nella dashboard."
+GuideWorkflowsResume2: Seleziona il cliente, il veicolo e il flusso aperto che vuoi continuare.
+GuideWorkflowsResume3: Compila le informazioni richieste a ogni passaggio e vai avanti.
+GuideWorkflowsResume4: Al termine dell'ultimo passaggio l'intervento verra' chiuso automaticamente.
+GuideWorkflowsHistoryTitle: Storico degli interventi
+GuideWorkflowsHistory1: "Nella sezione \"Storico\" trovi tutti gli interventi conclusi."
+GuideWorkflowsHistory2: Puoi vedere i dettagli di ogni lavorazione e scaricare il resoconto in PDF.
+GuideCustomersIntro: In questa sezione gestisci i tuoi clienti e i loro veicoli. Ogni veicolo deve essere associato a un cliente prima di poter avviare un intervento.
+GuideCustomersAddTitle: Come aggiungere un cliente
+GuideCustomersAdd1: "Vai alla sezione \"Clienti\" nel menu laterale."
+GuideCustomersAdd2: "Clicca sul pulsante \"Aggiungi cliente\"."
+GuideCustomersAdd3: Compila i dati richiesti (nome, cognome, telefono, ecc.).
+GuideCustomersAdd4: Salva per confermare l'inserimento.
+GuideVeichlesAddTitle: Come aggiungere un veicolo
+GuideVeichlesAdd1: "Vai alla sezione \"Veicoli\" nel menu laterale."
+GuideVeichlesAdd2: "Clicca sul pulsante \"Aggiungi veicolo\"."
+GuideVeichlesAdd3: Scegli il proprietario dall'elenco dei clienti presenti.
+GuideVeichlesAdd4: Inserisci i dati del veicolo (targa, marca, modello, ecc.) e salva.
+GuideCalendarioIntro: Il calendario ti offre una visione d'insieme di tutti gli interventi pianificati. Puoi vedere a colpo d'occhio chi e' impegnato e quando, e filtrare per operatore.
+GuideCalendario1: Usa i pulsanti Prec. e Succ. per scorrere tra le settimane.
+GuideCalendario2: "Clicca su \"Oggi\" per tornare rapidamente alla settimana corrente."
+GuideCalendario3: Usa il filtro in alto per vedere solo il lavoro di un operatore specifico.
+GuideCalendario4: I colori degli eventi indicano lo stato dell'intervento (aperto, in lavorazione, chiuso).
+GuideConfigIntro: "Questa sezione e' riservata ai responsabili (Manager). Da qui si configura tutto cio' che gli operatori usano ogni giorno."
+GuideConfigCompanyTitle: Dati aziendali
+GuideConfigCompany1: "Accedi a \"Gestione azienda\" per inserire ragione sociale, partita IVA e numero di telefono."
+GuideConfigCompany2: Puoi caricare il logo aziendale che apparira' nel menu laterale al posto dell'icona predefinita.
+GuideConfigCompany3: Puoi configurare gli orari di lavoro mattutini e pomeridiani usati nel calendario.
+GuideConfigEmployeesTitle: Operatori
+GuideConfigEmployees1: "In \"Gestione dipendenti\" aggiungi i tuoi operatori con nome, cognome e credenziali di accesso."
+GuideConfigEmployees2: "Puoi assegnare il ruolo di \"Impiegato\" (accesso operativo) o \"Manager\" (accesso completo inclusa la configurazione)."
+GuideConfigWorkflowsTitle: Tipi di intervento
+GuideConfigWorkflows1: "In \"Gestione flussi di lavoro\" crei i modelli di intervento che gli operatori possono avviare."
+GuideConfigWorkflows2: Ogni modello e' composto da una sequenza di passaggi. Per ognuno puoi stabilire se richiedere foto, componenti, firma o aggiornamento dei km.
+GuideConfigWorkflows3: "In \"Gestione task\" puoi creare e modificare i singoli passaggi da assegnare ai flussi."
+GuideConfigComponentsTitle: Magazzino ricambi
+GuideConfigComponents1: "In \"Gestione magazzino\" inserisci i materiali e i ricambi disponibili in officina."
+GuideConfigComponents2: Durante una lavorazione gli operatori possono selezionare i componenti usati e registrare le quantita' impiegate.
