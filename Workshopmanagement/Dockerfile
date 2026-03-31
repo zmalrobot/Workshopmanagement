@@ -20,7 +20,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Install Liberation Sans fonts for PDF generation
-RUN apt-get update && apt-get install -y --no-install-recommends fonts-liberation && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends fonts-liberation tzdata && rm -rf /var/lib/apt/lists/*
 
 # Create directories for persistent data
 RUN mkdir -p /app/data/images /app/wwwroot/templates

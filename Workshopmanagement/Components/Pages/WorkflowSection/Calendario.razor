@@ -113,19 +113,19 @@
             <MudCardContent>
                 <MudGrid Spacing="2">
                     <MudItem xs="6">
-                        <MudText Typo="Typo.caption">Inizio</MudText>
+                        <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventStart"]</MudText>
                         <MudText Typo="Typo.body2">@selectedEvent.Start.ToString("ddd dd/MM HH:mm")</MudText>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudText Typo="Typo.caption">Fine</MudText>
+                        <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventEnd"]</MudText>
                         <MudText Typo="Typo.body2">@selectedEvent.End.ToString("ddd dd/MM HH:mm")</MudText>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudText Typo="Typo.caption">Durata</MudText>
+                        <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventDuration"]</MudText>
                         <MudText Typo="Typo.body2">@($"{(int)(selectedEvent.End - selectedEvent.Start).TotalHours}h {(selectedEvent.End - selectedEvent.Start).Minutes:D2}m")</MudText>
                     </MudItem>
                     <MudItem xs="6">
-                        <MudText Typo="Typo.caption">Stato</MudText>
+                        <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventStatus"]</MudText>
                         <MudChip T="string" Size="Size.Small" Style="@($"background:{selectedEvent.Color}; color:white; margin:0; height:22px;")">
                             @selectedEvent.StatusLabel
                         </MudChip>
@@ -133,21 +133,21 @@
                     @if (!string.IsNullOrEmpty(selectedEvent.LicensePlate))
                     {
                         <MudItem xs="12">
-                            <MudText Typo="Typo.caption">Veicolo</MudText>
+                            <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventVeichle"]</MudText>
                             <MudText Typo="Typo.body2">@selectedEvent.LicensePlate</MudText>
                         </MudItem>
                     }
                     @if (!string.IsNullOrEmpty(selectedEvent.EmployeeNames))
                     {
                         <MudItem xs="12">
-                            <MudText Typo="Typo.caption">Operatore/i</MudText>
+                            <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventOperators"]</MudText>
                             <MudText Typo="Typo.body2">@selectedEvent.EmployeeNames</MudText>
                         </MudItem>
                     }
                     @if (selectedEvent.EstimatedHours.HasValue)
                     {
                         <MudItem xs="12">
-                            <MudText Typo="Typo.caption">Ore stimate</MudText>
+                            <MudText Typo="Typo.caption">@languageContainer.Keys["CalendarioEventEstimatedHours"]</MudText>
                             <MudText Typo="Typo.body2">@selectedEvent.EstimatedHours.Value.ToString("F0")h @(selectedEvent.EstimatedMinutes.HasValue && selectedEvent.EstimatedMinutes.Value > 0 ? selectedEvent.EstimatedMinutes.Value + "m" : "")</MudText>
                         </MudItem>
                     }
@@ -160,7 +160,7 @@
                     @EventDetailButtonLabel
                 </MudButton>
                 <MudSpacer />
-                <MudButton Variant="Variant.Text" OnClick="@(() => showEventPopup = false)">Chiudi</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="@(() => showEventPopup = false)">@languageContainer.Keys["CalendarioEventClose"]</MudButton>
             </MudCardActions>
         </MudCard>
     </div>
@@ -179,7 +179,7 @@
     private bool showEventPopup;
 
     private string EventDetailButtonLabel =>
-        selectedEvent?.IsCompleted == true ? "Vai allo storico" : "Vai a lavorazioni";
+        selectedEvent?.IsCompleted == true ? languageContainer.Keys["CalendarioGoToHistory"] : languageContainer.Keys["CalendarioGoToWork"];
 
     private void OpenSelectedEventDetailPage()
     {
@@ -356,7 +356,7 @@
             var subLabel1 = string.Join(" – ", new[] { customerName, plate }.Where(s => !string.IsNullOrEmpty(s)));
             var empIds1 = allTrackings.Where(t => t.WorkflowExecutionSeriesId == seriesId).Select(t => t.EmployeeId).Distinct().ToList();
             var empNames1 = string.Join(", ", employees.Where(e => empIds1.Contains(e.Id)).Select(e => $"{e.Name} {e.Surname}"));
-            var statusLabel1 = isCompleted ? "Completato" : (hasActive ? "In Lavorazione" : (isInFuture ? "Programmato" : "Aperto"));
+            var statusLabel1 = isCompleted ? languageContainer.Keys["CalendarioStatusCompleted"] : (hasActive ? languageContainer.Keys["CalendarioStatusInProgress"] : (isInFuture ? languageContainer.Keys["CalendarioStatusScheduled"] : languageContainer.Keys["CalendarioStatusOpen"]));
 
             events.Add(new CalEvent
             {
@@ -413,12 +413,12 @@
             foreach (var session in tracking.Sessions)
             {
                 var start = session.StartTime;
-                var end = session.EndTime ?? DateTime.Now;
+                var end = session.EndTime ?? Utility.ItalianNow;
                 var isActive = !session.EndTime.HasValue;
 
                 var plate2 = veichle?.LicensePlate ?? "";
                 var empName2 = emp != null ? $"{emp.Name} {emp.Surname}" : "";
-                var statusLabel2 = isActive ? "In Corso" : "Completato";
+                var statusLabel2 = isActive ? languageContainer.Keys["CalendarioStatusInCourse"] : languageContainer.Keys["CalendarioStatusCompleted"];
                 var subLabel2 = string.Join(" – ", new[] { customerName2, plate2 }.Where(s => !string.IsNullOrEmpty(s)));
                 if (!string.IsNullOrEmpty(empLabel)) subLabel2 = $"{subLabel2} {empLabel}".Trim();
 

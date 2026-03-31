@@ -9,6 +9,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:8080
+      - TZ=Europe/Rome
       - WebClientCulture=it-IT
       - MongoServerAddress=bigboi-pc.local
       - MongoServerPort=27017

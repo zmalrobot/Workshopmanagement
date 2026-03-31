@@ -176,12 +176,12 @@
         try
         {
 
-            item.UpdateDate = DateTime.Now;
+            item.UpdateDate = Utility.ItalianNow;
 
             if (String.IsNullOrEmpty(item.Id))
             {
                 item.Id = Guid.NewGuid().ToString();
-                item.InsertDate = DateTime.Now;
+                item.InsertDate = Utility.ItalianNow;
                 await dbDependency.GetDataAccessCustomer().InsertAsync(item);
             }
             else

@@ -61,7 +61,7 @@
                             {
                                 <div style="margin-bottom:8px;">
                                     <img src="@logoPreviewBase64" alt="Preview" style="width:128px; height:128px; object-fit:cover; border-radius:50%; border:2px solid #555; background:#222;" />
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Preview – salvato come PNG 512×512</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["CompanyLogoPreview"]</MudText>
                                 </div>
                             }
                             else if (settings.HasLogo)
@@ -167,7 +167,7 @@
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
                                 <MudIcon Icon="@Icons.Material.Filled.DarkMode" Size="Size.Small" Color="Color.Secondary" />
                                 <MudText Typo="Typo.caption" Color="Color.Secondary"
-                                         Style="text-transform:uppercase; letter-spacing:0.07em; font-weight:600;">Dark Mode</MudText>
+                                         Style="text-transform:uppercase; letter-spacing:0.07em; font-weight:600;">@languageContainer.Keys["ThemeDarkMode"]</MudText>
                             </MudStack>
                             <MudStack Spacing="2">
                                 @foreach (var info in GetThemeOptions().Where(t => t.IsDark))
@@ -206,7 +206,7 @@
                             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
                                 <MudIcon Icon="@Icons.Material.Filled.LightMode" Size="Size.Small" Color="Color.Secondary" />
                                 <MudText Typo="Typo.caption" Color="Color.Secondary"
-                                         Style="text-transform:uppercase; letter-spacing:0.07em; font-weight:600;">Light Mode</MudText>
+                                         Style="text-transform:uppercase; letter-spacing:0.07em; font-weight:600;">@languageContainer.Keys["ThemeLightMode"]</MudText>
                             </MudStack>
                             <MudStack Spacing="2">
                                 @foreach (var info in GetThemeOptions().Where(t => !t.IsDark))

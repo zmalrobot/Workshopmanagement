@@ -29,6 +29,9 @@ namespace Workshopmanagement.Utility
 
         public static int[] pageSizeOptions = [10, 20, 50];
 
+        private static readonly TimeZoneInfo _italianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Rome");
+        public static DateTime ItalianNow => TimeZoneInfo.ConvertTime(DateTime.UtcNow, _italianTimeZone);
+
         public enum DateFormat
         {
             OnlyDate,
@@ -58,7 +61,7 @@ namespace Workshopmanagement.Utility
             if (String.IsNullOrEmpty(localStorageDate.Value))
                 return false;
 
-            if (DateTime.Now.Date != JsonConvert.DeserializeObject<DateTime>(localStorageDate.Value).Date) //Login 1 volta al giorno
+            if (ItalianNow.Date != JsonConvert.DeserializeObject<DateTime>(localStorageDate.Value).Date) //Login 1 volta al giorno
             {
                 await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, null!);
                 return false;
@@ -83,7 +86,7 @@ namespace Workshopmanagement.Utility
                 await protectedLocalStorage.DeleteAsync(nameof(Employee));
 
             await protectedLocalStorage.SetAsync(nameof(Employee), JsonConvert.SerializeObject(employee));
-            await protectedLocalStorage.SetAsync(nameof(DateTime), JsonConvert.SerializeObject(DateTime.Now));
+            await protectedLocalStorage.SetAsync(nameof(DateTime), JsonConvert.SerializeObject(ItalianNow));
         }
 
         public static string GetPhoneNumberHtml(string phoneNumber)

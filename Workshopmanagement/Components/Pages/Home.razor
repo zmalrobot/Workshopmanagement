@@ -188,7 +188,7 @@
                                                                Color="Color.Success" Size="@Size.Small"
                                                                Icon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined"
                                                                Disabled="@(!isDashboardTrackingActive)"
-                                                               title="Duplica" />
+                                                               title="@languageContainer.Keys[\"Duplica\"]" />
                                             }
                                             @if (step.Execution != null && !CanEditStep(step))
                                             {
@@ -701,7 +701,7 @@
                 // Stop the other active tracking
                 var activeSession = otherActive.Sessions.LastOrDefault();
                 if (activeSession != null && activeSession.EndTime == null)
-                    activeSession.EndTime = DateTime.Now;
+                    activeSession.EndTime = Utility.ItalianNow;
                 otherActive.IsActive = false;
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
             }
@@ -710,7 +710,7 @@
             if (dashboardTimeTracking != null)
             {
                 dashboardTimeTracking.IsActive = true;
-                dashboardTimeTracking.Sessions.Add(new TimeTrackingSession { StartTime = DateTime.Now });
+                dashboardTimeTracking.Sessions.Add(new TimeTrackingSession { StartTime = Utility.ItalianNow });
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
             }
             else
@@ -723,7 +723,7 @@
                     IsActive = true,
                     Sessions = new List<TimeTrackingSession>
                     {
-                        new TimeTrackingSession { StartTime = DateTime.Now }
+                        new TimeTrackingSession { StartTime = Utility.ItalianNow }
                     }
                 };
                 await dbDependency.GetDataAccessTimeTracking().InsertAsync(dashboardTimeTracking);
@@ -759,7 +759,7 @@
 
             var activeSession = dashboardTimeTracking.Sessions.LastOrDefault();
             if (activeSession != null && activeSession.EndTime == null)
-                activeSession.EndTime = DateTime.Now;
+                activeSession.EndTime = Utility.ItalianNow;
 
             dashboardTimeTracking.IsActive = false;
             await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);

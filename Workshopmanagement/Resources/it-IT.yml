@@ -243,6 +243,137 @@ WorkkflowStartStep5Sign2: Effettuata in precedenza
 WorkkflowStartStep5CustomerSign: Firma del cliente
 ExecutionOutcome: Esito step
 VeichleData: Dati veicolo
+# Navbar / Layout
+CalendarioTitle: Calendario
+GestioneAzienda: Gestione azienda
+BetaWarning: Applicazione in fase di sviluppo. Alcune funzionalita' potrebbero non essere disponibili.
+# Guide dialog
+GuideTitle: Guida
+GuideTabWelcome: Benvenuto
+GuideWelcomeIntro: Benvenuto in Workshop Management
+GuideWelcomeDesc: "Questa applicazione ti permette di gestire i flussi di lavoro della tua officina."
+GuideWelcomeHowItWorks: Come funziona
+GuideWelcomeHowItWorksDesc: "L'applicazione e' organizzata in sezioni: flussi di lavoro, clienti, veicoli e configurazione."
+GuideTabWorkflows: Flussi di lavoro
+GuideWorkflowsIntro: Gestisci i flussi di lavoro della tua officina.
+GuideWorkflowsStartTitle: Avviare un nuovo flusso
+GuideWorkflowsStart1: "Clicca su \"Nuovo flusso\" dalla dashboard"
+GuideWorkflowsStart2: Seleziona il tipo di flusso di lavoro
+GuideWorkflowsStart3: Seleziona il cliente
+GuideWorkflowsStart4: Seleziona il veicolo
+GuideWorkflowsStart5: Conferma e avvia il flusso
+GuideWorkflowsResumeTitle: Riprendere un flusso esistente
+GuideWorkflowsResume1: "Clicca su \"Riprendi flusso\" dalla dashboard"
+GuideWorkflowsResume2: Seleziona il cliente
+GuideWorkflowsResume3: Seleziona il veicolo
+GuideWorkflowsResume4: Seleziona il flusso e procedi
+GuideWorkflowsHistoryTitle: Storico dei flussi
+GuideWorkflowsHistory1: Visualizza lo storico dei flussi completati
+GuideWorkflowsHistory2: Scarica il report PDF per ogni flusso completato
+GuideTabCustomers: Clienti e Veicoli
+GuideCustomersIntro: Gestisci i clienti e i loro veicoli.
+GuideCustomersAddTitle: Aggiungere un cliente
+GuideCustomersAdd1: Vai nella sezione Clienti
+GuideCustomersAdd2: Clicca su Aggiungi cliente
+GuideCustomersAdd3: Compila i dati del cliente
+GuideCustomersAdd4: Salva il cliente
+GuideVeichlesAddTitle: Aggiungere un veicolo
+GuideVeichlesAdd1: Vai nella sezione Veicoli
+GuideVeichlesAdd2: Clicca su Aggiungi veicolo
+GuideVeichlesAdd3: Compila i dati del veicolo e seleziona il proprietario
+GuideVeichlesAdd4: Salva il veicolo
+GuideTabCalendario: Calendario
+GuideCalendarioIntro: Visualizza e gestisci gli appuntamenti e le lavorazioni.
+GuideCalendario1: Naviga tra le settimane con le frecce
+GuideCalendario2: Torna alla settimana corrente con il pulsante Oggi
+GuideCalendario3: Filtra per operatore nel tab Lavorazioni
+GuideCalendario4: I colori indicano lo stato del flusso
+GuideTabConfig: Configurazione
+GuideConfigIntro: La sezione di configurazione e' accessibile solo ai Manager.
+GuideConfigCompanyTitle: Dati azienda
+GuideConfigCompany1: "Inserisci il nome e i dati fiscali dell'azienda"
+GuideConfigCompany2: Carica il logo aziendale
+GuideConfigCompany3: Configura gli orari di lavoro
+GuideConfigEmployeesTitle: Dipendenti
+GuideConfigEmployees1: Aggiungi e gestisci i dipendenti
+GuideConfigEmployees2: Assegna i ruoli di Manager o Impiegato
+GuideConfigWorkflowsTitle: Flussi e Task
+GuideConfigWorkflows1: Crea i modelli di flusso di lavoro
+GuideConfigWorkflows2: Definisci i task per ogni flusso
+GuideConfigWorkflows3: Configura le opzioni di ogni task
+GuideConfigComponentsTitle: Magazzino
+GuideConfigComponents1: Gestisci i componenti disponibili
+GuideConfigComponents2: Associa i componenti ai task durante le lavorazioni
+GuideClose: Chiudi
+# Gestione Azienda page
+GestioneAziendaDesc: Configura i dati della tua azienda
+CompanyInfo: Informazioni azienda
+CompanyName: Nome azienda
+CompanyVatNumber: Partita IVA
+CompanyPhone: Telefono
+CompanyLogo: Logo aziendale
+CompanyLogoUpload: Carica logo
+CompanyLogoUploaded: Logo caricato con successo
+CompanyLogoPreview: "Preview - salvato come PNG 512x512"
+CompanySettingsSaved: Impostazioni azienda salvate
+WorkingHoursConfig: Orari di lavoro
+WorkingHoursMorning: Mattina
+WorkingHoursStart: Inizio
+WorkingHoursEnd: Fine
+WorkingHoursAfternoon: Pomeriggio
+AppearanceSettings: Aspetto
+AppearanceSettingsDesc: Personalizza il tema dell'applicazione
+Save: Salva
+ThemeDarkMode: Dark Mode
+ThemeLightMode: Light Mode
+# Calendario page
+CalendarioAppuntamenti: Appuntamenti
+CalendarioPrev: Precedente
+CalendarioOggi: Oggi
+CalendarioNext: Successivo
+CalendarioLavorazioni: Lavorazioni
+CalendarioLegendaAperto: Aperto
+CalendarioLegendaInLavoro: In lavorazione
+CalendarioLegendaChiuso: Chiuso
+CalendarioTuttiOperatori: Tutti gli operatori
+CalendarioEventStart: Inizio
+CalendarioEventEnd: Fine
+CalendarioEventDuration: Durata
+CalendarioEventStatus: Stato
+CalendarioEventVeichle: Veicolo
+CalendarioEventOperators: "Operatore/i"
+CalendarioEventEstimatedHours: Ore stimate
+CalendarioEventClose: Chiudi
+CalendarioGoToHistory: Vai allo storico
+CalendarioGoToWork: Vai a lavorazioni
+CalendarioStatusCompleted: Completato
+CalendarioStatusInProgress: In Lavorazione
+CalendarioStatusScheduled: Programmato
+CalendarioStatusOpen: Aperto
+CalendarioStatusInCourse: In Corso
+# Workflow pages
+WorkflowColStartDate: Data inizio
+WorkflowColAssigned: Operatori
+WorkflowFutureScheduled: Pianificato per il futuro
+StepCompleted: Completato
+WorkflowEditSchedule: Modifica pianificazione
+TimeTrackingHoursSpent: Ore lavorate
+WorkflowCompleteColumn: Completa
+Duplica: Duplica
+# Workflow history
+ReopenWorkflow: Riapri
+ExecutionTitle: Flusso
+ExecutionSubtitle: Veicolo
+# Misc
+WorkflowEstimatedMinutes: Minuti di esecuzione
+Workflow: Flusso di lavoro
+WorkkflowStartStep5Time: Ora inizio pianificata
+WorkkflowStartStep5EstimatedMinutes: Minuti stimati
+WorkflowEditScheduleTitle: Modifica pianificazione
+WorkflowEditScheduleSaved: Pianificazione aggiornata
+SaveChanges: Salva modifiche
+StepComplete: Step completato
+FrameNumber: Numero telaio
 Images: Immagini
 Components: Componenti
 RowsPerPageString: Elementi per pagina

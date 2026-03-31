@@ -206,13 +206,13 @@
         processing = true;
         try
         {
-            item.UpdateDate = DateTime.Now;
+            item.UpdateDate = Utility.ItalianNow;
             item.Password = item.Password.Trim();
 
             if (String.IsNullOrEmpty(item.Id))
             {
                 item.Id = Guid.NewGuid().ToString();
-                item.InsertDate = DateTime.Now;
+                item.InsertDate = Utility.ItalianNow;
                 item.Password = Cypher.Encrypt(item.Password);
                 await dbDependency.GetDataAccessEmployee().InsertAsync(item);
             }

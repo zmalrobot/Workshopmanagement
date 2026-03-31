@@ -1,4 +1,5 @@
 using MongoDB.Bson.Serialization.Attributes;
+using Workshopmanagement.Utility;
 
 namespace Workshopmanagement.DatabaseManagment.DataObject
 {
@@ -24,7 +25,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
             var total = TimeSpan.Zero;
             foreach (var session in Sessions)
             {
-                var end = session.EndTime ?? DateTime.Now;
+                var end = session.EndTime ?? Utility.ItalianNow;
                 total += end - session.StartTime;
             }
             return total;

@@ -119,7 +119,7 @@
                     </CellTemplate>
                 </TemplateColumn>
 
-                <TemplateColumn Title="Complete" Hidden="false" CellClass="justify-end">
+                <TemplateColumn Title="@languageContainer.Keys["WorkflowCompleteColumn"]" Hidden="false" CellClass="justify-end">
                     <CellTemplate>
                         @{
                             var isFutureClose = IsStartDateInFuture(context.Item.Entry.WorkflowExecutionSeriesId);
@@ -180,7 +180,7 @@
                                                                        Color="Color.Success" Size="@Size.Small"
                                                                        Icon="@Icons.Material.Filled.ContentCopy" Variant="Variant.Outlined"
                                                                        Disabled="@(!IsTrackingActive(context.Item.Entry.WorkflowExecutionSeriesId))"
-                                                                       title="Duplica" />
+                                                                       title="@languageContainer.Keys[\"Duplica\"]" />
                                                     }
                                                     @if (step.Execution != null && !CanEditStep(step))
                                                     {
