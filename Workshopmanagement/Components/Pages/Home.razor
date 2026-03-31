@@ -280,9 +280,9 @@
             CloseButton = true,
             CloseOnEscapeKey = true
         };
-    private MudMessageBox? mudMessageBoxCustomer;
-    private MudMessageBox? mudMessageBoxVeichle;
-    private MudMessageBox? mudMessageBoxFlow;
+    private MudMessageBox mudMessageBoxCustomer = null!;
+    private MudMessageBox mudMessageBoxVeichle = null!;
+    private MudMessageBox mudMessageBoxFlow = null!;
     private DialogOptions mudMessageBoxOption = new() { BackdropClick = false };
 
     private List<Customer> resumeCustomers = new List<Customer>();
