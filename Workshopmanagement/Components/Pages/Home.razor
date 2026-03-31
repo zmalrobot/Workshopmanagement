@@ -922,28 +922,25 @@
             };
 
             var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
-            var result = await dialog.Result;
+            await dialog.Result;
 
-            if (!result?.Canceled ?? false)
+            // Always reload — the dialog may have created/updated executions even if cancelled via X
+            var updatedVeichle = await dbDependency.GetDataAccessVeichle().FindByIdAsync(veichle.Id);
+            if (updatedVeichle != null)
             {
-                // Reload vehicle and executions
-                var updatedVeichle = await dbDependency.GetDataAccessVeichle().FindByIdAsync(veichle.Id);
-                if (updatedVeichle != null)
-                {
-                    selectedResumeItem.Veichle = updatedVeichle;
-                    var updatedEntry = updatedVeichle.OpenWorkflows?
-                        .FirstOrDefault(e => e.WorkflowExecutionSeriesId == entry.WorkflowExecutionSeriesId);
-                    if (updatedEntry != null)
-                        selectedResumeItem.Entry = updatedEntry;
-                }
-
-                if (!string.IsNullOrEmpty(selectedResumeItem.Entry.WorkflowExecutionSeriesId))
-                {
-                    dashboardExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
-                        new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
-                }
-                await LoadDashboardTrackingState();
+                selectedResumeItem.Veichle = updatedVeichle;
+                var updatedEntry = updatedVeichle.OpenWorkflows?
+                    .FirstOrDefault(e => e.WorkflowExecutionSeriesId == entry.WorkflowExecutionSeriesId);
+                if (updatedEntry != null)
+                    selectedResumeItem.Entry = updatedEntry;
             }
+
+            if (!string.IsNullOrEmpty(selectedResumeItem.Entry.WorkflowExecutionSeriesId))
+            {
+                dashboardExecutions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                    new SearcherWorkflowExecution { WorkflowExecutionSeriesId = selectedResumeItem.Entry.WorkflowExecutionSeriesId });
+            }
+            await LoadDashboardTrackingState();
         }
         catch (Exception ex)
         {

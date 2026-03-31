@@ -399,6 +399,8 @@
             }
             else if (executionStatus == WorkflowExecutionStatus.InProgress)
             {
+                if (Dataset.workflowExecution.IsCompleted && !Dataset.workflowTask.IsFinalTask)
+                    await EnsureNextStepExecution();
                 snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"], Severity.Info);
             }
 
@@ -410,6 +412,31 @@
         {
             processing = false;
         }
+    }
+
+    private async Task EnsureNextStepExecution()
+    {
+        var nextTask = await GetNextStep(WorkflowExecutionStatus.Closed, false);
+        if (string.IsNullOrEmpty(nextTask.Id)) return;
+
+        var seriesId = Dataset.workflowExecution.WorkflowExecutionSeriesId;
+        var existing = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+            new SearcherWorkflowExecution { WorkflowExecutionSeriesId = seriesId });
+        if (existing.Any(e => e.WorkflowTaskId == nextTask.Id)) return;
+
+        var nextExecution = new WorkflowExecution
+        {
+            Id = Guid.NewGuid().ToString(),
+            EmployeeId = Dataset.employee.Id,
+            UserId = Dataset.customer.Id,
+            VeichleId = Dataset.veichle.Id,
+            WorkflowId = Dataset.workflow.Id,
+            WorkflowTaskId = nextTask.Id,
+            WorkflowExecutionSeriesId = seriesId,
+            ExecutionStatus = WorkflowExecutionStatus.Todo,
+            OpenAt = Utility.ItalianNow
+        };
+        await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(nextExecution);
     }
 
     private void Cancel()
