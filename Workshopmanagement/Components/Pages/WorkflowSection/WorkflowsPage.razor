@@ -979,12 +979,15 @@
             };
 
             var dialog = await dialogService.ShowAsync<ResumeWorkflow>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
-            await dialog.Result;
+            var result = await dialog.Result;
 
-            processing = true;
-            await GetVeichles();
-            await GetWorkflowExecutions();
-            await LoadTimeTrackingStates();
+            if (!result?.Canceled ?? false)
+            {
+                processing = true;
+                await GetVeichles();
+                await GetWorkflowExecutions();
+                await LoadTimeTrackingStates();
+            }
         }
         catch (Exception ex)
         {
@@ -992,6 +995,7 @@
         }
         finally
         {
+            processing = false;
             StateHasChanged();
         }
     }
