@@ -25,7 +25,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
             var total = TimeSpan.Zero;
             foreach (var session in Sessions)
             {
-                var end = session.EndTime ?? Utility.ItalianNow;
+                var end = session.EndTime ?? Workshopmanagement.Utility.Utility.ItalianNow;
                 total += end - session.StartTime;
             }
             return total;
