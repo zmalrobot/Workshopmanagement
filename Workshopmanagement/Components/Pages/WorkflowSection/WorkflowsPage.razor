@@ -113,21 +113,28 @@
                 <PropertyColumn Property="x => GetWorkflowTaskInfo(x.Entry.WorkflowTaskId)" Title="@languageContainer.Keys["WorkflowTaskInfo"]" Required="true" Editable="false" Sortable="true" Hidden="false" />
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowTaskCompletion"]">
                     <CellTemplate>
-                        <MudProgressCircular Color="Color.Info" Size="Size.Small" 
-                                                Value="@GetPercentageOfCompleteness(context.Item.Entry.WorkflowExecutionSeriesId, context.Item.Entry.WorkflowId)">
-                        </MudProgressCircular>
+                        @{
+                            var pct = GetPercentageOfCompleteness(context.Item.Entry.WorkflowExecutionSeriesId, context.Item.Entry.WorkflowId);
+                        }
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <MudProgressCircular Color="Color.Info" Size="Size.Small" Value="@pct" />
+                            <MudText Typo="Typo.caption">@($"{(int)pct}%")</MudText>
+                        </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
 
                 <TemplateColumn Title="@languageContainer.Keys["WorkflowCompleteColumn"]" Hidden="false" CellClass="justify-end">
                     <CellTemplate>
                         @{
-                            var isFutureClose = IsStartDateInFuture(context.Item.Entry.WorkflowExecutionSeriesId);
-                            var closeStyle = isFutureClose ? "opacity: 0.3;" : "";
+                            var seriesIdClose = context.Item.Entry.WorkflowExecutionSeriesId;
+                            var pctClose = GetPercentageOfCompleteness(seriesIdClose, context.Item.Entry.WorkflowId);
+                            var cannotComplete = IsStartDateInFuture(seriesIdClose)
+                                || IsTrackingActive(seriesIdClose)
+                                || pctClose < 100;
                         }
                         <MudIconButton OnClick="@(() => CloseWorkflowAsync(context.Item))"
                             Color="Color.Success" Size="@Size.Small" Icon="@Icons.Material.Filled.BlindsClosed" Variant="Variant.Filled"
-                            Disabled="@isFutureClose" Style="@closeStyle" />
+                            Disabled="@cannotComplete" Style="@(cannotComplete ? "opacity: 0.3;" : "")" />
                     </CellTemplate>
                 </TemplateColumn>
 
