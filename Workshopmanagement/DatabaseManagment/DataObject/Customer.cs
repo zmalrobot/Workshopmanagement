@@ -27,7 +27,12 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? PhoneNumber { get; set; }
         public string? PhonePrefix { get; set; }
         public string? Email { get; set; }
-        public string? Address { get; set; }
+        public string? AddressStreet { get; set; }
+        public string? AddressNumber { get; set; }
+        public string? AddressInterior { get; set; }
+        public string? AddressCAP { get; set; }
+        public string? AddressCity { get; set; }
+        public string? AddressProvince { get; set; }
         public string? VatNumber { get; set; }
         public string? FiscalCode { get; set; }
         public bool IsCompany { get; set; }
@@ -45,7 +50,12 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
             PhoneNumber      = PhoneNumber?.Trim();
             PhonePrefix      = PhonePrefix?.Trim();
             Email            = Email?.Trim();
-            Address          = Address?.Trim();
+            AddressStreet    = AddressStreet?.Trim();
+            AddressNumber    = AddressNumber?.Trim();
+            AddressInterior  = AddressInterior?.Trim();
+            AddressCAP       = AddressCAP?.Trim();
+            AddressCity      = AddressCity?.Trim();
+            AddressProvince  = AddressProvince?.Trim();
             VatNumber        = VatNumber?.Trim();
             FiscalCode       = FiscalCode?.Trim();
         }

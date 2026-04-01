@@ -305,7 +305,13 @@ namespace Workshopmanagement.Utility
 
             //Customer
             reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationName}}", $"{customer.Name} {customer.Surname}");
-            reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationAddress}}", $"{customer.Address}");
+            var addrStreetParts = new[] { customer.AddressStreet, customer.AddressNumber, customer.AddressInterior }
+                .Where(s => !string.IsNullOrWhiteSpace(s));
+            var addrStreet = string.Join(", ", addrStreetParts);
+            var addrProvinceFmt = string.IsNullOrWhiteSpace(customer.AddressProvince) ? "" : $"({customer.AddressProvince})";
+            var addrCity = string.Join(" ", new[] { customer.AddressCAP, customer.AddressCity, addrProvinceFmt }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            var addrFull = string.Join(" - ", new[] { addrStreet, addrCity }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationAddress}}", addrFull);
             reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationVatNumber}}", $"{customer.VatNumber}");
             reportTemplate = reportTemplate.Replace("{{ReportCustomerInformationFiscalCode}}", $"{customer.FiscalCode}");
 

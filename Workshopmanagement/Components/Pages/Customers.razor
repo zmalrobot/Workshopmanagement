@@ -78,7 +78,51 @@
                 <PropertyColumn Property="x => x.PhonePrefix" Title="@languageContainer.Keys["PhonePrefix"]" Hidden="true" Required="false" />
                 <PropertyColumn Property="x => x.PhoneNumber" Title="@languageContainer.Keys["PhoneNumber"]" Required="false" />                    
                 <PropertyColumn Property="x => x.Email" Title="@languageContainer.Keys["Email"]" Required="false" />
-                <PropertyColumn Property="x => x.Address" Title="@languageContainer.Keys["Address"]" Required="false" />                    
+                <TemplateColumn Title="@languageContainer.Keys["Address"]" Sortable="false">
+                    <CellTemplate>
+                        @{
+                            var streetParts = new[] { context.Item.AddressStreet, context.Item.AddressNumber, context.Item.AddressInterior }
+                                .Where(s => !string.IsNullOrWhiteSpace(s));
+                            var streetStr = string.Join(", ", streetParts);
+
+                            var capPart = context.Item.AddressCAP ?? "";
+                            var cityPart = context.Item.AddressCity ?? "";
+                            var provincePart = string.IsNullOrWhiteSpace(context.Item.AddressProvince) ? "" : $"({context.Item.AddressProvince})";
+                            var cityStr = string.Join(" ", new[] { capPart, cityPart, provincePart }.Where(s => !string.IsNullOrWhiteSpace(s)));
+
+                            var fullAddress = string.Join(" - ", new[] { streetStr, cityStr }.Where(s => !string.IsNullOrWhiteSpace(s)));
+                        }
+                        <MudText>@fullAddress</MudText>
+                    </CellTemplate>
+                    <EditTemplate>
+                        <MudGrid Spacing="1">
+                            <MudItem xs="9">
+                                <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["AddressStreet"]" Variant="Variant.Outlined"
+                                    @bind-Value="context.Item.AddressStreet" />
+                            </MudItem>
+                            <MudItem xs="3">
+                                <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["AddressNumber"]" Variant="Variant.Outlined"
+                                    @bind-Value="context.Item.AddressNumber" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["AddressInterior"]" Variant="Variant.Outlined"
+                                    @bind-Value="context.Item.AddressInterior" />
+                            </MudItem>
+                            <MudItem xs="3">
+                                <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["AddressCAP"]" Variant="Variant.Outlined"
+                                    @bind-Value="context.Item.AddressCAP" />
+                            </MudItem>
+                            <MudItem xs="6">
+                                <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["AddressCity"]" Variant="Variant.Outlined"
+                                    @bind-Value="context.Item.AddressCity" />
+                            </MudItem>
+                            <MudItem xs="3">
+                                <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["AddressProvince"]" Variant="Variant.Outlined"
+                                    @bind-Value="context.Item.AddressProvince" />
+                            </MudItem>
+                        </MudGrid>
+                    </EditTemplate>
+                </TemplateColumn>
                 <PropertyColumn Property="x => x.FiscalCode" Title="@languageContainer.Keys["FiscalCode"]" Required="false" />
                 <PropertyColumn Property="x => x.VatNumber" Title="@languageContainer.Keys["VatNumber"]" Required="false" />
                 <PropertyColumn Property="x => x.InsertDate" Title="@languageContainer.Keys["InsertDate"]" Editable="false" Hidden="true" />

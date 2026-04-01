@@ -34,6 +34,12 @@ Manager: Manager
 AddCustomer: Aggiungi cliente
 IsCompany: Azienda
 Address: Indirizzo
+AddressStreet: Via/Viale/Corso
+AddressNumber: N° civico
+AddressInterior: Interno/Scala
+AddressCAP: CAP
+AddressCity: Città
+AddressProvince: Provincia
 FiscalCode: Codice fiscale
 VatNumber: Partita IVA
 AddVeichles: Aggiungi veicolo
