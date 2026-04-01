@@ -1,0 +1,636 @@
+@page "/importexport"
+
+@using Workshopmanagement.Utility
+
+@inject IJSRuntime JSRuntime
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+@inject IDialogService dialogService
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h5">@languageContainer.Keys["ImportExport"]</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@languageContainer.Keys["ImportExportDesc"]</MudText>
+    </MudItem>
+
+    @if (!processing)
+    {
+        @* ── CUSTOMERS ──────────────────────────────────────────────────── *@
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.People" Class="mr-2" />
+                            @languageContainer.Keys["ImportExportCustomers"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="ExportCustomersAsync">
+                            @languageContainer.Keys["ImportExportExportAll"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="DownloadCustomerTemplateAsync">
+                            @languageContainer.Keys["ImportExportDownloadTemplate"]
+                        </MudButton>
+                        <MudFileUpload T="IBrowserFile"
+                                       Accept=".csv"
+                                       FilesChanged="@(async f => await ImportCustomersAsync(f))">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Info"
+                                           StartIcon="@Icons.Material.Filled.Upload"
+                                           FullWidth="true"
+                                           Disabled="processing">
+                                    @languageContainer.Keys["ImportExportImportFile"]
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        @* ── VEHICLES ───────────────────────────────────────────────────── *@
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.DirectionsCar" Class="mr-2" />
+                            @languageContainer.Keys["ImportExportVeichles"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="ExportVeichlesAsync">
+                            @languageContainer.Keys["ImportExportExportAll"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="DownloadVeichleTemplateAsync">
+                            @languageContainer.Keys["ImportExportDownloadTemplate"]
+                        </MudButton>
+                        <MudFileUpload T="IBrowserFile"
+                                       Accept=".csv"
+                                       FilesChanged="@(async f => await ImportVeichlesAsync(f))">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Info"
+                                           StartIcon="@Icons.Material.Filled.Upload"
+                                           FullWidth="true"
+                                           Disabled="processing">
+                                    @languageContainer.Keys["ImportExportImportFile"]
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        @* ── COMPONENTS ─────────────────────────────────────────────────── *@
+        <MudItem xs="12" md="4">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.SettingsInputComponent" Class="mr-2" />
+                            @languageContainer.Keys["ImportExportComponents"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="ExportComponentsAsync">
+                            @languageContainer.Keys["ImportExportExportAll"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="DownloadComponentTemplateAsync">
+                            @languageContainer.Keys["ImportExportDownloadTemplate"]
+                        </MudButton>
+                        <MudFileUpload T="IBrowserFile"
+                                       Accept=".csv"
+                                       FilesChanged="@(async f => await ImportComponentsAsync(f))">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Info"
+                                           StartIcon="@Icons.Material.Filled.Upload"
+                                           FullWidth="true"
+                                           Disabled="processing">
+                                    @languageContainer.Keys["ImportExportImportFile"]
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    }
+</MudGrid>
+
+@code {
+    // ── CSV column definitions ───────────────────────────────────────────────
+
+    private static readonly string[] CustomerHeaders = new[]
+    {
+        "Name","Surname","Username","Password","BusinessName",
+        "PhonePrefix","PhoneNumber","Email",
+        "AddressStreet","AddressNumber","AddressInterior","AddressCAP","AddressCity","AddressProvince",
+        "VatNumber","FiscalCode","IsCompany","IsActive"
+    };
+
+    private static readonly string[] VeichleHeaders = new[]
+    {
+        "LicensePlate","Brand","Model","FrameType","EngineType","FrameNumber",
+        "ActualKilometers","ActualFuelPercentage","Note","RegistrationDate",
+        "CustomerFiscalCode","CustomerVatNumber"
+    };
+
+    private static readonly string[] ComponentHeaders = new[]
+    {
+        "Barcode","Name","Quanity","PricePerQuantity","UnitOfMeasurement"
+    };
+
+    // ── State ────────────────────────────────────────────────────────────────
+
+    private Employee? employee;
+    private bool processing = true;
+
+    // ── Auth ─────────────────────────────────────────────────────────────────
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                processing = true;
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo("login");
+                    return;
+                }
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+                if (employee?.EmployeeRole != EmployeeRole.Manager)
+                {
+                    snackbar.Add(languageContainer.Keys["UserNotAutorized"], Severity.Warning);
+                    navigationManager.NavigateTo("dashboard");
+                    return;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if (firstRender) StateHasChanged();
+            }
+        }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  CUSTOMERS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private async Task ExportCustomersAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var all = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
+            var csv = ImportExportHelper.BuildCsv(CustomerHeaders, all.Select(c => ImportExportHelper.CustomerToCells(c)));
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "customers_export.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task DownloadCustomerTemplateAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var csv = ImportExportHelper.BuildCsv(CustomerHeaders, Enumerable.Empty<string[]>());
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "customers_template.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task ImportCustomersAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            List<Dictionary<string, string>> rows;
+            try { rows = await ImportExportHelper.ParseCsvAsync(file, CustomerHeaders); }
+            catch { snackbar.Add(languageContainer.Keys["ImportInvalidFile"], Severity.Error); return; }
+
+            if (rows.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var allDb = await dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
+
+            var byFiscal = allDb
+                .Where(c => !string.IsNullOrWhiteSpace(c.FiscalCode))
+                .ToDictionary(c => c.FiscalCode!.Trim().ToUpperInvariant());
+            var byVat = allDb
+                .Where(c => !string.IsNullOrWhiteSpace(c.VatNumber))
+                .ToDictionary(c => c.VatNumber!.Trim().ToUpperInvariant());
+            var byEmail = allDb
+                .Where(c => !string.IsNullOrWhiteSpace(c.Email))
+                .ToDictionary(c => c.Email!.Trim().ToLowerInvariant());
+
+            var previews = new ImportRowPreview[rows.Count];
+            var objects  = new Customer[rows.Count];
+
+            Parallel.For(0, rows.Count, i =>
+            {
+                var row = rows[i];
+                var fc  = row.GetOr("FiscalCode").ToUpperInvariant();
+                var vat = row.GetOr("VatNumber").ToUpperInvariant();
+                var em  = row.GetOr("Email").ToLowerInvariant();
+
+                Customer? match = null;
+                if (!string.IsNullOrEmpty(fc)  && byFiscal.TryGetValue(fc,  out var mf)) match = mf;
+                else if (!string.IsNullOrEmpty(vat) && byVat.TryGetValue(vat, out var mv)) match = mv;
+                else if (!string.IsNullOrEmpty(em)  && byEmail.TryGetValue(em,  out var me)) match = me;
+
+                var obj = ImportExportHelper.MapCustomer(row, match);
+                objects[i] = obj;
+                previews[i] = new ImportRowPreview
+                {
+                    RowNumber = i + 1,
+                    MatchType = match == null ? ImportMatchType.Insert : ImportMatchType.Update,
+                    ExistingId = match?.Id,
+                    Cells = ImportExportHelper.CustomerToCells(obj)
+                };
+            });
+
+            var validPreviews = previews
+                .Where((p, i) => !string.IsNullOrWhiteSpace(objects[i].FiscalCode)
+                                  || !string.IsNullOrWhiteSpace(objects[i].VatNumber)
+                                  || !string.IsNullOrWhiteSpace(objects[i].Email))
+                .ToList();
+
+            if (validPreviews.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var previewHeaders = CustomerHeaders.Where(h => h != "Password").ToArray();
+            var params_ = new DialogParameters<ImportPreviewDialog>
+            {
+                { x => x.Rows,    validPreviews },
+                { x => x.Headers, previewHeaders }
+            };
+            var dialog = await dialogService.ShowAsync<ImportPreviewDialog>(
+                languageContainer.Keys["ImportPreviewTitle"],
+                params_,
+                new DialogOptions { MaxWidth = MaxWidth.ExtraExtraLarge, FullWidth = true, CloseOnEscapeKey = true });
+
+            var result = await dialog.Result;
+            if (result == null || result.Canceled) return;
+
+            int inserted = 0, updated = 0;
+            var tasks = previews.Select(async (p, i) =>
+            {
+                var obj = objects[i];
+                if (string.IsNullOrWhiteSpace(obj.FiscalCode)
+                    && string.IsNullOrWhiteSpace(obj.VatNumber)
+                    && string.IsNullOrWhiteSpace(obj.Email))
+                    return;
+
+                if (p.MatchType == ImportMatchType.Update)
+                {
+                    obj.Id = p.ExistingId!;
+                    obj.UpdateDate = DateTime.UtcNow;
+                    await dbDependency.GetDataAccessCustomer().UpdateAsync(obj);
+                    System.Threading.Interlocked.Increment(ref updated);
+                }
+                else
+                {
+                    obj.Id = Guid.NewGuid().ToString();
+                    obj.InsertDate = DateTime.UtcNow;
+                    obj.UpdateDate = DateTime.UtcNow;
+                    await dbDependency.GetDataAccessCustomer().InsertAsync(obj);
+                    System.Threading.Interlocked.Increment(ref inserted);
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            snackbar.Add(string.Format(languageContainer.Keys["ImportSuccess"], inserted, updated), Severity.Success);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  VEHICLES
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private async Task ExportVeichlesAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var all = await dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle());
+            var csv = ImportExportHelper.BuildCsv(VeichleHeaders, all.Select(v => ImportExportHelper.VeichleToCells(v)));
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "veichles_export.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task DownloadVeichleTemplateAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var csv = ImportExportHelper.BuildCsv(VeichleHeaders, Enumerable.Empty<string[]>());
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "veichles_template.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task ImportVeichlesAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            List<Dictionary<string, string>> rows;
+            try { rows = await ImportExportHelper.ParseCsvAsync(file, VeichleHeaders); }
+            catch { snackbar.Add(languageContainer.Keys["ImportInvalidFile"], Severity.Error); return; }
+
+            if (rows.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var allVeichlesTask  = dbDependency.GetDataAccessVeichle().FindAsync(new SearcherVeichle());
+            var allCustomersTask = dbDependency.GetDataAccessCustomer().FindAsync(new SearcherCustomer());
+            await Task.WhenAll(allVeichlesTask, allCustomersTask);
+
+            var allVeichles  = allVeichlesTask.Result;
+            var allCustomers = allCustomersTask.Result;
+
+            var byPlate = allVeichles
+                .Where(v => !string.IsNullOrWhiteSpace(v.LicensePlate))
+                .ToDictionary(v => v.LicensePlate.Trim().ToUpperInvariant());
+
+            var custByFiscal = allCustomers
+                .Where(c => !string.IsNullOrWhiteSpace(c.FiscalCode))
+                .ToDictionary(c => c.FiscalCode!.Trim().ToUpperInvariant());
+            var custByVat = allCustomers
+                .Where(c => !string.IsNullOrWhiteSpace(c.VatNumber))
+                .ToDictionary(c => c.VatNumber!.Trim().ToUpperInvariant());
+
+            var previews = new ImportRowPreview[rows.Count];
+            var objects  = new (Veichle? Obj, bool Valid)[rows.Count];
+            var warnings = new System.Collections.Concurrent.ConcurrentBag<string>();
+
+            Parallel.For(0, rows.Count, i =>
+            {
+                var row   = rows[i];
+                var plate = row.GetOr("LicensePlate").Trim().ToUpperInvariant();
+
+                if (string.IsNullOrWhiteSpace(plate))
+                {
+                    objects[i] = (null, false);
+                    return;
+                }
+
+                byPlate.TryGetValue(plate, out var match);
+
+                string? resolvedUserId = match?.UserId;
+                if (resolvedUserId == null)
+                {
+                    var fc  = row.GetOr("CustomerFiscalCode").Trim().ToUpperInvariant();
+                    var vat = row.GetOr("CustomerVatNumber").Trim().ToUpperInvariant();
+                    if (!string.IsNullOrEmpty(fc)  && custByFiscal.TryGetValue(fc,  out var cf)) resolvedUserId = cf.Id;
+                    else if (!string.IsNullOrEmpty(vat) && custByVat.TryGetValue(vat, out var cv)) resolvedUserId = cv.Id;
+                    else warnings.Add(string.Format(languageContainer.Keys["ImportVeichleCustomerNotFound"], i + 1));
+                }
+
+                var obj = ImportExportHelper.MapVeichle(row, match, resolvedUserId);
+                objects[i] = (obj, true);
+
+                previews[i] = new ImportRowPreview
+                {
+                    RowNumber = i + 1,
+                    MatchType = match == null ? ImportMatchType.Insert : ImportMatchType.Update,
+                    ExistingId = match?.Id,
+                    Cells = ImportExportHelper.VeichleToCells(obj)
+                };
+            });
+
+            foreach (var w in warnings) snackbar.Add(w, Severity.Warning);
+
+            var validPreviews = previews.Where((p, i) => objects[i].Valid).ToList();
+            if (validPreviews.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var params_ = new DialogParameters<ImportPreviewDialog>
+            {
+                { x => x.Rows,    validPreviews },
+                { x => x.Headers, VeichleHeaders }
+            };
+            var dialog = await dialogService.ShowAsync<ImportPreviewDialog>(
+                languageContainer.Keys["ImportPreviewTitle"],
+                params_,
+                new DialogOptions { MaxWidth = MaxWidth.ExtraExtraLarge, FullWidth = true, CloseOnEscapeKey = true });
+
+            var result = await dialog.Result;
+            if (result == null || result.Canceled) return;
+
+            int inserted = 0, updated = 0;
+            var tasks = objects.Select(async (entry, i) =>
+            {
+                if (!entry.Valid || entry.Obj == null) return;
+                var p = previews[i];
+                if (p.MatchType == ImportMatchType.Update)
+                {
+                    entry.Obj.Id = p.ExistingId!;
+                    entry.Obj.UpdateDate = DateTime.UtcNow;
+                    await dbDependency.GetDataAccessVeichle().UpdateAsync(entry.Obj);
+                    System.Threading.Interlocked.Increment(ref updated);
+                }
+                else
+                {
+                    entry.Obj.Id = Guid.NewGuid().ToString();
+                    entry.Obj.InsertDate = DateTime.UtcNow;
+                    entry.Obj.UpdateDate = DateTime.UtcNow;
+                    await dbDependency.GetDataAccessVeichle().InsertAsync(entry.Obj);
+                    System.Threading.Interlocked.Increment(ref inserted);
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            snackbar.Add(string.Format(languageContainer.Keys["ImportSuccess"], inserted, updated), Severity.Success);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  COMPONENTS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private async Task ExportComponentsAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var all = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent());
+            var csv = ImportExportHelper.BuildCsv(ComponentHeaders, all.Select(c => ImportExportHelper.ComponentToCells(c)));
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "components_export.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task DownloadComponentTemplateAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var csv = ImportExportHelper.BuildCsv(ComponentHeaders, Enumerable.Empty<string[]>());
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "components_template.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task ImportComponentsAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            List<Dictionary<string, string>> rows;
+            try { rows = await ImportExportHelper.ParseCsvAsync(file, ComponentHeaders); }
+            catch { snackbar.Add(languageContainer.Keys["ImportInvalidFile"], Severity.Error); return; }
+
+            if (rows.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var allDb = await dbDependency.GetDataAccessComponent().FindAsync(new SearcherComponent());
+
+            var byBarcode = allDb
+                .Where(c => !string.IsNullOrWhiteSpace(c.Barcode))
+                .ToDictionary(c => c.Barcode!.Trim().ToUpperInvariant());
+
+            var previews = new ImportRowPreview[rows.Count];
+            var objects  = new Component[rows.Count];
+
+            Parallel.For(0, rows.Count, i =>
+            {
+                var row     = rows[i];
+                var barcode = row.GetOr("Barcode").Trim().ToUpperInvariant();
+
+                byBarcode.TryGetValue(barcode, out var match);
+
+                var obj = ImportExportHelper.MapComponent(row, match);
+                objects[i] = obj;
+                previews[i] = new ImportRowPreview
+                {
+                    RowNumber = i + 1,
+                    MatchType = match == null ? ImportMatchType.Insert : ImportMatchType.Update,
+                    ExistingId = match?.Id,
+                    Cells = ImportExportHelper.ComponentToCells(obj)
+                };
+            });
+
+            var validPreviews = previews
+                .Where((p, i) => !string.IsNullOrWhiteSpace(objects[i].Barcode))
+                .ToList();
+
+            if (validPreviews.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var params_ = new DialogParameters<ImportPreviewDialog>
+            {
+                { x => x.Rows,    validPreviews },
+                { x => x.Headers, ComponentHeaders }
+            };
+            var dialog = await dialogService.ShowAsync<ImportPreviewDialog>(
+                languageContainer.Keys["ImportPreviewTitle"],
+                params_,
+                new DialogOptions { MaxWidth = MaxWidth.ExtraExtraLarge, FullWidth = true, CloseOnEscapeKey = true });
+
+            var result = await dialog.Result;
+            if (result == null || result.Canceled) return;
+
+            int inserted = 0, updated = 0;
+            var tasks = objects.Select(async (obj, i) =>
+            {
+                if (string.IsNullOrWhiteSpace(obj.Barcode)) return;
+                var p = previews[i];
+                if (p.MatchType == ImportMatchType.Update)
+                {
+                    obj.Id = p.ExistingId!;
+                    await dbDependency.GetDataAccessComponent().UpdateAsync(obj);
+                    System.Threading.Interlocked.Increment(ref updated);
+                }
+                else
+                {
+                    obj.Id = Guid.NewGuid().ToString();
+                    await dbDependency.GetDataAccessComponent().InsertAsync(obj);
+                    System.Threading.Interlocked.Increment(ref inserted);
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            snackbar.Add(string.Format(languageContainer.Keys["ImportSuccess"], inserted, updated), Severity.Success);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+}

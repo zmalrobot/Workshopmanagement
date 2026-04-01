@@ -500,4 +500,25 @@ GuideConfigWorkflows2: Ogni modello e' composto da una sequenza di passaggi. Per
 GuideConfigWorkflows3: "In \"Gestione task\" puoi creare e modificare i singoli passaggi da assegnare ai flussi."
 GuideConfigComponentsTitle: Magazzino ricambi
 GuideConfigComponents1: "In \"Gestione magazzino\" inserisci i materiali e i ricambi disponibili in officina."
+ImportExport: Importazione / Esportazione
+ImportExportDesc: Importa ed esporta clienti, veicoli e componenti tramite file CSV
+ImportExportCustomers: Clienti
+ImportExportVeichles: Veicoli
+ImportExportComponents: Componenti
+ImportExportExportAll: Esporta tutto
+ImportExportDownloadTemplate: Scarica template vuoto
+ImportExportImportFile: Importa da CSV
+ImportPreviewTitle: Anteprima importazione
+ImportPreviewDesc: "Righe evidenziate in verde verranno aggiornate. Righe in blu verranno inserite come nuovi record."
+ImportPreviewConfirm: Conferma ed esegui
+ImportPreviewCancel: Annulla
+ImportStatusNew: Nuovo
+ImportStatusUpdate: Aggiorna
+ImportSuccess: "Importazione completata: {0} inseriti, {1} aggiornati"
+ImportError: Errore durante l'importazione del file
+ImportNoData: Nessuna riga valida trovata nel file
+ImportInvalidFile: File non valido o formato non riconosciuto
+ImportExportColStatus: Stato
+ImportExportColRow: Riga
+ImportVeichleCustomerNotFound: "Veicolo riga {0}: cliente non trovato (FiscalCode/VatNumber)"
 GuideConfigComponents2: Durante una lavorazione gli operatori possono selezionare i componenti usati e registrare le quantita' impiegate.

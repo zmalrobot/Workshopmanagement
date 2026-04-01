@@ -1,0 +1,81 @@
+@inject ILanguageContainerService languageContainer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Preview" Class="mr-2" />
+            @languageContainer.Keys["ImportPreviewTitle"]
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+            @languageContainer.Keys["ImportPreviewDesc"]
+        </MudText>
+        <MudDataGrid T="ImportRowPreview"
+                     Items="@Rows"
+                     Dense="true"
+                     Hover="true"
+                     Striped="false"
+                     FixedHeader="true"
+                     Height="450px"
+                     RowStyleFunc="@RowStyle">
+            <Columns>
+                <PropertyColumn Property="x => x.RowNumber" Title="@languageContainer.Keys["ImportExportColRow"]" CellStyle="width:60px;" />
+                <TemplateColumn Title="@languageContainer.Keys["ImportExportColStatus"]" CellStyle="width:110px;">
+                    <CellTemplate>
+                        @if (context.Item.MatchType == ImportMatchType.Insert)
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">
+                                @languageContainer.Keys["ImportStatusNew"]
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">
+                                @languageContainer.Keys["ImportStatusUpdate"]
+                            </MudChip>
+                        }
+                    </CellTemplate>
+                </TemplateColumn>
+                @for (int ci = 0; ci < Headers.Length; ci++)
+                {
+                    var capturedIndex = ci;
+                    var header = Headers[capturedIndex];
+                    <TemplateColumn Title="@header">
+                        <CellTemplate>
+                            @(capturedIndex < context.Item.Cells.Length ? context.Item.Cells[capturedIndex] : string.Empty)
+                        </CellTemplate>
+                    </TemplateColumn>
+                }
+            </Columns>
+        </MudDataGrid>
+        <MudText Typo="Typo.caption" Class="mt-2">
+            @Rows.Count @languageContainer.Keys["ImportExportColRow"]:
+            @Rows.Count(r => r.MatchType == ImportMatchType.Insert) @languageContainer.Keys["ImportStatusNew"],
+            @Rows.Count(r => r.MatchType == ImportMatchType.Update) @languageContainer.Keys["ImportStatusUpdate"]
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">
+            @languageContainer.Keys["ImportPreviewCancel"]
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Confirm" StartIcon="@Icons.Material.Filled.Upload">
+            @languageContainer.Keys["ImportPreviewConfirm"]
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter] public List<ImportRowPreview> Rows { get; set; } = new();
+    [Parameter] public string[] Headers { get; set; } = Array.Empty<string>();
+
+    private string RowStyle(ImportRowPreview row, int index)
+        => row.MatchType == ImportMatchType.Insert
+            ? "background-color: rgba(33,150,243,0.08);"
+            : "background-color: rgba(76,175,80,0.08);";
+
+    private void Confirm() => MudDialog.Close(DialogResult.Ok(true));
+    private void Cancel()  => MudDialog.Cancel();
+}
