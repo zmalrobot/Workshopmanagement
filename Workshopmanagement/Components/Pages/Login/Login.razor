@@ -44,7 +44,12 @@
             <MudAlert Severity="Severity.Warning" Class="mb-4">@languageContainer.Keys["LoginNoUsersWarning"]</MudAlert>
         }
         <MudTextField @bind-Value="userModel.Username" Label="@languageContainer.Keys["Username"]" Variant="Variant.Filled" Required="true" />
-        <MudTextField @bind-Value="userModel.Password" Label="@languageContainer.Keys["Password"]" Variant="Variant.Filled" InputType="InputType.Password" Required="true" />
+        <MudTextField @bind-Value="userModel.Password" Label="@languageContainer.Keys["Password"]" Variant="Variant.Filled"
+            InputType="@(showPassword ? InputType.Text : InputType.Password)"
+            Required="true"
+            Adornment="Adornment.End"
+            AdornmentIcon="@(showPassword ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+            OnAdornmentClick="@(() => showPassword = !showPassword)" />
     </MudCardContent>
     <MudCardActions>
         <MudGrid>
@@ -79,6 +84,7 @@
     private bool processing = false;
     private bool reloading = false;
     private bool isFirstUser = false;
+    private bool showPassword = false;
     private CompanySettings? companySettings;
 
     protected override async Task OnInitializedAsync()

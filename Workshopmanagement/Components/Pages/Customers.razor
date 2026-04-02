@@ -71,7 +71,11 @@
                     </CellTemplate>
                     <EditTemplate>
                         <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["Password"]" Variant="Variant.Outlined"
-                        InputType="InputType.Password" @bind-Value="context.Item.Password" />
+                            InputType="@(showPasswordEdit ? InputType.Text : InputType.Password)"
+                            @bind-Value="context.Item.Password"
+                            Adornment="Adornment.End"
+                            AdornmentIcon="@(showPasswordEdit ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                            OnAdornmentClick="@(() => showPasswordEdit = !showPasswordEdit)" />
                     </EditTemplate>
                 </TemplateColumn>
                 <PropertyColumn Property="x => x.BusinessName" Title="@languageContainer.Keys["BusinessName"]" Required="false" />
@@ -153,6 +157,7 @@
     private bool processing = true;
     private bool isViewMode = true;
     private bool hidePassword = true;
+    private bool showPasswordEdit = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {        

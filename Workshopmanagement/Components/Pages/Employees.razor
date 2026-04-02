@@ -72,8 +72,12 @@
                         <MudText Color="Color.Warning">@Cypher.Decrypt(context.Item.Password)</MudText>
                     </CellTemplate>
                     <EditTemplate>
-                        <MudTextField Required Margin="Margin.Dense"  Label="@languageContainer.Keys["Password"]" Variant="Variant.Outlined"
-                        InputType="InputType.Password" @bind-Value="context.Item.Password" />
+                        <MudTextField Required Margin="Margin.Dense" Label="@languageContainer.Keys["Password"]" Variant="Variant.Outlined"
+                            InputType="@(showPasswordEdit ? InputType.Text : InputType.Password)"
+                            @bind-Value="context.Item.Password"
+                            Adornment="Adornment.End"
+                            AdornmentIcon="@(showPasswordEdit ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility)"
+                            OnAdornmentClick="@(() => showPasswordEdit = !showPasswordEdit)" />
                     </EditTemplate>
                 </TemplateColumn>
                 <TemplateColumn Title="@languageContainer.Keys["EmployeeRole"]" Sortable="false">
@@ -122,6 +126,7 @@
     private bool processing = true;
     private bool isViewMode = true;
     private bool hidePassword = true;
+    private bool showPasswordEdit = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {      
