@@ -291,6 +291,43 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadTimeTrackingState();
+        await InitializeDefaultVehicleData();
+    }
+
+    private async Task InitializeDefaultVehicleData()
+    {
+        if (Dataset.viewOneExecution) return;
+
+        bool needsKm   = Dataset.workflowTask.UserMustUpdateVeichleKm  && Dataset.workflowExecution.KmPost   == null;
+        bool needsFuel = Dataset.workflowTask.UserMustUpdateFuelLevel   && Dataset.workflowExecution.FuelPost == null;
+
+        if (!needsKm && !needsFuel) return;
+
+        var seriesId = Dataset.workflowExecution.WorkflowExecutionSeriesId;
+
+        if (!string.IsNullOrEmpty(seriesId))
+        {
+            var executions = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
+                new SearcherWorkflowExecution { WorkflowExecutionSeriesId = seriesId });
+
+            var others = executions
+                .Where(e => e.Id != Dataset.workflowExecution.Id)
+                .OrderByDescending(e => e.ClosedAt ?? e.OpenAt)
+                .ToList();
+
+            if (needsKm)
+                Dataset.workflowExecution.KmPost = others.FirstOrDefault(e => e.KmPost != null)?.KmPost
+                                                   ?? Dataset.veichle?.ActualKilometers;
+
+            if (needsFuel)
+                Dataset.workflowExecution.FuelPost = others.FirstOrDefault(e => e.FuelPost != null)?.FuelPost
+                                                     ?? Dataset.veichle?.ActualFuelPercentage;
+        }
+        else
+        {
+            if (needsKm)   Dataset.workflowExecution.KmPost   = Dataset.veichle?.ActualKilometers;
+            if (needsFuel) Dataset.workflowExecution.FuelPost = Dataset.veichle?.ActualFuelPercentage;
+        }
     }
 
     private async Task LoadTimeTrackingState()
