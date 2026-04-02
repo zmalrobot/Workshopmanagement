@@ -22,8 +22,8 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string Id { get; set; } = null!;
         public string Name { get; set; } = null!;
         public string Surname { get; set; } = null!;
-        public string Username { get; set; } = null!;
-        public string Password { get; set; } = null!;
+        public string? Username { get; set; }
+        public string? Password { get; set; }
         public string? BusinessName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? PhonePrefix { get; set; }
@@ -45,8 +45,8 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         {
             Name             = Name?.Trim()!;
             Surname          = Surname?.Trim()!;
-            Username         = Username?.Trim()!;
-            Password         = Password?.Trim()!;
+            Username         = string.IsNullOrWhiteSpace(Username) ? null : Username.Trim();
+            Password         = string.IsNullOrWhiteSpace(Password) ? null : Password.Trim();
             BusinessName     = BusinessName?.Trim();
             PhoneNumber      = PhoneNumber?.Trim();
             PhonePrefix      = PhonePrefix?.Trim();

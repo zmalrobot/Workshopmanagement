@@ -521,4 +521,5 @@ ImportInvalidFile: File non valido o formato non riconosciuto
 ImportExportColStatus: Stato
 ImportExportColRow: Riga
 ImportVeichleCustomerNotFound: "Veicolo riga {0}: cliente non trovato (FiscalCode/VatNumber)"
+CustomerUsernamePasswordRequired: "Username e password devono essere entrambi presenti o entrambi assenti"
 GuideConfigComponents2: Durante una lavorazione gli operatori possono selezionare i componenti usati e registrare le quantita' impiegate.

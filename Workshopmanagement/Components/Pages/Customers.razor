@@ -64,13 +64,13 @@
                 <PropertyColumn Property="x => x.Id" Title="@languageContainer.Keys["Id"]" Required="false" Editable="false" Sortable="false" Hidden="true" />
                 <PropertyColumn Property="x => x.Name" Title="@languageContainer.Keys["Name"]" />
                 <PropertyColumn Property="x => x.Surname" Title="@languageContainer.Keys["Surname"]" />
-                <PropertyColumn Property="x => x.Username" Title="@languageContainer.Keys["Username"]" />
+                <PropertyColumn Property="x => x.Username" Title="@languageContainer.Keys["Username"]" Required="false" />
                 <TemplateColumn Title="@languageContainer.Keys["Password"]" Hidden="hidePassword" Sortable="false">
                     <CellTemplate>
-                        <MudText Color="Color.Warning">@Cypher.Decrypt(context.Item.Password)</MudText>
+                        <MudText Color="Color.Warning">@Cypher.Decrypt(context.Item.Password ?? string.Empty)</MudText>
                     </CellTemplate>
                     <EditTemplate>
-                        <MudTextField Required Margin="Margin.Dense" Label="@languageContainer.Keys["Password"]" Variant="Variant.Outlined"
+                        <MudTextField Margin="Margin.Dense" Label="@languageContainer.Keys["Password"]" Variant="Variant.Outlined"
                         InputType="InputType.Password" @bind-Value="context.Item.Password" />
                     </EditTemplate>
                 </TemplateColumn>
@@ -221,6 +221,15 @@
         {
 
             item.UpdateDate = Utility.ItalianNow;
+
+            var hasUsername = !string.IsNullOrWhiteSpace(item.Username);
+            var hasPassword = !string.IsNullOrWhiteSpace(item.Password);
+            if (hasUsername != hasPassword)
+            {
+                snackbar.Add(@languageContainer.Keys["CustomerUsernamePasswordRequired"], Severity.Warning);
+                await GetCustomers();
+                return;
+            }
 
             if (String.IsNullOrEmpty(item.Id))
             {
