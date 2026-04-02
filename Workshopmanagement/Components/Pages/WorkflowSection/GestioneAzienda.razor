@@ -274,10 +274,10 @@
                                Variant="Variant.Outlined"
                                Margin="Margin.Dense"
                                FullWidth="true">
-                        <MudSelectItem Value="Debug">@languageContainer.Keys["LogLevelDebug"]</MudSelectItem>
-                        <MudSelectItem Value="Information">@languageContainer.Keys["LogLevelInformation"]</MudSelectItem>
-                        <MudSelectItem Value="Warning">@languageContainer.Keys["LogLevelWarning"]</MudSelectItem>
-                        <MudSelectItem Value="Error">@languageContainer.Keys["LogLevelError"]</MudSelectItem>
+                        <MudSelectItem Value="@("Debug")">@languageContainer.Keys["LogLevelDebug"]</MudSelectItem>
+                        <MudSelectItem Value="@("Information")">@languageContainer.Keys["LogLevelInformation"]</MudSelectItem>
+                        <MudSelectItem Value="@("Warning")">@languageContainer.Keys["LogLevelWarning"]</MudSelectItem>
+                        <MudSelectItem Value="@("Error")">@languageContainer.Keys["LogLevelError"]</MudSelectItem>
                     </MudSelect>
                 </MudCardContent>
             </MudCard>

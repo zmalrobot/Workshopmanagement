@@ -64,8 +64,7 @@
                                            DateChanged="@(d => searcher.DateFrom = d)"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"
-                                           DateFormat="dd/MM/yyyy"
-                                           FullWidth="true" />
+                                           DateFormat="dd/MM/yyyy" />
                         </MudItem>
                         <MudItem xs="12" sm="6" md="2">
                             <MudDatePicker Label="@languageContainer.Keys["LogDateTo"]"
@@ -73,8 +72,7 @@
                                            DateChanged="@(d => searcher.DateTo = d)"
                                            Variant="Variant.Outlined"
                                            Margin="Margin.Dense"
-                                           DateFormat="dd/MM/yyyy"
-                                           FullWidth="true" />
+                                           DateFormat="dd/MM/yyyy" />
                         </MudItem>
                         <MudItem xs="12" md="2" Class="d-flex align-end">
                             <MudButton FullWidth="true"
@@ -130,8 +128,7 @@
                             <MudIconButton Icon="@Icons.Material.Filled.Info"
                                            Size="Size.Small"
                                            Color="Color.Info"
-                                           OnClick="@(() => OpenDetail(context.Item))"
-                                           Title="@languageContainer.Keys["LogDetail"]" />
+                                           OnClick="@(() => OpenDetail(context.Item))" />
                         </CellTemplate>
                     </TemplateColumn>
                 </Columns>
@@ -149,7 +146,7 @@
 @* ─── Detail dialog ──────────────────────────────────────────────────────── *@
 @if (detailLog is not null)
 {
-    <MudDialog @bind-IsVisible="detailVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true })">
+    <MudDialog @bind-Visible="detailVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true })">
         <TitleContent>
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
                 @{
@@ -279,14 +276,14 @@
             if (firstRender)
             {
                 processing = true;
-                var isUserLogged = await Utility.Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                var isUserLogged = await Utility.IsUserLoggedInAsync(protectedLocalStorage);
                 if (!isUserLogged)
                 {
                     snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
                     navigationManager.NavigateTo("login");
                     return;
                 }
-                employee = await Utility.Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+                employee = await Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
                 if (employee?.EmployeeRole != EmployeeRole.Manager)
                 {
                     snackbar.Add(@languageContainer.Keys["UserNotAutorized"], Severity.Warning);
