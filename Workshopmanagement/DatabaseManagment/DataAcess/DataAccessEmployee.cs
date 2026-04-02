@@ -1,7 +1,7 @@
 ﻿using Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents;
 using Workshopmanagement.DatabaseManagment.DataObject;
 using MongoDB.Driver;
-using Workshopmanagement.Utility;
+using static Workshopmanagement.Utility.Utility;
 
 namespace Workshopmanagement.DatabaseManagment.DataAcess
 {
@@ -37,11 +37,11 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
                 filter &= builder.Eq(x => x.IsActive, searcher.IsActive.Value);
 
             if (searcher.InsertDateFrom.HasValue && searcher.InsertDateTo.HasValue)
-                filter &= builder.And(builder.Gt(x => x.InsertDate, Utility.ToUtc(searcher.InsertDateFrom.Value)), builder.Lt(x => x.InsertDate, Utility.ToUtc(searcher.InsertDateTo.Value)));
+                filter &= builder.And(builder.Gt(x => x.InsertDate, ToUtc(searcher.InsertDateFrom.Value)), builder.Lt(x => x.InsertDate, ToUtc(searcher.InsertDateTo.Value)));
             else if (searcher.InsertDateFrom.HasValue)
-                filter &= builder.And(builder.Gt(x => x.InsertDate, Utility.ToUtc(searcher.InsertDateFrom.Value)));
+                filter &= builder.And(builder.Gt(x => x.InsertDate, ToUtc(searcher.InsertDateFrom.Value)));
             else if (searcher.InsertDateTo.HasValue)
-                filter &= builder.And(builder.Lt(x => x.InsertDate, Utility.ToUtc(searcher.InsertDateTo.Value)));
+                filter &= builder.And(builder.Lt(x => x.InsertDate, ToUtc(searcher.InsertDateTo.Value)));
 
             return filter;
         }

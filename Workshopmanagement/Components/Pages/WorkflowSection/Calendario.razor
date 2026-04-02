@@ -412,8 +412,8 @@
 
             foreach (var session in tracking.Sessions)
             {
-                var start = session.StartTime;
-                var end = session.EndTime ?? DateTime.UtcNow;
+                var start = TimeZoneInfo.ConvertTime(DateTime.SpecifyKind(session.StartTime, DateTimeKind.Utc), Utility.ItalianTimeZone);
+                var end = TimeZoneInfo.ConvertTime(DateTime.SpecifyKind(session.EndTime ?? DateTime.UtcNow, DateTimeKind.Utc), Utility.ItalianTimeZone);
                 var isActive = !session.EndTime.HasValue;
 
                 var plate2 = veichle?.LicensePlate ?? "";
