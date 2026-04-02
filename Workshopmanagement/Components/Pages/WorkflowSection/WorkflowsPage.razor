@@ -7,6 +7,7 @@
 @inject IDialogService dialogService
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -448,6 +449,7 @@
                     activeSession.EndTime = DateTime.Now;
                 otherActive.IsActive = false;
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
+                await appLogger.LogWarningAsync("Tracciamento precedente fermato per conflitto", new LogContext { WorkflowExecutionId = otherActive.WorkflowExecutionSeriesId, EmployeeId = employeeId });
             }
 
             // Start tracking for this workflow
@@ -475,6 +477,7 @@
             }
 
             snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
+            await appLogger.LogInformationAsync("Tracciamento avviato", new LogContext { WorkflowExecutionId = seriesId, EmployeeId = employeeId, VeichleId = item.Veichle.Id, WorkflowId = item.Entry.WorkflowId });
 
             // Add employee to AssignedEmployeeIds on the current execution
             var startExecution = workflowExecutions.FirstOrDefault(e => e.Id == item.Entry.WorkflowExecutionId);
@@ -492,6 +495,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore avvio tracciamento", new LogContext { WorkflowExecutionId = item.Entry.WorkflowExecutionSeriesId }, ex);
         }
     }
 
@@ -519,10 +523,12 @@
 
             StateHasChanged();
             snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
+            await appLogger.LogInformationAsync("Tracciamento fermato", new LogContext { WorkflowExecutionId = seriesId, EmployeeId = employee!.Id, VeichleId = item.Veichle.Id });
         }
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore stop tracciamento", new LogContext { WorkflowExecutionId = item.Entry.WorkflowExecutionSeriesId }, ex);
         }
     }
 
@@ -774,11 +780,13 @@
                 await GetWorkflowTasks();
                 await GetWorkflowExecutions();
                 await LoadTimeTrackingStates();
+                await appLogger.LogInformationAsync("Nuovo workflow creato", new LogContext { EmployeeId = employee?.Id });
             }
 
         }catch(Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore apertura dialogo nuovo workflow", null, ex);
         }
         finally
         {        
@@ -796,7 +804,10 @@
                 yesText: languageContainer.Keys["Yes"], cancelText: languageContainer.Keys["No"]);
 
             if (result != true)
+            {
+                await appLogger.LogDebugAsync("Chiusura workflow annullata dall'utente", new LogContext { WorkflowExecutionId = item.Entry.WorkflowExecutionSeriesId });
                 return;
+            }
 
             processing = true;
 
@@ -816,6 +827,7 @@
             await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
 
             snackbar.Add(languageContainer.Keys["CloseWorkflowSuccess"], Severity.Success);
+            await appLogger.LogInformationAsync("Workflow chiuso", new LogContext { VeichleId = item.Veichle.Id, WorkflowId = item.Entry.WorkflowId, WorkflowExecutionId = item.Entry.WorkflowExecutionSeriesId, EmployeeId = employee?.Id });
 
             await GetVeichles();
             await GetWorkflowExecutions();
@@ -824,6 +836,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore chiusura workflow", new LogContext { WorkflowExecutionId = item.Entry.WorkflowExecutionSeriesId }, ex);
         }
         finally
         {

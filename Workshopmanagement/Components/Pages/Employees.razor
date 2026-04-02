@@ -6,6 +6,7 @@
 @inject ILanguageContainerService languageContainer
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -220,6 +221,7 @@
                 item.InsertDate = Utility.ItalianNow;
                 item.Password = Cypher.Encrypt(item.Password);
                 await dbDependency.GetDataAccessEmployee().InsertAsync(item);
+                await appLogger.LogInformationAsync("Dipendente creato", new LogContext { EmployeeId = item.Id, EmployeeName = $"{item.Name} {item.Surname}" });
             }
             else
             {
@@ -229,6 +231,7 @@
                     item.Password = Cypher.Encrypt(item.Password);
 
                 await dbDependency.GetDataAccessEmployee().UpdateAsync(item);
+                await appLogger.LogInformationAsync("Dipendente aggiornato", new LogContext { EmployeeId = item.Id, EmployeeName = $"{item.Name} {item.Surname}" });
             }
             
             await GetEmployee();
@@ -237,6 +240,7 @@
         }catch(Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore salvataggio dipendente", new LogContext { EmployeeId = item.Id }, ex);
         }   
         processing = false;
     }
@@ -256,9 +260,11 @@
             if (!canBeDeleted)
             {
                 snackbar.Add(@languageContainer.Keys["DeletionWarningIsInUse"], Severity.Warning);
+                await appLogger.LogWarningAsync("Cancellazione dipendente bloccata: ha dati collegati", new LogContext { EmployeeId = item.Id, EmployeeName = $"{item.Name} {item.Surname}" });
                 return;
             }
             await dbDependency.GetDataAccessEmployee().DeleteAsync(item.Id);
+            await appLogger.LogInformationAsync("Dipendente eliminato", new LogContext { EmployeeId = item.Id, EmployeeName = $"{item.Name} {item.Surname}" });
 
             await GetEmployee();
 
@@ -267,6 +273,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore cancellazione dipendente", new LogContext { EmployeeId = item.Id }, ex);
         }
         processing = false;
     }

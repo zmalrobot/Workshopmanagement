@@ -9,6 +9,7 @@
 @inject IWebHostEnvironment webHostEnvironment
 @inject ThemeService themeService
 @inject LogSettingsService logSettingsService
+@inject IAppLogger appLogger
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -408,6 +409,7 @@
                 logoFileBytes = null;
                 logoFile = null;
                 snackbar.Add(@languageContainer.Keys["CompanyLogoUploaded"], Severity.Info);
+                await appLogger.LogInformationAsync("Logo aziendale caricato", new LogContext { EmployeeId = employee?.Id });
             }
 
             await dbDependency.GetDataAccessCompanySettings().UpsertAsync(settings, new SearcherCompanySettings { Id = settings.Id });
@@ -416,10 +418,12 @@
             logSettingsService.SetLogLevel(settings.LogLevel);
 
             snackbar.Add(@languageContainer.Keys["CompanySettingsSaved"], Severity.Success);
+            await appLogger.LogInformationAsync("Impostazioni aziendali salvate", new LogContext { EmployeeId = employee?.Id, AdditionalInfo = $"LogLevel: {settings.LogLevel}" });
         }
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore salvataggio impostazioni aziendali", new LogContext { EmployeeId = employee?.Id }, ex);
         }
         finally
         {

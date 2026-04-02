@@ -8,6 +8,7 @@
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
 @inject IWebHostEnvironment webHostEnvironment
+@inject IAppLogger appLogger
 
 <PageTitle>@languageContainer.Keys["ApplicationName"]</PageTitle>
 
@@ -121,6 +122,7 @@
             if (String.IsNullOrEmpty(userModel.Username?.Trim()) || String.IsNullOrEmpty(userModel.Password?.Trim()))
             {
                 snackbar.Add(@languageContainer.Keys["LoginIsNotValid"], Severity.Warning);
+                await appLogger.LogWarningAsync("Tentativo login con credenziali vuote");
             }
             else
             {
@@ -143,6 +145,7 @@
                         IsActive = true
                     };
                     await dataAccessEmployee.InsertAsync(newManager);
+                    await appLogger.LogInformationAsync("Primo utente creato come Manager", new LogContext { EmployeeId = newManager.Id, EmployeeName = newManager.Username });
 
                     await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, newManager);
                     snackbar.Add(@languageContainer.Keys["LoginIsValid"], Severity.Success);
@@ -159,17 +162,19 @@
                 if (user == null || user.Count == 0)
                 {
                     snackbar.Add(@languageContainer.Keys["LoginIsNotValid"], Severity.Warning);
+                    await appLogger.LogWarningAsync("Credenziali non valide", new LogContext { AdditionalInfo = userModel.Username });
                     return;
                 }
 
                 if(user.First().EmployeeRole == EmployeeRole.None)
                 {
                     snackbar.Add(@languageContainer.Keys["LoginIsNotValidUserDisabled"], Severity.Warning);
+                    await appLogger.LogWarningAsync("Account disabilitato", new LogContext { AdditionalInfo = userModel.Username });
                     return;
                 }
 
                 await Utility.SaveCurrentLoggedEmployee(protectedLocalStorage, user.First());
-
+                await appLogger.LogInformationAsync("Login effettuato", new LogContext { EmployeeId = user.First().Id, EmployeeName = $"{user.First().Name} {user.First().Surname}" });
 
                 snackbar.Add(@languageContainer.Keys["LoginIsValid"], Severity.Success);
                 navigationManager.NavigateTo($"/dashboard");
@@ -177,6 +182,7 @@
         }catch(Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore durante il login", new LogContext { AdditionalInfo = userModel.Username }, ex);
         }   
           
     }

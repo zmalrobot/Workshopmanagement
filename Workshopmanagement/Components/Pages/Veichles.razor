@@ -6,6 +6,7 @@
 @inject ILanguageContainerService languageContainer
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -233,10 +234,12 @@
                 item.Id = Guid.NewGuid().ToString();
                 item.InsertDate = Utility.ItalianNow;
                 await dbDependency.GetDataAccessVeichle().InsertAsync(item);
+                await appLogger.LogInformationAsync("Veicolo creato", new LogContext { VeichleId = item.Id, VeichleLicensePlate = item.LicensePlate, CustomerId = selectedCustomers.Id });
             }
             else
             {
                 await dbDependency.GetDataAccessVeichle().UpdateAsync(item);
+                await appLogger.LogInformationAsync("Veicolo aggiornato", new LogContext { VeichleId = item.Id, VeichleLicensePlate = item.LicensePlate });
             }
 
             await GetVeichle();
@@ -246,6 +249,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore salvataggio veicolo", new LogContext { VeichleId = item.Id }, ex);
         }
         processing = false;
     }
@@ -265,9 +269,11 @@
             if (!canBeDeleted)
             {
                 snackbar.Add(@languageContainer.Keys["DeletionWarningIsInUse"], Severity.Warning);
+                await appLogger.LogWarningAsync("Cancellazione veicolo bloccata: ha dati collegati", new LogContext { VeichleId = item.Id, VeichleLicensePlate = item.LicensePlate });
                 return;
             }
             await dbDependency.GetDataAccessVeichle().DeleteAsync(item.Id);
+            await appLogger.LogInformationAsync("Veicolo eliminato", new LogContext { VeichleId = item.Id, VeichleLicensePlate = item.LicensePlate });
 
             await GetVeichle();
 
@@ -276,6 +282,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore cancellazione veicolo", new LogContext { VeichleId = item.Id }, ex);
         }
         processing = false;
     }

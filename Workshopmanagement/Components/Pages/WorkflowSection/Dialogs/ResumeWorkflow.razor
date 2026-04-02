@@ -6,6 +6,7 @@
 @inject IDialogService dialogService
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudDialog Style="min-width: min(95vw, 820px);">
     <TitleContent>
@@ -372,6 +373,7 @@
                 {
                     await GoToNextStep(nextTask, repeat);
                     snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSkpipped"], Severity.Warning);
+                    await appLogger.LogInformationAsync("Step saltato", new LogContext { EmployeeId = Dataset.employee?.Id, EmployeeName = $"{Dataset.employee?.Name} {Dataset.employee?.Surname}", CustomerId = Dataset.customer?.Id, CustomerName = $"{Dataset.customer?.Name} {Dataset.customer?.Surname}", VeichleId = Dataset.veichle?.Id, VeichleLicensePlate = Dataset.veichle?.LicensePlate, WorkflowId = Dataset.workflow?.Id, WorkflowName = Dataset.workflow?.Title, WorkflowTaskId = Dataset.workflowTask?.Id, WorkflowTaskName = Dataset.workflowTask?.Title, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId });
                 }
                 else // Closed — always close dialog regardless of repeat
                 {
@@ -380,9 +382,13 @@
                         message = $"{message} {languageContainer.Keys["ResumeWorkflowGotoNextStepCompleted"]}: {nextTask.Title}";
 
                     snackbar.Add(message, Severity.Success);
+                    await appLogger.LogInformationAsync("Step chiuso", new LogContext { EmployeeId = Dataset.employee?.Id, EmployeeName = $"{Dataset.employee?.Name} {Dataset.employee?.Surname}", CustomerId = Dataset.customer?.Id, CustomerName = $"{Dataset.customer?.Name} {Dataset.customer?.Surname}", VeichleId = Dataset.veichle?.Id, VeichleLicensePlate = Dataset.veichle?.LicensePlate, WorkflowId = Dataset.workflow?.Id, WorkflowName = Dataset.workflow?.Title, WorkflowTaskId = Dataset.workflowTask?.Id, WorkflowTaskName = Dataset.workflowTask?.Title, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId });
 
                     if (String.IsNullOrEmpty(nextTask.Id))
+                    {
                         snackbar.Add(languageContainer.Keys["ResumeWorkflowCompleted"], Severity.Info);
+                        await appLogger.LogInformationAsync("Workflow completato", new LogContext { EmployeeId = Dataset.employee?.Id, EmployeeName = $"{Dataset.employee?.Name} {Dataset.employee?.Surname}", CustomerId = Dataset.customer?.Id, CustomerName = $"{Dataset.customer?.Name} {Dataset.customer?.Surname}", VeichleId = Dataset.veichle?.Id, VeichleLicensePlate = Dataset.veichle?.LicensePlate, WorkflowId = Dataset.workflow?.Id, WorkflowName = Dataset.workflow?.Title, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId });
+                    }
 
                     MudDialog.Close(DialogResult.Ok(true));
                     return;
@@ -393,11 +399,13 @@
                 if (Dataset.workflowExecution.IsCompleted && !Dataset.workflowTask.IsFinalTask)
                     await EnsureNextStepExecution();
                 snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"], Severity.Info);
+                await appLogger.LogInformationAsync("Step salvato (in corso)", new LogContext { EmployeeId = Dataset.employee?.Id, EmployeeName = $"{Dataset.employee?.Name} {Dataset.employee?.Surname}", CustomerId = Dataset.customer?.Id, CustomerName = $"{Dataset.customer?.Name} {Dataset.customer?.Surname}", VeichleId = Dataset.veichle?.Id, VeichleLicensePlate = Dataset.veichle?.LicensePlate, WorkflowId = Dataset.workflow?.Id, WorkflowName = Dataset.workflow?.Title, WorkflowTaskId = Dataset.workflowTask?.Id, WorkflowTaskName = Dataset.workflowTask?.Title, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId });
             }
 
         }catch(Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore conferma step workflow", new LogContext { EmployeeId = Dataset.employee?.Id, VeichleId = Dataset.veichle?.Id, WorkflowId = Dataset.workflow?.Id, WorkflowTaskId = Dataset.workflowTask?.Id, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId }, ex);
         }
         finally
         {
@@ -462,10 +470,12 @@
             }                 
 
             Dataset.workflowExecution.Images.Add(img); //Aggiungo le nuove caricate
+            await appLogger.LogInformationAsync("Immagine caricata", new LogContext { VeichleId = Dataset.veichle?.Id, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId, AdditionalInfo = file.Name });
 
         }catch(Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore upload immagine", new LogContext { VeichleId = Dataset.veichle?.Id, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId }, ex);
         }
         finally
         {
@@ -481,22 +491,27 @@
         if (workflowExecutionStatus == WorkflowExecutionStatus.Skipped)
             return true;
 
+        var ctx = new LogContext { EmployeeId = Dataset.employee.Id, VeichleId = Dataset.veichle.Id, WorkflowId = Dataset.workflow.Id, WorkflowTaskId = Dataset.workflowTask.Id, WorkflowExecutionId = Dataset.workflowExecution.WorkflowExecutionSeriesId };
+
         Dataset.workflowExecution.Titile = Dataset.workflowExecution.Titile?.Trim();
         Dataset.workflowExecution.Note = Dataset.workflowExecution.Note?.Trim();
 
         if (String.IsNullOrEmpty(Dataset.workflowExecution.Titile))
         {
             snackbar.Add(@languageContainer.Keys["StepTitleError"], Severity.Warning);
+            _ = appLogger.LogWarningAsync("Validazione fallita: titolo step mancante", ctx);
             isValid = false;
         }
         if (Dataset.workflowTask.UserMustUpdateVeichleKm && Dataset.workflowExecution.KmPost == null)
         {
             snackbar.Add(@languageContainer.Keys["StepVeichleKmError"], Severity.Warning);
+            _ = appLogger.LogWarningAsync("Validazione fallita: chilometraggio obbligatorio", ctx);
             isValid = false;
         }
         if (Dataset.workflowTask.UserMustUpdateFuelLevel && Dataset.workflowExecution.FuelPost == null)
         {
             snackbar.Add(@languageContainer.Keys["StepVeichleFuelError"], Severity.Warning);
+            _ = appLogger.LogWarningAsync("Validazione fallita: livello carburante obbligatorio", ctx);
             isValid = false;
         }
         // if (Dataset.workflowTask.AllowImageUpload && Dataset.workflowExecution.Images?.Count() == 0)

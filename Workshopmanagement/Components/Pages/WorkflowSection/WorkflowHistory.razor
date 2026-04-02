@@ -7,6 +7,7 @@
 @inject ILanguageContainerService languageContainer
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -560,6 +561,7 @@
             if (lastExec == null)
             {
                 snackbar.Add("Nessuna esecuzione trovata per questa serie.", Severity.Error);
+                await appLogger.LogErrorAsync("Riapertura workflow fallita: nessuna esecuzione trovata per la serie", new LogContext { WorkflowExecutionId = seriesId, VeichleId = veichle.Id });
                 return;
             }
 
@@ -582,6 +584,7 @@
 
             await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
             snackbar.Add(languageContainer.Keys["ReopenWorkflowSuccess"], Severity.Success);
+            await appLogger.LogInformationAsync("Workflow riaperto", new LogContext { WorkflowExecutionId = seriesId, VeichleId = item.Veichle.Id, WorkflowId = lastExec.WorkflowId, EmployeeId = employee?.Id });
 
             // Refresh data
             var previousVeichleId = veichle.Id;
@@ -592,6 +595,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore riapertura workflow", new LogContext { WorkflowExecutionId = item.WorkflowExecutionSeriesId }, ex);
         }
         finally
         {
@@ -637,11 +641,13 @@
             };
 
             var dialog = await dialogService.ShowAsync<ViewHistory>(@languageContainer.Keys["ResumingWorkflow"], parameters, dialogOptions);
+            await appLogger.LogInformationAsync("Report workflow visualizzato", new LogContext { WorkflowExecutionId = seriesId, VeichleId = item.Veichle.Id, WorkflowId = item.WorkflowId, EmployeeId = employee?.Id });
             await dialog.Result;
         }
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore visualizzazione report", new LogContext { WorkflowExecutionId = item.WorkflowExecutionSeriesId }, ex);
         }
         finally
         {

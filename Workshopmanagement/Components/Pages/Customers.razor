@@ -6,6 +6,7 @@
 @inject ILanguageContainerService languageContainer
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -232,6 +233,7 @@
             if (hasUsername != hasPassword)
             {
                 snackbar.Add(@languageContainer.Keys["CustomerUsernamePasswordRequired"], Severity.Warning);
+                await appLogger.LogWarningAsync("Validazione fallita: username e password devono essere entrambi presenti o assenti", new LogContext { CustomerId = item.Id, CustomerName = $"{item.Name} {item.Surname}" });
                 await GetCustomers();
                 return;
             }
@@ -241,10 +243,12 @@
                 item.Id = Guid.NewGuid().ToString();
                 item.InsertDate = Utility.ItalianNow;
                 await dbDependency.GetDataAccessCustomer().InsertAsync(item);
+                await appLogger.LogInformationAsync("Cliente creato", new LogContext { CustomerId = item.Id, CustomerName = $"{item.Name} {item.Surname}" });
             }
             else
             {              
                 await dbDependency.GetDataAccessCustomer().UpdateAsync(item);
+                await appLogger.LogInformationAsync("Cliente aggiornato", new LogContext { CustomerId = item.Id, CustomerName = $"{item.Name} {item.Surname}" });
             }
 
             Thread.Sleep(5000);
@@ -254,6 +258,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore salvataggio cliente", new LogContext { CustomerId = item.Id }, ex);
         }
         processing = false;
     }
@@ -280,11 +285,13 @@
                 if (!canBeDeleted)
                 {
                     snackbar.Add(@languageContainer.Keys["DeletionWarningIsInUse"], Severity.Warning);
+                    await appLogger.LogWarningAsync("Cancellazione cliente bloccata: ha dati collegati", new LogContext { CustomerId = item.Id, CustomerName = $"{item.Name} {item.Surname}" });
                     return;
                 }
             }
            
             await dbDependency.GetDataAccessCustomer().DeleteAsync(item.Id);
+            await appLogger.LogInformationAsync("Cliente eliminato", new LogContext { CustomerId = item.Id, CustomerName = $"{item.Name} {item.Surname}" });
 
             await GetCustomers();
             snackbar.Add(@languageContainer.Keys["DeleteOk"], Severity.Success);
@@ -292,6 +299,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore cancellazione cliente", new LogContext { CustomerId = item.Id }, ex);
         }
         processing = false;
     }

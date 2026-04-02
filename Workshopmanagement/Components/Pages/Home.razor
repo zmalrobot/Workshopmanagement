@@ -7,6 +7,7 @@
 @inject IDialogService dialogService
 @inject ProtectedLocalStorage protectedLocalStorage
 @inject NavigationManager navigationManager
+@inject IAppLogger appLogger
 
 <MudGrid>
     <MudItem xs="12">
@@ -482,6 +483,7 @@
             {
                 selectedResumeItem = bestItem;
                 dashboardExecutions = bestExecutions;
+                await appLogger.LogDebugAsync("Dashboard precaricata con workflow", new LogContext { WorkflowExecutionId = bestItem.Entry.WorkflowExecutionSeriesId, VeichleId = bestItem.Veichle.Id });
                 showStepTable = true;
                 await LoadDashboardTrackingState();
                 StateHasChanged();
@@ -492,9 +494,10 @@
                 StateHasChanged();
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             // Silently fail preload - user can still manually select
+            await appLogger.LogErrorAsync("Errore precaricamento workflow recente", null, ex);
         }
     }
 
@@ -521,10 +524,14 @@
             var dialog = await dialogService.ShowAsync<StartNewWorkflow>(@languageContainer.Keys["StartingNewWorkflow"], parameters, dialogOptions);
             var result = await dialog.Result;
 
+            if (!result?.Canceled ?? false)
+                await appLogger.LogInformationAsync("Nuovo workflow creato dalla dashboard", new LogContext { EmployeeId = employee?.Id });
+
         }
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore apertura dialogo nuovo workflow (dashboard)", new LogContext { EmployeeId = employee?.Id }, ex);
         }
         finally
         {
@@ -704,6 +711,7 @@
                     activeSession.EndTime = Utility.ItalianNow;
                 otherActive.IsActive = false;
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
+                await appLogger.LogWarningAsync("Tracciamento esistente fermato per avvio dashboard", new LogContext { WorkflowExecutionId = otherActive.WorkflowExecutionSeriesId, EmployeeId = employeeId });
             }
 
             // Start tracking
@@ -731,6 +739,7 @@
 
             isDashboardTrackingActive = true;
             snackbar.Add(languageContainer.Keys["TimeTrackingStarted"], Severity.Success);
+            await appLogger.LogInformationAsync("Tracciamento dashboard avviato", new LogContext { WorkflowExecutionId = seriesId, EmployeeId = employeeId });
 
             // Add employee to AssignedEmployeeIds on the current execution
             var startExecution = dashboardExecutions.FirstOrDefault(e => e.Id == selectedResumeItem.Entry.WorkflowExecutionId);
@@ -748,6 +757,7 @@
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore avvio tracciamento dashboard", new LogContext { EmployeeId = employee?.Id }, ex);
         }
     }
 
@@ -779,10 +789,12 @@
 
             StateHasChanged();
             snackbar.Add(languageContainer.Keys["TimeTrackingStopped"], Severity.Info);
+            await appLogger.LogInformationAsync("Tracciamento dashboard fermato", new LogContext { WorkflowExecutionId = dashboardTimeTracking.WorkflowExecutionSeriesId, EmployeeId = employee?.Id });
         }
         catch (Exception ex)
         {
             snackbar.Add(ex.Message, Severity.Error);
+            await appLogger.LogErrorAsync("Errore stop tracciamento dashboard", new LogContext { EmployeeId = employee?.Id }, ex);
         }
     }
 
