@@ -13,5 +13,6 @@ namespace Workshopmanagement.DatabaseManagment
         public DataAccessComponent GetDataAccessComponent();
         public DataAccessTimeTracking GetDataAccessTimeTracking();
         public DataAccessCompanySettings GetDataAccessCompanySettings();
+        public DataAccessAppLog GetDataAccessAppLog();
     }
 }

@@ -198,6 +198,26 @@ excecutionstatus_Todo: Da fare
 Ok: Ok
 RunningOut: In fase di esaurimento
 ToBeVerified: Da verificare
+AppLogs: Log applicazione
+AppLogsDesc: Visualizzazione e filtraggio dei log di sistema
+LogLevel: Livello di log
+LogLevelSetting: Impostazioni di log
+LogLevelSettingDesc: Imposta il livello minimo di log salvato nel database
+LogLevelDebug: "Debug — tutti i messaggi"
+LogLevelInformation: "Information — messaggi informativi e superiori"
+LogLevelWarning: "Warning — avvisi ed errori"
+LogLevelError: "Error — solo errori"
+LogTimestamp: Data/Ora
+LogMessage: Messaggio
+LogDetail: Dettaglio
+LogUser: Utente
+LogAll: Tutti
+LogDateFrom: Da data
+LogDateTo: A data
+LogException: Eccezione
+LogExecutionId: ID esecuzione
+LogAdditionalInfo: Informazioni aggiuntive
+NoResults: Nessun risultato trovato
 ToBeReplaced: Da sostituire
 Verified: Da verificare
 Replaced: Da rimpiazzare

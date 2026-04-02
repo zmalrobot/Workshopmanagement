@@ -21,6 +21,9 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         // Appearance
         public string? SelectedTheme { get; set; }
 
+        // Logging
+        public string LogLevel { get; set; } = "Information";
+
         // Working hours
         public TimeOnly MorningStart { get; set; } = new TimeOnly(9, 0);
         public TimeOnly MorningEnd { get; set; } = new TimeOnly(13, 0);

@@ -5,6 +5,8 @@ using System.Globalization;
 using System.Reflection;
 using Workshopmanagement.Components;
 using Workshopmanagement.DatabaseManagment;
+using Workshopmanagement.DatabaseManagment.DataObject;
+using Workshopmanagement.Utility;
 using Workshopmanagement.Utility.Themes;
 
 namespace Workshopmanagement
@@ -24,6 +26,8 @@ namespace Workshopmanagement
             builder.Services.AddScoped<IDbDependency, DbDependency>();
             builder.Services.AddScoped<ICamperTheme, VeniceCamperTheme>();
             builder.Services.AddSingleton<ThemeService>();
+            builder.Services.AddSingleton<LogSettingsService>();
+            builder.Services.AddScoped<IAppLogger, AppLogger>();
             builder.Services.AddMudServices();
             builder.Services.AddMudServices(config =>
             {
@@ -41,6 +45,21 @@ namespace Workshopmanagement
             //builder.WebHost.UseStaticWebAssets();
 
             var app = builder.Build();
+
+            // Initialize log level from CompanySettings at startup
+            using (var scope = app.Services.CreateScope())
+            {
+                try
+                {
+                    var db = scope.ServiceProvider.GetRequiredService<IDbDependency>();
+                    var logSettings = app.Services.GetRequiredService<LogSettingsService>();
+                    var settingsList = await db.GetDataAccessCompanySettings().FindAsync(new SearcherCompanySettings());
+                    var companySettings = settingsList.FirstOrDefault();
+                    if (companySettings != null)
+                        logSettings.SetLogLevel(companySettings.LogLevel);
+                }
+                catch { /* DB may not be available at first startup; default level (Information) will be used */ }
+            }
 
             // Ensure MongoDB indexes exist at startup
             await MongoDbIndexInitializer.EnsureIndexesAsync();

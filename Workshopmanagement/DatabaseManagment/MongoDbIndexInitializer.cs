@@ -18,6 +18,7 @@ namespace Workshopmanagement.DatabaseManagment
             await EnsureWorkflowExecutionIndexesAsync(db);
             await EnsureTimeTrackingIndexesAsync(db);
             await EnsureComponentIndexesAsync(db);
+            await EnsureAppLogIndexesAsync(db);
         }
 
         private static async Task EnsureCustomerIndexesAsync(IMongoDatabase db)
@@ -138,6 +139,37 @@ namespace Workshopmanagement.DatabaseManagment
             await col.Indexes.CreateOneAsync(new CreateIndexModel<Component>(
                 Builders<Component>.IndexKeys.Ascending(x => x.Name),
                 new CreateIndexOptions { Name = "idx_components_name" }));
+        }
+
+        private static async Task EnsureAppLogIndexesAsync(IMongoDatabase db)
+        {
+            var col = db.GetCollection<AppLog>(DataAccessAppLog.CollectionName);
+
+            await col.Indexes.CreateOneAsync(new CreateIndexModel<AppLog>(
+                Builders<AppLog>.IndexKeys.Descending(x => x.Timestamp),
+                new CreateIndexOptions { Name = "idx_applogs_timestamp" }));
+
+            await col.Indexes.CreateOneAsync(new CreateIndexModel<AppLog>(
+                Builders<AppLog>.IndexKeys.Ascending(x => x.Level),
+                new CreateIndexOptions { Name = "idx_applogs_level" }));
+
+            await col.Indexes.CreateOneAsync(new CreateIndexModel<AppLog>(
+                Builders<AppLog>.IndexKeys
+                    .Descending(x => x.Timestamp)
+                    .Ascending(x => x.Level),
+                new CreateIndexOptions { Name = "idx_applogs_timestamp_level" }));
+
+            await col.Indexes.CreateOneAsync(new CreateIndexModel<AppLog>(
+                Builders<AppLog>.IndexKeys.Ascending(x => x.EmployeeId),
+                new CreateIndexOptions { Sparse = true, Name = "idx_applogs_employeeid" }));
+
+            await col.Indexes.CreateOneAsync(new CreateIndexModel<AppLog>(
+                Builders<AppLog>.IndexKeys.Ascending(x => x.CustomerId),
+                new CreateIndexOptions { Sparse = true, Name = "idx_applogs_customerid" }));
+
+            await col.Indexes.CreateOneAsync(new CreateIndexModel<AppLog>(
+                Builders<AppLog>.IndexKeys.Ascending(x => x.VeichleId),
+                new CreateIndexOptions { Sparse = true, Name = "idx_applogs_veicleid" }));
         }
     }
 }

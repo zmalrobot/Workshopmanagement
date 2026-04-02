@@ -8,6 +8,7 @@
 @inject NavigationManager navigationManager
 @inject IWebHostEnvironment webHostEnvironment
 @inject ThemeService themeService
+@inject LogSettingsService logSettingsService
 
 <MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
     <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
@@ -253,6 +254,34 @@
                 @languageContainer.Keys["Save"]
             </MudButton>
         </MudItem>
+
+        @* ─── Log Level card ─────────────────────────────────────────────── *@
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.BugReport" Class="mr-2" />
+                            @languageContainer.Keys["LogLevelSetting"]
+                        </MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@languageContainer.Keys["LogLevelSettingDesc"]</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSelect T="string"
+                               @bind-Value="settings.LogLevel"
+                               Label="@languageContainer.Keys["LogLevel"]"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense"
+                               FullWidth="true">
+                        <MudSelectItem Value="Debug">@languageContainer.Keys["LogLevelDebug"]</MudSelectItem>
+                        <MudSelectItem Value="Information">@languageContainer.Keys["LogLevelInformation"]</MudSelectItem>
+                        <MudSelectItem Value="Warning">@languageContainer.Keys["LogLevelWarning"]</MudSelectItem>
+                        <MudSelectItem Value="Error">@languageContainer.Keys["LogLevelError"]</MudSelectItem>
+                    </MudSelect>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
     }
 </MudGrid>
 
@@ -382,6 +411,9 @@
             }
 
             await dbDependency.GetDataAccessCompanySettings().UpsertAsync(settings, new SearcherCompanySettings { Id = settings.Id });
+
+            // Update in-memory log level immediately
+            logSettingsService.SetLogLevel(settings.LogLevel);
 
             snackbar.Add(@languageContainer.Keys["CompanySettingsSaved"], Severity.Success);
         }

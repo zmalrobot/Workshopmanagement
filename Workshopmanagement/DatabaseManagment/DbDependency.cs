@@ -15,6 +15,7 @@ namespace Workshopmanagement.DatabaseManagment
         private DataAccessComponent dataAccessComponent;
         private DataAccessTimeTracking dataAccessTimeTracking;
         private DataAccessCompanySettings dataAccessCompanySettings;
+        private DataAccessAppLog dataAccessAppLog;
 
         public DbDependency()
         {
@@ -28,6 +29,7 @@ namespace Workshopmanagement.DatabaseManagment
             dataAccessComponent = new DataAccessComponent(db);
             dataAccessTimeTracking = new DataAccessTimeTracking(db);
             dataAccessCompanySettings = new DataAccessCompanySettings(db);
+            dataAccessAppLog = new DataAccessAppLog(db);
         }
 
         public DataAccessCustomer GetDataAccessCustomer()
@@ -73,6 +75,11 @@ namespace Workshopmanagement.DatabaseManagment
         public DataAccessCompanySettings GetDataAccessCompanySettings()
         {
             return dataAccessCompanySettings;
+        }
+
+        public DataAccessAppLog GetDataAccessAppLog()
+        {
+            return dataAccessAppLog;
         }
 
     }

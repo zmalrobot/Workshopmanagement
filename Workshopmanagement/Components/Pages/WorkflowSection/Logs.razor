@@ -1,0 +1,355 @@
+@page "/logs"
+
+@using MudBlazor
+@using Workshopmanagement.DatabaseManagment.DataObject
+@using Workshopmanagement.Utility
+
+@inject IDbDependency dbDependency
+@inject ISnackbar snackbar
+@inject ILanguageContainerService languageContainer
+@inject IDialogService dialogService
+@inject ProtectedLocalStorage protectedLocalStorage
+@inject NavigationManager navigationManager
+
+<MudContainer Class="loading-overlay" Style="@(processing ? "display:flex;" : "display:none;")">
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+</MudContainer>
+
+<MudGrid>
+    <MudItem xs="12">
+        <MudText Typo="Typo.h5">@languageContainer.Keys["AppLogs"]</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">@languageContainer.Keys["AppLogsDesc"]</MudText>
+    </MudItem>
+
+    @if (!processing)
+    {
+        @* ─── Filter toolbar ─────────────────────────────────────────────────── *@
+        <MudItem xs="12">
+            <MudCard Elevation="2">
+                <MudCardContent>
+                    <MudGrid Spacing="2">
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudSelect T="string"
+                                       @bind-Value="searcher.Level"
+                                       Label="@languageContainer.Keys["LogLevel"]"
+                                       Clearable="true"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       FullWidth="true">
+                                <MudSelectItem Value="@((string?)null)">@languageContainer.Keys["LogAll"]</MudSelectItem>
+                                <MudSelectItem Value="@("Debug")">@languageContainer.Keys["LogLevelDebug"]</MudSelectItem>
+                                <MudSelectItem Value="@("Information")">@languageContainer.Keys["LogLevelInformation"]</MudSelectItem>
+                                <MudSelectItem Value="@("Warning")">@languageContainer.Keys["LogLevelWarning"]</MudSelectItem>
+                                <MudSelectItem Value="@("Error")">@languageContainer.Keys["LogLevelError"]</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudSelect T="string"
+                                       @bind-Value="searcher.EmployeeId"
+                                       Label="@languageContainer.Keys["Employee"]"
+                                       Clearable="true"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense"
+                                       FullWidth="true">
+                                <MudSelectItem Value="@((string?)null)">@languageContainer.Keys["LogAll"]</MudSelectItem>
+                                @foreach (var emp in employees)
+                                {
+                                    <MudSelectItem Value="@emp.Id">@emp.Name @emp.Surname</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="2">
+                            <MudDatePicker Label="@languageContainer.Keys["LogDateFrom"]"
+                                           Date="@searcher.DateFrom"
+                                           DateChanged="@(d => searcher.DateFrom = d)"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           DateFormat="dd/MM/yyyy"
+                                           FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="2">
+                            <MudDatePicker Label="@languageContainer.Keys["LogDateTo"]"
+                                           Date="@searcher.DateTo"
+                                           DateChanged="@(d => searcher.DateTo = d)"
+                                           Variant="Variant.Outlined"
+                                           Margin="Margin.Dense"
+                                           DateFormat="dd/MM/yyyy"
+                                           FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="2" Class="d-flex align-end">
+                            <MudButton FullWidth="true"
+                                       Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Search"
+                                       OnClick="SearchLogs">
+                                @languageContainer.Keys["Search"]
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        @* ─── Data grid ────────────────────────────────────────────────────────── *@
+        <MudItem xs="12">
+            <MudDataGrid @ref="dataGrid"
+                         T="AppLog"
+                         ServerData="LoadLogsAsync"
+                         Dense="true"
+                         Hover="true"
+                         RowsPerPage="20"
+                         FixedHeader="true"
+                         Height="calc(100vh - 380px)">
+                <Columns>
+                    <PropertyColumn Property="x => x.Timestamp" Title="@languageContainer.Keys["LogTimestamp"]"
+                                    CellStyleFunc="@(_ => "white-space:nowrap; width:155px;")"
+                                    Format="dd/MM/yyyy HH:mm:ss" />
+                    <TemplateColumn Title="@languageContainer.Keys["LogLevel"]" CellStyle="width:110px;">
+                        <CellTemplate>
+                            @{
+                                var (color, icon) = GetLevelStyle(context.Item.Level);
+                            }
+                            <MudChip T="string" Color="@color" Size="Size.Small" Icon="@icon">@context.Item.Level</MudChip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <TemplateColumn Title="@languageContainer.Keys["LogMessage"]">
+                        <CellTemplate>
+                            @{
+                                var msg = context.Item.Message;
+                                var truncated = msg.Length > 90 ? msg[..90] + "…" : msg;
+                            }
+                            <MudTooltip Text="@msg" Placement="Placement.Bottom">
+                                <MudText Typo="Typo.body2">@truncated</MudText>
+                            </MudTooltip>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.EmployeeName" Title="@languageContainer.Keys["LogUser"]"
+                                    CellStyle="width:130px;" />
+                    <TemplateColumn Title="" CellStyle="width:56px;">
+                        <CellTemplate>
+                            <MudIconButton Icon="@Icons.Material.Filled.Info"
+                                           Size="Size.Small"
+                                           Color="Color.Info"
+                                           OnClick="@(() => OpenDetail(context.Item))"
+                                           Title="@languageContainer.Keys["LogDetail"]" />
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="AppLog" PageSizeOptions="@(new int[] { 10, 20, 50 })" />
+                </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="py-4">@languageContainer.Keys["NoResults"]</MudText>
+                </NoRecordsContent>
+            </MudDataGrid>
+        </MudItem>
+    }
+</MudGrid>
+
+@* ─── Detail dialog ──────────────────────────────────────────────────────── *@
+@if (detailLog is not null)
+{
+    <MudDialog @bind-IsVisible="detailVisible" Options="@(new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true })">
+        <TitleContent>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                @{
+                    var (dc, di) = GetLevelStyle(detailLog.Level);
+                }
+                <MudChip T="string" Color="@dc" Icon="@di" Size="Size.Small">@detailLog.Level</MudChip>
+                <MudText Typo="Typo.h6">@languageContainer.Keys["LogDetail"]</MudText>
+            </MudStack>
+        </TitleContent>
+        <DialogContent>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LogTimestamp"]</MudText>
+                    <MudText Typo="Typo.body2">@detailLog.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</MudText>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LogMessage"]</MudText>
+                    <MudText Typo="Typo.body2" Style="word-break:break-word;">@detailLog.Message</MudText>
+                </MudItem>
+
+                @if (!string.IsNullOrEmpty(detailLog.Exception))
+                {
+                    <MudItem xs="12">
+                        <MudText Typo="Typo.caption" Color="Color.Error">@languageContainer.Keys["LogException"]</MudText>
+                        <MudPaper Elevation="0" Class="pa-2" Style="background:rgba(0,0,0,0.15); border-radius:4px; overflow:auto; max-height:200px;">
+                            <pre style="font-size:0.72rem; margin:0; white-space:pre-wrap;">@detailLog.Exception</pre>
+                        </MudPaper>
+                    </MudItem>
+                }
+
+                @if (!string.IsNullOrEmpty(detailLog.EmployeeId))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.subtitle2">@languageContainer.Keys["Employee"]</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["Name"]</MudText>
+                        <MudText Typo="Typo.body2">@detailLog.EmployeeName</MudText>
+                    </MudItem>
+                }
+
+                @if (!string.IsNullOrEmpty(detailLog.CustomerId))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.subtitle2">@languageContainer.Keys["Customers"]</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["Name"]</MudText>
+                        <MudText Typo="Typo.body2">@detailLog.CustomerName</MudText>
+                    </MudItem>
+                }
+
+                @if (!string.IsNullOrEmpty(detailLog.VeichleId))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.subtitle2">@languageContainer.Keys["Veichles"]</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LicensePlate"]</MudText>
+                        <MudText Typo="Typo.body2">@detailLog.VeichleLicensePlate</MudText>
+                    </MudItem>
+                }
+
+                @if (!string.IsNullOrEmpty(detailLog.WorkflowId))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.subtitle2">@languageContainer.Keys["WorkflowManamgent"]</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["Name"]</MudText>
+                        <MudText Typo="Typo.body2">@detailLog.WorkflowName</MudText>
+                    </MudItem>
+                    @if (!string.IsNullOrEmpty(detailLog.WorkflowExecutionId))
+                    {
+                        <MudItem xs="12" sm="6">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LogExecutionId"]</MudText>
+                            <MudText Typo="Typo.body2" Style="font-size:0.75rem;">@detailLog.WorkflowExecutionId</MudText>
+                        </MudItem>
+                    }
+                }
+
+                @if (!string.IsNullOrEmpty(detailLog.WorkflowTaskId))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.subtitle2">@languageContainer.Keys["Workflowstasks"]</MudText>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["Name"]</MudText>
+                        <MudText Typo="Typo.body2">@detailLog.WorkflowTaskName</MudText>
+                    </MudItem>
+                }
+
+                @if (!string.IsNullOrEmpty(detailLog.AdditionalInfo))
+                {
+                    <MudItem xs="12">
+                        <MudDivider Class="my-1" />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LogAdditionalInfo"]</MudText>
+                        <MudText Typo="Typo.body2" Style="word-break:break-word;">@detailLog.AdditionalInfo</MudText>
+                    </MudItem>
+                }
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@(() => detailVisible = false)" Variant="Variant.Outlined">@languageContainer.Keys["Cancel"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    private Employee? employee;
+    private bool processing = true;
+    private List<Employee> employees = new();
+    private SearcherAppLog searcher = new();
+    private MudDataGrid<AppLog>? dataGrid;
+    private AppLog? detailLog;
+    private bool detailVisible;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        try
+        {
+            if (firstRender)
+            {
+                processing = true;
+                var isUserLogged = await Utility.Utility.IsUserLoggedInAsync(protectedLocalStorage);
+                if (!isUserLogged)
+                {
+                    snackbar.Add(@languageContainer.Keys["LoginExpiredError"], Severity.Warning);
+                    navigationManager.NavigateTo("login");
+                    return;
+                }
+                employee = await Utility.Utility.GetCurrentLoggedEmployee(protectedLocalStorage);
+                if (employee?.EmployeeRole != EmployeeRole.Manager)
+                {
+                    snackbar.Add(@languageContainer.Keys["UserNotAutorized"], Severity.Warning);
+                    navigationManager.NavigateTo("dashboard");
+                    return;
+                }
+
+                employees = await dbDependency.GetDataAccessEmployee().FindAsync(new SearcherEmployee { IsActive = true });
+            }
+        }
+        catch (Exception ex)
+        {
+            if (!ex.Message.Contains("was not found in the key ring"))
+                snackbar.Add(ex.Message, Severity.Error);
+        }
+        finally
+        {
+            if (processing)
+            {
+                processing = false;
+                if (firstRender) StateHasChanged();
+            }
+        }
+    }
+
+    private async Task<GridData<AppLog>> LoadLogsAsync(GridState<AppLog> state)
+    {
+        try
+        {
+            var da = dbDependency.GetDataAccessAppLog();
+            var page = state.Page;
+            var pageSize = state.PageSize;
+
+            var (results, _) = await da.FindPagedSortedAsync(searcher, page, pageSize);
+            var total = await da.CountAsync(searcher);
+
+            return new GridData<AppLog> { Items = results, TotalItems = (int)total };
+        }
+        catch (Exception ex)
+        {
+            snackbar.Add(ex.Message, Severity.Error);
+            return new GridData<AppLog> { Items = new List<AppLog>(), TotalItems = 0 };
+        }
+    }
+
+    private async Task SearchLogs()
+    {
+        if (dataGrid is not null)
+            await dataGrid.ReloadServerData();
+    }
+
+    private void OpenDetail(AppLog log)
+    {
+        detailLog = log;
+        detailVisible = true;
+    }
+
+    private (Color color, string icon) GetLevelStyle(string level) => level switch
+    {
+        "Debug"       => (Color.Default,  Icons.Material.Filled.BugReport),
+        "Information" => (Color.Info,     Icons.Material.Filled.Info),
+        "Warning"     => (Color.Warning,  Icons.Material.Filled.Warning),
+        "Error"       => (Color.Error,    Icons.Material.Filled.Error),
+        _             => (Color.Default,  Icons.Material.Filled.Circle)
+    };
+}
