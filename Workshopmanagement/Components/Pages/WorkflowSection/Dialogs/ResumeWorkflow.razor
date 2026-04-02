@@ -398,7 +398,7 @@
             {
                 snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"], Severity.Info);
                 await appLogger.LogInformationAsync("Step salvato (in corso)", new LogContext { EmployeeId = Dataset.employee?.Id, EmployeeName = $"{Dataset.employee?.Name} {Dataset.employee?.Surname}", CustomerId = Dataset.customer?.Id, CustomerName = $"{Dataset.customer?.Name} {Dataset.customer?.Surname}", VeichleId = Dataset.veichle?.Id, VeichleLicensePlate = Dataset.veichle?.LicensePlate, WorkflowId = Dataset.workflow?.Id, WorkflowName = Dataset.workflow?.Title, WorkflowTaskId = Dataset.workflowTask?.Id, WorkflowTaskName = Dataset.workflowTask?.Title, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId });
-                if (Dataset.workflowExecution.IsCompleted)
+                if (Dataset.workflowExecution?.IsCompleted == true)
                 {
                     MudDialog.Close(DialogResult.Ok(true));
                     return;
