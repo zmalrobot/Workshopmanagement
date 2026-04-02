@@ -284,6 +284,7 @@ namespace Workshopmanagement.Utility
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationNameTitle}}", languageContainer.Keys["ReportCompanyInformationNameTitle"]);
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationVatNumberTitle}}", languageContainer.Keys["ReportCompanyInformationVatNumberTitle"]);
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationPhoneTitle}}", languageContainer.Keys["ReportCompanyInformationPhoneTitle"]);
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationAddressTitle}}", languageContainer.Keys["ReportCompanyInformationAddressTitle"]);
             #endregion
 
             #region Contents
@@ -305,9 +306,18 @@ namespace Workshopmanagement.Utility
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationName}}", companySettings.CompanyName ?? "");
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationVatNumber}}", companySettings.CompanyVatNumber ?? "");
             reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationPhone}}", companySettings.CompanyPhone ?? "");
+            var companyAddrStreetParts = new[] { companySettings.AddressStreet, companySettings.AddressNumber, companySettings.AddressInterior }
+                .Where(s => !string.IsNullOrWhiteSpace(s));
+            var companyAddrStreet = string.Join(", ", companyAddrStreetParts);
+            var companyAddrProvinceFmt = string.IsNullOrWhiteSpace(companySettings.AddressProvince) ? "" : $"({companySettings.AddressProvince})";
+            var companyAddrCity = string.Join(" ", new[] { companySettings.AddressCAP, companySettings.AddressCity, companyAddrProvinceFmt }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            var companyAddrFull = string.Join(" - ", new[] { companyAddrStreet, companyAddrCity }.Where(s => !string.IsNullOrWhiteSpace(s)));
+            reportTemplate = reportTemplate.Replace("{{ReportCompanyInformationAddress}}", companyAddrFull);
             if (string.IsNullOrWhiteSpace(companySettings.CompanyName) &&
                 string.IsNullOrWhiteSpace(companySettings.CompanyVatNumber) &&
                 string.IsNullOrWhiteSpace(companySettings.CompanyPhone) &&
+                string.IsNullOrWhiteSpace(companySettings.AddressStreet) &&
+                string.IsNullOrWhiteSpace(companySettings.AddressCity) &&
                 !companySettings.HasLogo)
             {
                 reportTemplate = RemoveElement(reportTemplate, "CompanyInformationSection");

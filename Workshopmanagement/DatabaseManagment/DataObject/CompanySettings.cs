@@ -16,6 +16,12 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string? CompanyName { get; set; }
         public string? CompanyVatNumber { get; set; }
         public string? CompanyPhone { get; set; }
+        public string? AddressStreet { get; set; }
+        public string? AddressNumber { get; set; }
+        public string? AddressInterior { get; set; }
+        public string? AddressCAP { get; set; }
+        public string? AddressCity { get; set; }
+        public string? AddressProvince { get; set; }
         public bool HasLogo { get; set; }
 
         // Appearance
@@ -35,6 +41,12 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
             CompanyName      = CompanyName?.Trim();
             CompanyVatNumber = CompanyVatNumber?.Trim();
             CompanyPhone     = CompanyPhone?.Trim();
+            AddressStreet    = AddressStreet?.Trim();
+            AddressNumber    = AddressNumber?.Trim();
+            AddressInterior  = AddressInterior?.Trim();
+            AddressCAP       = AddressCAP?.Trim();
+            AddressCity      = AddressCity?.Trim();
+            AddressProvince  = AddressProvince?.Trim();
         }
     }
 }

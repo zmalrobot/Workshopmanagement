@@ -57,6 +57,48 @@
                                           Margin="Margin.Dense"
                                           FullWidth="true" />
                         </MudItem>
+                        <MudItem xs="9">
+                            <MudTextField @bind-Value="settings.AddressStreet"
+                                          Label="@languageContainer.Keys["AddressStreet"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField @bind-Value="settings.AddressNumber"
+                                          Label="@languageContainer.Keys["AddressNumber"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="settings.AddressInterior"
+                                          Label="@languageContainer.Keys["AddressInterior"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField @bind-Value="settings.AddressCAP"
+                                          Label="@languageContainer.Keys["AddressCAP"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudTextField @bind-Value="settings.AddressCity"
+                                          Label="@languageContainer.Keys["AddressCity"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="3">
+                            <MudTextField @bind-Value="settings.AddressProvince"
+                                          Label="@languageContainer.Keys["AddressProvince"]"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          FullWidth="true" />
+                        </MudItem>
                         <MudItem xs="12">
                             <MudText Typo="Typo.body2" Class="mb-2">@languageContainer.Keys["CompanyLogo"]</MudText>
                             @if (logoPreviewBase64 != null)
