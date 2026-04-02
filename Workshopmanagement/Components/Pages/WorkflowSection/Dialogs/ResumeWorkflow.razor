@@ -237,13 +237,6 @@
         {
             <MudStack Row="true" Justify="Justify.SpaceBetween" Class="w-100 px-1" Wrap="Wrap.Wrap" Spacing="2">
                 <MudStack Row="true" Spacing="1">
-                    @if (Dataset.editOneExecution == false && Dataset.workflowTask.CanBeSkipped)
-                    {
-                        <MudButton OnClick="(() => Confirm(WorkflowExecutionStatus.Skipped))"
-                                   Variant="Variant.Outlined" StartIcon="@Icons.Material.Filled.AirlineStops" Color="Color.Warning" Disabled="@IsEditDisabled()">
-                            @languageContainer.Keys["ResumeWorkflowSkipStep"]
-                        </MudButton>
-                    }
                 </MudStack>
                 <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd">
                     @if (Dataset.workflowExecution.IsCompleted)
@@ -374,28 +367,26 @@
             await UpdateVeichle(nextTask, executionStatus, repeat);
 
             if (executionStatus == WorkflowExecutionStatus.Closed || executionStatus == WorkflowExecutionStatus.Skipped)
-            {           
-                await GoToNextStep(nextTask, repeat);
-
+            {
                 if (executionStatus == WorkflowExecutionStatus.Skipped)
+                {
+                    await GoToNextStep(nextTask, repeat);
                     snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSkpipped"], Severity.Warning);
-                else
+                }
+                else // Closed — always close dialog regardless of repeat
                 {
                     var message = languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"];
                     if (!nextTask.IsFinalTask)
-                        if (repeat)
-                            message = $"{message} {languageContainer.Keys["ResumeWorkflowGotoNextStepCompletedRepeat"]}: {nextTask.Title}";                           
-                        else
-                            message = $"{message} {languageContainer.Keys["ResumeWorkflowGotoNextStepCompleted"]}: {nextTask.Title}";
+                        message = $"{message} {languageContainer.Keys["ResumeWorkflowGotoNextStepCompleted"]}: {nextTask.Title}";
 
                     snackbar.Add(message, Severity.Success);
-                }
 
-                if (String.IsNullOrEmpty(nextTask.Id))
-                {
-                    snackbar.Add(languageContainer.Keys["ResumeWorkflowCompleted"], Severity.Info);
-                }
+                    if (String.IsNullOrEmpty(nextTask.Id))
+                        snackbar.Add(languageContainer.Keys["ResumeWorkflowCompleted"], Severity.Info);
 
+                    MudDialog.Close(DialogResult.Ok(true));
+                    return;
+                }
             }
             else if (executionStatus == WorkflowExecutionStatus.InProgress)
             {

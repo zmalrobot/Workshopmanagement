@@ -3,11 +3,11 @@ using MudBlazor;
 namespace Workshopmanagement.Utility.Themes
 {
     /// <summary>
-    /// IBM Carbon Design System — enterprise-grade, crisp, high-contrast.
+    /// Forge — enterprise-grade, crisp, high-contrast.
     /// Zero glass effects. Sharp corners, strong focus rings, pure data-first aesthetic.
-    /// Primary: IBM Blue 60 (#0F62FE), Font: IBM Plex Sans.
+    /// Primary: Deep Blue (#0F62FE), Font: IBM Plex Sans.
     /// </summary>
-    public static class CarbonTheme
+    public static class ForgeTheme
     {
         public static MudTheme Dark => new MudTheme
         {

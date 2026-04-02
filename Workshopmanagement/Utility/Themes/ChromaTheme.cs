@@ -3,10 +3,10 @@ using MudBlazor;
 namespace Workshopmanagement.Utility.Themes
 {
     /// <summary>
-    /// Material Design 3 Expressive — rich tonal palette, very rounded corners,
-    /// Google Sans typography, dynamic colour tinting.
+    /// Chroma — rich tonal palette, very rounded corners,
+    /// expressive typography, dynamic colour tinting.
     /// </summary>
-    public static class MaterialExpressiveTheme
+    public static class ChromaTheme
     {
         public static MudTheme Dark => new MudTheme
         {

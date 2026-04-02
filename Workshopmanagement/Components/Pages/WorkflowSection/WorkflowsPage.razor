@@ -648,7 +648,7 @@
             if (String.IsNullOrEmpty(seriesId) || String.IsNullOrEmpty(currentWorkflowId))
                 return 0;
 
-            var totalTasks = workflowTasks.Where(x => x.WorkflowId.Equals(currentWorkflowId) && x.TaskOrder >= 0).Count();
+            var totalTasks = workflowTasks.Where(x => x.WorkflowId.Equals(currentWorkflowId) && x.TaskOrder >= 0 && !x.CanBeSkipped).Count();
             if (totalTasks == 0)
                 totalTasks = 1;
 

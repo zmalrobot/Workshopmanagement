@@ -68,7 +68,7 @@
                 if (!string.IsNullOrEmpty(saved) && Enum.TryParse<ThemeVariant>(saved, out var variant))
                     themeService.InitializeFromDb(variant);
                 else
-                    themeService.InitializeFromDb(ThemeVariant.MaterialExpressiveDark);
+                    themeService.InitializeFromDb(ThemeVariant.ChromaDark);
                 StateHasChanged();
             }
             catch { /* keep default theme */ }

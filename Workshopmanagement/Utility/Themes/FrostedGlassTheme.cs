@@ -3,10 +3,10 @@ using MudBlazor;
 namespace Workshopmanagement.Utility.Themes
 {
     /// <summary>
-    /// Apple Liquid Glass — translucent frosted-glass surfaces, iOS/macOS vibrancy,
-    /// system blue/green accents, tight letter-spacing, SF Pro-inspired typography.
+    /// Frosted Glass — translucent frosted-glass surfaces, vibrancy,
+    /// system blue/green accents, tight letter-spacing, clean typography.
     /// </summary>
-    public static class AppleLiquidGlassTheme
+    public static class FrostedGlassTheme
     {
         public static MudTheme Dark => new MudTheme
         {

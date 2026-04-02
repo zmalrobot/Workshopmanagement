@@ -2,14 +2,14 @@ namespace Workshopmanagement.Utility.Themes
 {
     public enum ThemeVariant
     {
-        MaterialExpressiveDark,
-        MaterialExpressiveLight,
-        AppleLiquidGlassDark,
-        AppleLiquidGlassLight,
-        FluentDesignDark,
-        FluentDesignLight,
-        CarbonDark,
-        CarbonLight,
+        ChromaDark,
+        ChromaLight,
+        FrostedGlassDark,
+        FrostedGlassLight,
+        AcrylicDark,
+        AcrylicLight,
+        ForgeDark,
+        ForgeLight,
         RetroWebDark,
         RetroWebLight
     }

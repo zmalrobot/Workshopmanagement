@@ -3,10 +3,10 @@ using MudBlazor;
 namespace Workshopmanagement.Utility.Themes
 {
     /// <summary>
-    /// Microsoft Fluent Design System — Windows 11 Mica/Acrylic material,
-    /// Windows accent blue, Segoe UI Variable, subtle shadows, slightly rounded corners.
+    /// Acrylic — layered acrylic/mica material,
+    /// cool accent blue, system UI variable fonts, subtle shadows, slightly rounded corners.
     /// </summary>
-    public static class FluentDesignTheme
+    public static class AcrylicTheme
     {
         public static MudTheme Dark => new MudTheme
         {

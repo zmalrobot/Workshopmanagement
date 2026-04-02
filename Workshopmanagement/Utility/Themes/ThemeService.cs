@@ -9,7 +9,7 @@ namespace Workshopmanagement.Utility.Themes
     /// </summary>
     public class ThemeService
     {
-        private ThemeVariant _currentVariant = ThemeVariant.MaterialExpressiveDark;
+        private ThemeVariant _currentVariant = ThemeVariant.ChromaDark;
         private readonly object _lock = new();
 
         public ThemeVariant CurrentVariant
@@ -47,43 +47,43 @@ namespace Workshopmanagement.Utility.Themes
 
         public MudTheme GetMudTheme() => _currentVariant switch
         {
-            ThemeVariant.MaterialExpressiveDark  => MaterialExpressiveTheme.Dark,
-            ThemeVariant.MaterialExpressiveLight => MaterialExpressiveTheme.Light,
-            ThemeVariant.AppleLiquidGlassDark    => AppleLiquidGlassTheme.Dark,
-            ThemeVariant.AppleLiquidGlassLight   => AppleLiquidGlassTheme.Light,
-            ThemeVariant.FluentDesignDark        => FluentDesignTheme.Dark,
-            ThemeVariant.FluentDesignLight       => FluentDesignTheme.Light,
-            ThemeVariant.CarbonDark              => CarbonTheme.Dark,
-            ThemeVariant.CarbonLight             => CarbonTheme.Light,
-            ThemeVariant.RetroWebDark            => RetroWebTheme.Dark,
-            ThemeVariant.RetroWebLight           => RetroWebTheme.Light,
-            _                                    => MaterialExpressiveTheme.Dark
+            ThemeVariant.ChromaDark         => ChromaTheme.Dark,
+            ThemeVariant.ChromaLight        => ChromaTheme.Light,
+            ThemeVariant.FrostedGlassDark   => FrostedGlassTheme.Dark,
+            ThemeVariant.FrostedGlassLight  => FrostedGlassTheme.Light,
+            ThemeVariant.AcrylicDark        => AcrylicTheme.Dark,
+            ThemeVariant.AcrylicLight       => AcrylicTheme.Light,
+            ThemeVariant.ForgeDark          => ForgeTheme.Dark,
+            ThemeVariant.ForgeLight         => ForgeTheme.Light,
+            ThemeVariant.RetroWebDark       => RetroWebTheme.Dark,
+            ThemeVariant.RetroWebLight      => RetroWebTheme.Light,
+            _                               => ChromaTheme.Dark
         };
 
         public bool IsDarkMode => _currentVariant switch
         {
-            ThemeVariant.MaterialExpressiveLight => false,
-            ThemeVariant.AppleLiquidGlassLight   => false,
-            ThemeVariant.FluentDesignLight       => false,
-            ThemeVariant.CarbonLight             => false,
-            ThemeVariant.RetroWebLight           => false,
-            _                                    => true
+            ThemeVariant.ChromaLight        => false,
+            ThemeVariant.FrostedGlassLight  => false,
+            ThemeVariant.AcrylicLight       => false,
+            ThemeVariant.ForgeLight         => false,
+            ThemeVariant.RetroWebLight      => false,
+            _                               => true
         };
 
         /// <summary>CSS class applied to the root wrapper div in MainLayout for extra visual effects.</summary>
         public string GetBodyClass() => _currentVariant switch
         {
-            ThemeVariant.MaterialExpressiveDark  => "theme-md3-dark",
-            ThemeVariant.MaterialExpressiveLight => "theme-md3-light",
-            ThemeVariant.AppleLiquidGlassDark    => "theme-glass-dark",
-            ThemeVariant.AppleLiquidGlassLight   => "theme-glass-light",
-            ThemeVariant.FluentDesignDark        => "theme-fluent-dark",
-            ThemeVariant.FluentDesignLight       => "theme-fluent-light",
-            ThemeVariant.CarbonDark              => "theme-carbon-dark",
-            ThemeVariant.CarbonLight             => "theme-carbon-light",
-            ThemeVariant.RetroWebDark            => "theme-retro-dark",
-            ThemeVariant.RetroWebLight           => "theme-retro-light",
-            _                                    => "theme-md3-dark"
+            ThemeVariant.ChromaDark         => "theme-md3-dark",
+            ThemeVariant.ChromaLight        => "theme-md3-light",
+            ThemeVariant.FrostedGlassDark   => "theme-glass-dark",
+            ThemeVariant.FrostedGlassLight  => "theme-glass-light",
+            ThemeVariant.AcrylicDark        => "theme-fluent-dark",
+            ThemeVariant.AcrylicLight       => "theme-fluent-light",
+            ThemeVariant.ForgeDark          => "theme-carbon-dark",
+            ThemeVariant.ForgeLight         => "theme-carbon-light",
+            ThemeVariant.RetroWebDark       => "theme-retro-dark",
+            ThemeVariant.RetroWebLight      => "theme-retro-light",
+            _                               => "theme-md3-dark"
         };
     }
 }
