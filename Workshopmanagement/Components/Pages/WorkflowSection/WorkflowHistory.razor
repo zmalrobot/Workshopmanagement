@@ -580,7 +580,7 @@
             });
 
             veichle.HasOpenWorkflow = true;
-            veichle.UpdateDate = DateTime.Now;
+            veichle.UpdateDate = DateTime.UtcNow;
 
             await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
             snackbar.Add(languageContainer.Keys["ReopenWorkflowSuccess"], Severity.Success);
@@ -629,7 +629,7 @@
                     {
                         worflowReport = report,
                         worflowTitle = wf.Title ?? "",
-                        worflowDate = elements.Min(x => x.OpenAt) ?? DateTime.Now,
+                        worflowDate = elements.Min(x => x.OpenAt) ?? DateTime.UtcNow,
                         worflowStyle = $"color: {color};",
                         images = elements?.SelectMany(x => x.Images ?? new List<Image>()).ToList() ?? new List<Image>(),
                         components = elements?.SelectMany(x => x.Components ?? new List<Component>()).ToList() ?? new List<Component>(),

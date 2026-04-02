@@ -227,12 +227,12 @@
         processing = true;
         try
         {
-            item.UpdateDate = Utility.ItalianNow;
+            item.UpdateDate = DateTime.UtcNow;
 
             if (String.IsNullOrEmpty(item.Id))
             {
                 item.Id = Guid.NewGuid().ToString();
-                item.InsertDate = Utility.ItalianNow;
+                item.InsertDate = DateTime.UtcNow;
                 await dbDependency.GetDataAccessVeichle().InsertAsync(item);
                 await appLogger.LogInformationAsync("Veicolo creato", new LogContext { VeichleId = item.Id, VeichleLicensePlate = item.LicensePlate, CustomerId = selectedCustomers.Id });
             }

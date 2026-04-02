@@ -417,7 +417,7 @@
     private bool isDisclamerAleadySign = false;
     private string signImage = "";
     private DateTime? startDate = DateTime.Today;
-    private TimeSpan? startTime = new TimeSpan(DateTime.Now.Hour, DateTime.Now.Minute, 0);
+    private TimeSpan? startTime = new TimeSpan(Utility.ItalianNow.Hour, Utility.ItalianNow.Minute, 0);
     private int? estimatedHours;
     private int? estimatedMinutes;
 
@@ -486,9 +486,9 @@
                    workflowExecution.WorkflowId = selectedWorkflow.Id;
                    workflowExecution.WorkflowTaskId = Dataset.workflowTasks?.Where(x => x.WorkflowId.Equals(selectedWorkflow.Id))?.OrderBy(x => x.TaskOrder)?.FirstOrDefault(x => x.IsSignTask == true)?.Id ?? "";
                    workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Closed;
-                   workflowExecution.OpenAt = DateTime.Now;
-                   workflowExecution.ClosedAt = DateTime.Now;
-                   workflowExecution.DisclamierSignDate = DateTime.Now;
+                   workflowExecution.OpenAt = DateTime.UtcNow;
+                   workflowExecution.ClosedAt = DateTime.UtcNow;
+                   workflowExecution.DisclamierSignDate = DateTime.UtcNow;
                    workflowExecution.DisclamierSign = signImage;
                    workflowExecution.IsDisclamerAleadySign = isDisclamerAleadySign;
                    workflowExecution.Titile = languageContainer.Keys["WorkflowTaskSign"];
@@ -526,7 +526,7 @@
                     workflowExecution.WorkflowId = selectedWorkflow.Id;
                     workflowExecution.WorkflowTaskId = currentTask.Id;
                     workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
-                    workflowExecution.OpenAt = DateTime.Now;
+                    workflowExecution.OpenAt = DateTime.UtcNow;
                     workflowExecution.Titile = $"{currentTask.Title} - {currentTask.Subtitle}";
                     workflowExecution.StartDate = startDate?.Date.Add(startTime ?? TimeSpan.Zero);
                     workflowExecution.EstimatedHours = estimatedHours;

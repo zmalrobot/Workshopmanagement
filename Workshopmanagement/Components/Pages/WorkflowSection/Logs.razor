@@ -160,7 +160,7 @@
             <MudGrid Spacing="2">
                 <MudItem xs="12" sm="6">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LogTimestamp"]</MudText>
-                    <MudText Typo="Typo.body2">@detailLog.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</MudText>
+                    <MudText Typo="Typo.body2">@TimeZoneInfo.ConvertTime(detailLog.Timestamp, Utility.ItalianTimeZone).ToString("dd/MM/yyyy HH:mm:ss")</MudText>
                 </MudItem>
                 <MudItem xs="12">
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@languageContainer.Keys["LogMessage"]</MudText>

@@ -7,7 +7,7 @@ namespace Workshopmanagement.Utility.DialogParameter
         public string worflowReport = "";
         public string worflowTitle = "";
         public string worflowStyle = "";
-        public DateTime worflowDate = DateTime.Now;
+        public DateTime worflowDate = DateTime.UtcNow;
         public List<Image> images = new List<Image>();
         public List<Component> components = new List<Component>();
         public bool useComponents = false;

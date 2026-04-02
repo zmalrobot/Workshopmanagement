@@ -29,8 +29,13 @@ namespace Workshopmanagement.Utility
 
         public static int[] pageSizeOptions = [10, 20, 50];
 
-        private static readonly TimeZoneInfo _italianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Rome");
-        public static DateTime ItalianNow => TimeZoneInfo.ConvertTime(DateTime.UtcNow, _italianTimeZone);
+        public static readonly TimeZoneInfo ItalianTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Rome");
+        private static readonly TimeZoneInfo _italianTimeZone = ItalianTimeZone;
+        /// <summary>Current time in Italy (display/UI use only — do NOT store in DB).</summary>
+        public static DateTime ItalianNow => TimeZoneInfo.ConvertTime(DateTime.UtcNow, ItalianTimeZone);
+        /// <summary>Converts an Italian-local DateTime (from UI / date pickers) to UTC for DB storage / queries.</summary>
+        public static DateTime ToUtc(DateTime italianLocalDateTime)
+            => TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(italianLocalDateTime, DateTimeKind.Unspecified), ItalianTimeZone);
 
         public enum DateFormat
         {
@@ -126,22 +131,27 @@ namespace Workshopmanagement.Utility
 
             var culture = CultureInfo.GetCultureInfo(cultureS);
 
+            // UTC values coming from DB must be displayed in Italian time
+            var dt = dateTime.Value.Kind == DateTimeKind.Utc
+                ? TimeZoneInfo.ConvertTime(dateTime.Value, ItalianTimeZone)
+                : dateTime.Value;
+
             switch (dateFormat)
             {
                 case DateFormat.OnlyDate:
-                    return dateTime.Value.ToString("d", culture); //6/15/2008
+                    return dt.ToString("d", culture);
                 case DateFormat.OnlyDateExtended:
-                    return dateTime.Value.ToString("D", culture); //Sunday, June 15, 2008
+                    return dt.ToString("D", culture);
                 case DateFormat.FullDate:
-                    return dateTime.Value.ToString("G", culture); //6/15/2008 9:15:07 PM
+                    return dt.ToString("G", culture);
                 case DateFormat.FullDateExtended:
-                    return dateTime.Value.ToString("F", culture); //Sunday, June 15, 2008 9:15:07 PM
+                    return dt.ToString("F", culture);
                 case DateFormat.OnlyTime:
-                    return dateTime.Value.ToString("t", culture); //9:15 PM
+                    return dt.ToString("t", culture);
                 case DateFormat.OnlyTimeExtended:
-                    return dateTime.Value.ToString("T", culture); //9:15:07 PM
+                    return dt.ToString("T", culture);
                 default:
-                    return dateTime.Value.ToString(culture);
+                    return dt.ToString(culture);
             }
         }
 

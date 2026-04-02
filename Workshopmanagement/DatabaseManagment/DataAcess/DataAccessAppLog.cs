@@ -1,6 +1,7 @@
 using MongoDB.Driver;
 using Workshopmanagement.DatabaseManagment.DataAcess.BaseComponents;
 using Workshopmanagement.DatabaseManagment.DataObject;
+using Workshopmanagement.Utility;
 
 namespace Workshopmanagement.DatabaseManagment.DataAcess
 {
@@ -27,10 +28,10 @@ namespace Workshopmanagement.DatabaseManagment.DataAcess
                 filter &= builder.Eq(x => x.Level, searcher.Level);
 
             if (searcher.DateFrom.HasValue)
-                filter &= builder.Gte(x => x.Timestamp, searcher.DateFrom.Value);
+                filter &= builder.Gte(x => x.Timestamp, Utility.ToUtc(searcher.DateFrom.Value));
 
             if (searcher.DateTo.HasValue)
-                filter &= builder.Lte(x => x.Timestamp, searcher.DateTo.Value.AddDays(1).AddTicks(-1));
+                filter &= builder.Lte(x => x.Timestamp, Utility.ToUtc(searcher.DateTo.Value.AddDays(1).AddTicks(-1)));
 
             if (!string.IsNullOrWhiteSpace(searcher.EmployeeId))
                 filter &= builder.Eq(x => x.EmployeeId, searcher.EmployeeId);

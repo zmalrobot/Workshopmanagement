@@ -413,7 +413,7 @@
             foreach (var session in tracking.Sessions)
             {
                 var start = session.StartTime;
-                var end = session.EndTime ?? Utility.ItalianNow;
+                var end = session.EndTime ?? DateTime.UtcNow;
                 var isActive = !session.EndTime.HasValue;
 
                 var plate2 = veichle?.LicensePlate ?? "";
@@ -595,7 +595,7 @@
         int slotCount = lastSlot - firstSlot;
         double totalH = slotCount * slotH;
         var ic = System.Globalization.CultureInfo.InvariantCulture;
-        DateTime now = DateTime.Now;
+        DateTime now = Utility.ItalianNow;
         int seq = 0;
 
         // ── outer scroll container ──────────────────────────────────────

@@ -446,7 +446,7 @@
                 // Stop the other active tracking
                 var activeSession = otherActive.Sessions.LastOrDefault();
                 if (activeSession != null && activeSession.EndTime == null)
-                    activeSession.EndTime = DateTime.Now;
+                    activeSession.EndTime = DateTime.UtcNow;
                 otherActive.IsActive = false;
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
                 await appLogger.LogWarningAsync("Tracciamento precedente fermato per conflitto", new LogContext { WorkflowExecutionId = otherActive.WorkflowExecutionSeriesId, EmployeeId = employeeId });
@@ -456,7 +456,7 @@
             if (trackingsBySeriesId.TryGetValue(seriesId, out var existing))
             {
                 existing.IsActive = true;
-                existing.Sessions.Add(new TimeTrackingSession { StartTime = DateTime.Now });
+                existing.Sessions.Add(new TimeTrackingSession { StartTime = DateTime.UtcNow });
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(existing);
             }
             else
@@ -469,7 +469,7 @@
                     IsActive = true,
                     Sessions = new List<TimeTrackingSession>
                     {
-                        new TimeTrackingSession { StartTime = DateTime.Now }
+                        new TimeTrackingSession { StartTime = DateTime.UtcNow }
                     }
                 };
                 await dbDependency.GetDataAccessTimeTracking().InsertAsync(newTracking);
@@ -508,7 +508,7 @@
 
             var activeSession = tracking.Sessions.LastOrDefault();
             if (activeSession != null && activeSession.EndTime == null)
-                activeSession.EndTime = DateTime.Now;
+                activeSession.EndTime = DateTime.UtcNow;
 
             tracking.IsActive = false;
             await dbDependency.GetDataAccessTimeTracking().UpdateAsync(tracking);
@@ -823,7 +823,7 @@
                 veichle.WorkflowExecutionsCompleted = new List<string>();
             veichle.WorkflowExecutionsCompleted.Add(entry.WorkflowExecutionSeriesId);
 
-            veichle.UpdateDate = DateTime.Now;
+            veichle.UpdateDate = DateTime.UtcNow;
             await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
 
             snackbar.Add(languageContainer.Keys["CloseWorkflowSuccess"], Severity.Success);
@@ -969,7 +969,7 @@
                 WorkflowTaskId = step.Task.Id,
                 WorkflowExecutionSeriesId = step.Execution.WorkflowExecutionSeriesId,
                 ExecutionStatus = WorkflowExecutionStatus.Todo,
-                OpenAt = DateTime.Now,
+                OpenAt = DateTime.UtcNow,
                 StartDate = step.Execution.StartDate,
                 EstimatedHours = step.Execution.EstimatedHours,
                 EstimatedMinutes = step.Execution.EstimatedMinutes,

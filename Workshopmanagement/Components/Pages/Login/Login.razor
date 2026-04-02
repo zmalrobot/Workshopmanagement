@@ -140,8 +140,8 @@
                         Name = userModel.Username.Trim(),
                         Surname = string.Empty,
                         EmployeeRole = EmployeeRole.Manager,
-                        InsertDate = DateTime.Now,
-                        UpdateDate = DateTime.Now,
+                        InsertDate = DateTime.UtcNow,
+                        UpdateDate = DateTime.UtcNow,
                         IsActive = true
                     };
                     await dataAccessEmployee.InsertAsync(newManager);

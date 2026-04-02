@@ -222,7 +222,7 @@
         processing = true;
         try
         {
-            item.UpdateDate = DateTime.Now;
+            item.UpdateDate = DateTime.UtcNow;
 
             if(string.IsNullOrEmpty(item.Color))
                 item.Color = "#FFFFFF";
@@ -230,7 +230,7 @@
             if (String.IsNullOrEmpty(item.Id))
             {
                 item.Id = Guid.NewGuid().ToString();
-                item.InsertDate = DateTime.Now;
+                item.InsertDate = DateTime.UtcNow;
                 await dbDependency.GetDataAccessWorkflow().InsertAsync(item);
 
                 @if (item.RequireDisclaimer)

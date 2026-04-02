@@ -226,7 +226,7 @@
         try
         {
 
-            item.UpdateDate = Utility.ItalianNow;
+            item.UpdateDate = DateTime.UtcNow;
 
             var hasUsername = !string.IsNullOrWhiteSpace(item.Username);
             var hasPassword = !string.IsNullOrWhiteSpace(item.Password);
@@ -241,7 +241,7 @@
             if (String.IsNullOrEmpty(item.Id))
             {
                 item.Id = Guid.NewGuid().ToString();
-                item.InsertDate = Utility.ItalianNow;
+                item.InsertDate = DateTime.UtcNow;
                 await dbDependency.GetDataAccessCustomer().InsertAsync(item);
                 await appLogger.LogInformationAsync("Cliente creato", new LogContext { CustomerId = item.Id, CustomerName = $"{item.Name} {item.Surname}" });
             }

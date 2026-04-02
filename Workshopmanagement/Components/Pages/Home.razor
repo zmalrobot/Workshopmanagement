@@ -708,7 +708,7 @@
                 // Stop the other active tracking
                 var activeSession = otherActive.Sessions.LastOrDefault();
                 if (activeSession != null && activeSession.EndTime == null)
-                    activeSession.EndTime = Utility.ItalianNow;
+                    activeSession.EndTime = DateTime.UtcNow;
                 otherActive.IsActive = false;
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(otherActive);
                 await appLogger.LogWarningAsync("Tracciamento esistente fermato per avvio dashboard", new LogContext { WorkflowExecutionId = otherActive.WorkflowExecutionSeriesId, EmployeeId = employeeId });
@@ -718,7 +718,7 @@
             if (dashboardTimeTracking != null)
             {
                 dashboardTimeTracking.IsActive = true;
-                dashboardTimeTracking.Sessions.Add(new TimeTrackingSession { StartTime = Utility.ItalianNow });
+                dashboardTimeTracking.Sessions.Add(new TimeTrackingSession { StartTime = DateTime.UtcNow });
                 await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
             }
             else
@@ -731,7 +731,7 @@
                     IsActive = true,
                     Sessions = new List<TimeTrackingSession>
                     {
-                        new TimeTrackingSession { StartTime = Utility.ItalianNow }
+                        new TimeTrackingSession { StartTime = DateTime.UtcNow }
                     }
                 };
                 await dbDependency.GetDataAccessTimeTracking().InsertAsync(dashboardTimeTracking);
@@ -769,7 +769,7 @@
 
             var activeSession = dashboardTimeTracking.Sessions.LastOrDefault();
             if (activeSession != null && activeSession.EndTime == null)
-                activeSession.EndTime = Utility.ItalianNow;
+                activeSession.EndTime = DateTime.UtcNow;
 
             dashboardTimeTracking.IsActive = false;
             await dbDependency.GetDataAccessTimeTracking().UpdateAsync(dashboardTimeTracking);
@@ -987,7 +987,7 @@
                 WorkflowTaskId = step.Task.Id,
                 WorkflowExecutionSeriesId = step.Execution.WorkflowExecutionSeriesId,
                 ExecutionStatus = WorkflowExecutionStatus.Todo,
-                OpenAt = DateTime.Now,
+                OpenAt = DateTime.UtcNow,
                 StartDate = step.Execution.StartDate,
                 EstimatedHours = step.Execution.EstimatedHours,
                 EstimatedMinutes = step.Execution.EstimatedMinutes,

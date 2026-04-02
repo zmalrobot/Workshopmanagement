@@ -537,14 +537,14 @@
         Dataset.workflowExecution.ExecutionStatus = executionStatus;
 
         if (executionStatus == WorkflowExecutionStatus.Closed)
-            Dataset.workflowExecution.ClosedAt = DateTime.Now;
+            Dataset.workflowExecution.ClosedAt = DateTime.UtcNow;
 
         if (Dataset.workflowExecution.IsCompleted)
-            Dataset.workflowExecution.ClosedAt ??= DateTime.Now;
+            Dataset.workflowExecution.ClosedAt ??= DateTime.UtcNow;
 
         if (isNew)
         {
-            Dataset.workflowExecution.OpenAt = DateTime.Now;
+            Dataset.workflowExecution.OpenAt = DateTime.UtcNow;
             await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(Dataset.workflowExecution);
         }
         else
@@ -572,7 +572,7 @@
             }
         }
 
-        veichle.UpdateDate = DateTime.Now;
+        veichle.UpdateDate = DateTime.UtcNow;
         await dbDependency.GetDataAccessVeichle().UpdateAsync(veichle);
     }
 
@@ -613,7 +613,7 @@
             Dataset.workflowExecution.WorkflowTaskId = nextTask.Id;
             Dataset.workflowExecution.WorkflowExecutionSeriesId = workflowExecutionSeriesId;
             Dataset.workflowExecution.ExecutionStatus = WorkflowExecutionStatus.Todo;
-            Dataset.workflowExecution.OpenAt = DateTime.Now;
+            Dataset.workflowExecution.OpenAt = DateTime.UtcNow;
             Dataset.workflowExecution.Titile = $"{nextTask.Title} - {nextTask.Subtitle}";
 
             var nextWf = await dbDependency.GetDataAccessWorkflowTask().FindByIdAsync(nextTask.Id);

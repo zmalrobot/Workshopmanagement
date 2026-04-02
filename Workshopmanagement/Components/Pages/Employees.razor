@@ -212,13 +212,13 @@
         processing = true;
         try
         {
-            item.UpdateDate = Utility.ItalianNow;
+            item.UpdateDate = DateTime.UtcNow;
             item.Password = item.Password.Trim();
 
             if (String.IsNullOrEmpty(item.Id))
             {
                 item.Id = Guid.NewGuid().ToString();
-                item.InsertDate = Utility.ItalianNow;
+                item.InsertDate = DateTime.UtcNow;
                 item.Password = Cypher.Encrypt(item.Password);
                 await dbDependency.GetDataAccessEmployee().InsertAsync(item);
                 await appLogger.LogInformationAsync("Dipendente creato", new LogContext { EmployeeId = item.Id, EmployeeName = $"{item.Name} {item.Surname}" });
