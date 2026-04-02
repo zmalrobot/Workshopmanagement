@@ -396,10 +396,13 @@
             }
             else if (executionStatus == WorkflowExecutionStatus.InProgress)
             {
-                if (Dataset.workflowExecution.IsCompleted && !Dataset.workflowTask.IsFinalTask)
-                    await EnsureNextStepExecution();
                 snackbar.Add(languageContainer.Keys["ResumeWorkflowGotoNextStepSaved"], Severity.Info);
                 await appLogger.LogInformationAsync("Step salvato (in corso)", new LogContext { EmployeeId = Dataset.employee?.Id, EmployeeName = $"{Dataset.employee?.Name} {Dataset.employee?.Surname}", CustomerId = Dataset.customer?.Id, CustomerName = $"{Dataset.customer?.Name} {Dataset.customer?.Surname}", VeichleId = Dataset.veichle?.Id, VeichleLicensePlate = Dataset.veichle?.LicensePlate, WorkflowId = Dataset.workflow?.Id, WorkflowName = Dataset.workflow?.Title, WorkflowTaskId = Dataset.workflowTask?.Id, WorkflowTaskName = Dataset.workflowTask?.Title, WorkflowExecutionId = Dataset.workflowExecution?.WorkflowExecutionSeriesId });
+                if (Dataset.workflowExecution.IsCompleted)
+                {
+                    MudDialog.Close(DialogResult.Ok(true));
+                    return;
+                }
             }
 
         }catch(Exception ex)
@@ -411,31 +414,6 @@
         {
             processing = false;
         }
-    }
-
-    private async Task EnsureNextStepExecution()
-    {
-        var nextTask = await GetNextStep(WorkflowExecutionStatus.Closed, false);
-        if (string.IsNullOrEmpty(nextTask.Id)) return;
-
-        var seriesId = Dataset.workflowExecution.WorkflowExecutionSeriesId;
-        var existing = await dbDependency.GetDataAccessWorkflowExecution().FindAsync(
-            new SearcherWorkflowExecution { WorkflowExecutionSeriesId = seriesId });
-        if (existing.Any(e => e.WorkflowTaskId == nextTask.Id)) return;
-
-        var nextExecution = new WorkflowExecution
-        {
-            Id = Guid.NewGuid().ToString(),
-            EmployeeId = Dataset.employee.Id,
-            UserId = Dataset.customer.Id,
-            VeichleId = Dataset.veichle.Id,
-            WorkflowId = Dataset.workflow.Id,
-            WorkflowTaskId = nextTask.Id,
-            WorkflowExecutionSeriesId = seriesId,
-            ExecutionStatus = WorkflowExecutionStatus.Todo,
-            OpenAt = Utility.ItalianNow
-        };
-        await dbDependency.GetDataAccessWorkflowExecution().InsertAsync(nextExecution);
     }
 
     private void Cancel()
