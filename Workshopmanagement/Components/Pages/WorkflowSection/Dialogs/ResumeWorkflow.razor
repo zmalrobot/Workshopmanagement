@@ -527,11 +527,6 @@
         Dataset.workflowExecution.UserId = Dataset.customer.Id;
         Dataset.workflowExecution.VeichleId = Dataset.veichle.Id;
         Dataset.workflowExecution.WorkflowId = Dataset.workflow.Id;
-        if (!isNew)
-        {
-            var currentEntry = Dataset.veichle?.OpenWorkflows?.FirstOrDefault(w => w.WorkflowId == Dataset.workflow.Id);
-            Dataset.workflowExecution.WorkflowTaskId = currentEntry?.WorkflowTaskId ?? "";
-        }
         Dataset.workflowExecution.FuelPre = Dataset.veichle?.ActualFuelPercentage;
         Dataset.workflowExecution.KmPre = Dataset.veichle?.ActualKilometers;
         Dataset.workflowExecution.ExecutionStatus = executionStatus;
