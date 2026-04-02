@@ -521,10 +521,13 @@ GuideConfigWorkflows3: "In \"Gestione task\" puoi creare e modificare i singoli 
 GuideConfigComponentsTitle: Magazzino ricambi
 GuideConfigComponents1: "In \"Gestione magazzino\" inserisci i materiali e i ricambi disponibili in officina."
 ImportExport: Importazione / Esportazione
-ImportExportDesc: Importa ed esporta clienti, veicoli e componenti tramite file CSV
+ImportExportDesc: Importa ed esporta clienti, veicoli, componenti, flussi e task tramite file CSV
 ImportExportCustomers: Clienti
 ImportExportVeichles: Veicoli
 ImportExportComponents: Componenti
+ImportExportWorkflows: Flussi di lavoro
+ImportExportWorkflowTasks: Task dei flussi
+ImportWorkflowTaskWorkflowNotFound: "Task riga {0}: flusso di lavoro non trovato (WorkflowTitle)"
 ImportExportExportAll: Esporta tutto
 ImportExportDownloadTemplate: Scarica template vuoto
 ImportExportImportFile: Importa da CSV

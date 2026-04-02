@@ -162,6 +162,105 @@
                 </MudCardContent>
             </MudCard>
         </MudItem>
+
+        @* ── DIVIDER ─────────────────────────────────────────────────────── *@
+        <MudItem xs="12">
+            <MudDivider Class="my-4" />
+        </MudItem>
+
+        @* ── WORKFLOWS ───────────────────────────────────────────────────── *@
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Class="mr-2" />
+                            @languageContainer.Keys["ImportExportWorkflows"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="ExportWorkflowsAsync">
+                            @languageContainer.Keys["ImportExportExportAll"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="DownloadWorkflowTemplateAsync">
+                            @languageContainer.Keys["ImportExportDownloadTemplate"]
+                        </MudButton>
+                        <MudFileUpload T="IBrowserFile"
+                                       Accept=".csv"
+                                       FilesChanged="@(async f => await ImportWorkflowsAsync(f))">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Info"
+                                           StartIcon="@Icons.Material.Filled.Upload"
+                                           FullWidth="true"
+                                           Disabled="processing">
+                                    @languageContainer.Keys["ImportExportImportFile"]
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        @* ── WORKFLOW TASKS ──────────────────────────────────────────────── *@
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="3">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="@Icons.Material.Filled.PlaylistAddCheck" Class="mr-2" />
+                            @languageContainer.Keys["ImportExportWorkflowTasks"]
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Download"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="ExportWorkflowTasksAsync">
+                            @languageContainer.Keys["ImportExportExportAll"]
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Secondary"
+                                   StartIcon="@Icons.Material.Filled.FileDownload"
+                                   FullWidth="true"
+                                   Disabled="processing"
+                                   OnClick="DownloadWorkflowTaskTemplateAsync">
+                            @languageContainer.Keys["ImportExportDownloadTemplate"]
+                        </MudButton>
+                        <MudFileUpload T="IBrowserFile"
+                                       Accept=".csv"
+                                       FilesChanged="@(async f => await ImportWorkflowTasksAsync(f))">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Info"
+                                           StartIcon="@Icons.Material.Filled.Upload"
+                                           FullWidth="true"
+                                           Disabled="processing">
+                                    @languageContainer.Keys["ImportExportImportFile"]
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
     }
 </MudGrid>
 
@@ -186,6 +285,19 @@
     private static readonly string[] ComponentHeaders = new[]
     {
         "Barcode","Name","Quanity","PricePerQuantity","UnitOfMeasurement"
+    };
+
+    private static readonly string[] WorkflowHeaders = new[]
+    {
+        "Title","Subtitle","Description","Note",
+        "RequireDisclaimer","Color","IsActive","EstimatedHours","EstimatedMinutes"
+    };
+
+    private static readonly string[] WorkflowTaskHeaders = new[]
+    {
+        "WorkflowTitle","TaskOrder","Title","Subtitle","TaskSpecification","Description","Note",
+        "IsSignTask","IsStartingTask","UserMustUpdateVeichleKm","UserMustUpdateFuelLevel",
+        "AllowImageUpload","AllowLoop","IsComponentRequired","CanBeSkipped","HasOutcome","IsFinalTask"
     };
 
     // ── State ────────────────────────────────────────────────────────────────
@@ -623,6 +735,277 @@
                 {
                     obj.Id = Guid.NewGuid().ToString();
                     await dbDependency.GetDataAccessComponent().InsertAsync(obj);
+                    System.Threading.Interlocked.Increment(ref inserted);
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            snackbar.Add(string.Format(languageContainer.Keys["ImportSuccess"], inserted, updated), Severity.Success);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  WORKFLOWS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private async Task ExportWorkflowsAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var all = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+            var csv = ImportExportHelper.BuildCsv(WorkflowHeaders, all.Select(w => ImportExportHelper.WorkflowToCells(w)));
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "workflows_export.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task DownloadWorkflowTemplateAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var csv = ImportExportHelper.BuildCsv(WorkflowHeaders, Enumerable.Empty<string[]>());
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "workflows_template.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task ImportWorkflowsAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            List<Dictionary<string, string>> rows;
+            try { rows = await ImportExportHelper.ParseCsvAsync(file, WorkflowHeaders); }
+            catch { snackbar.Add(languageContainer.Keys["ImportInvalidFile"], Severity.Error); return; }
+
+            if (rows.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var allDb = await dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+
+            var byTitle = allDb
+                .Where(w => !string.IsNullOrWhiteSpace(w.Title))
+                .ToDictionary(w => w.Title.Trim().ToLowerInvariant());
+
+            var previews = new ImportRowPreview[rows.Count];
+            var objects  = new Workflow[rows.Count];
+
+            Parallel.For(0, rows.Count, i =>
+            {
+                var row   = rows[i];
+                var title = row.GetOr("Title").Trim().ToLowerInvariant();
+
+                byTitle.TryGetValue(title, out var match);
+
+                var obj = ImportExportHelper.MapWorkflow(row, match);
+                objects[i]  = obj;
+                previews[i] = new ImportRowPreview
+                {
+                    RowNumber  = i + 1,
+                    MatchType  = match == null ? ImportMatchType.Insert : ImportMatchType.Update,
+                    ExistingId = match?.Id,
+                    Cells      = ImportExportHelper.WorkflowToCells(obj)
+                };
+            });
+
+            var validPreviews = previews
+                .Where((p, i) => !string.IsNullOrWhiteSpace(objects[i].Title))
+                .ToList();
+
+            if (validPreviews.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var params_ = new DialogParameters<ImportPreviewDialog>
+            {
+                { x => x.Rows,    validPreviews },
+                { x => x.Headers, WorkflowHeaders }
+            };
+            var dialog = await dialogService.ShowAsync<ImportPreviewDialog>(
+                languageContainer.Keys["ImportPreviewTitle"],
+                params_,
+                new DialogOptions { MaxWidth = MaxWidth.ExtraExtraLarge, FullWidth = true, CloseOnEscapeKey = true });
+
+            var result = await dialog.Result;
+            if (result == null || result.Canceled) return;
+
+            int inserted = 0, updated = 0;
+            var tasks = previews.Select(async (p, i) =>
+            {
+                var obj = objects[i];
+                if (string.IsNullOrWhiteSpace(obj.Title)) return;
+
+                if (p.MatchType == ImportMatchType.Update)
+                {
+                    obj.Id         = p.ExistingId!;
+                    obj.UpdateDate = DateTime.UtcNow;
+                    await dbDependency.GetDataAccessWorkflow().UpdateAsync(obj);
+                    System.Threading.Interlocked.Increment(ref updated);
+                }
+                else
+                {
+                    obj.Id         = Guid.NewGuid().ToString();
+                    obj.InsertDate = DateTime.UtcNow;
+                    obj.UpdateDate = DateTime.UtcNow;
+                    await dbDependency.GetDataAccessWorkflow().InsertAsync(obj);
+                    System.Threading.Interlocked.Increment(ref inserted);
+                }
+            });
+
+            await Task.WhenAll(tasks);
+            snackbar.Add(string.Format(languageContainer.Keys["ImportSuccess"], inserted, updated), Severity.Success);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    // ═════════════════════════════════════════════════════════════════════════
+    //  WORKFLOW TASKS
+    // ═════════════════════════════════════════════════════════════════════════
+
+    private async Task ExportWorkflowTasksAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var allTasksTask     = dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+            var allWorkflowsTask = dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+            await Task.WhenAll(allTasksTask, allWorkflowsTask);
+
+            var allTasks     = allTasksTask.Result;
+            var allWorkflows = allWorkflowsTask.Result;
+
+            var titleById = allWorkflows.ToDictionary(w => w.Id, w => w.Title ?? string.Empty);
+
+            var csv = ImportExportHelper.BuildCsv(
+                WorkflowTaskHeaders,
+                allTasks.Select(t => ImportExportHelper.WorkflowTaskToCells(t, titleById.TryGetValue(t.WorkflowId, out var title) ? title : string.Empty)));
+
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "workflow_tasks_export.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task DownloadWorkflowTaskTemplateAsync()
+    {
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            var csv = ImportExportHelper.BuildCsv(WorkflowTaskHeaders, Enumerable.Empty<string[]>());
+            await JSRuntime.InvokeVoidAsync("downloadCsvFile", "workflow_tasks_template.csv", csv);
+        }
+        catch (Exception ex) { snackbar.Add(ex.Message, Severity.Error); }
+        finally { processing = false; StateHasChanged(); }
+    }
+
+    private async Task ImportWorkflowTasksAsync(IBrowserFile? file)
+    {
+        if (file == null) return;
+        processing = true;
+        StateHasChanged();
+        try
+        {
+            List<Dictionary<string, string>> rows;
+            try { rows = await ImportExportHelper.ParseCsvAsync(file, WorkflowTaskHeaders); }
+            catch { snackbar.Add(languageContainer.Keys["ImportInvalidFile"], Severity.Error); return; }
+
+            if (rows.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var allTasksTask     = dbDependency.GetDataAccessWorkflowTask().FindAsync(new SearcherWorkflowTask());
+            var allWorkflowsTask = dbDependency.GetDataAccessWorkflow().FindAsync(new SearcherWorkflow());
+            await Task.WhenAll(allTasksTask, allWorkflowsTask);
+
+            var allTasks     = allTasksTask.Result;
+            var allWorkflows = allWorkflowsTask.Result;
+
+            var workflowByTitle = allWorkflows
+                .Where(w => !string.IsNullOrWhiteSpace(w.Title))
+                .ToDictionary(w => w.Title.Trim().ToLowerInvariant());
+
+            // composite key: workflowId + taskOrder
+            var taskByKey = allTasks
+                .ToDictionary(t => $"{t.WorkflowId}|{t.TaskOrder}");
+
+            var previews = new ImportRowPreview[rows.Count];
+            var objects  = new (WorkflowTask? Obj, bool Valid)[rows.Count];
+            var warnings = new System.Collections.Concurrent.ConcurrentBag<string>();
+
+            Parallel.For(0, rows.Count, i =>
+            {
+                var row        = rows[i];
+                var titleKey   = row.GetOr("WorkflowTitle").Trim().ToLowerInvariant();
+                var taskOrder  = row.GetOr("TaskOrder").Trim();
+
+                if (string.IsNullOrWhiteSpace(titleKey) || string.IsNullOrWhiteSpace(taskOrder))
+                {
+                    objects[i] = (null, false);
+                    return;
+                }
+
+                if (!workflowByTitle.TryGetValue(titleKey, out var workflow))
+                {
+                    warnings.Add(string.Format(languageContainer.Keys["ImportWorkflowTaskWorkflowNotFound"], i + 1));
+                    objects[i] = (null, false);
+                    return;
+                }
+
+                var compositeKey = $"{workflow.Id}|{taskOrder}";
+                taskByKey.TryGetValue(compositeKey, out var match);
+
+                var obj = ImportExportHelper.MapWorkflowTask(row, match, workflow.Id);
+                objects[i]  = (obj, true);
+                previews[i] = new ImportRowPreview
+                {
+                    RowNumber  = i + 1,
+                    MatchType  = match == null ? ImportMatchType.Insert : ImportMatchType.Update,
+                    ExistingId = match?.Id,
+                    Cells      = ImportExportHelper.WorkflowTaskToCells(obj, row.GetOr("WorkflowTitle"))
+                };
+            });
+
+            foreach (var w in warnings) snackbar.Add(w, Severity.Warning);
+
+            var validPreviews = previews.Where((p, i) => objects[i].Valid).ToList();
+            if (validPreviews.Count == 0) { snackbar.Add(languageContainer.Keys["ImportNoData"], Severity.Warning); return; }
+
+            var params_ = new DialogParameters<ImportPreviewDialog>
+            {
+                { x => x.Rows,    validPreviews },
+                { x => x.Headers, WorkflowTaskHeaders }
+            };
+            var dialog = await dialogService.ShowAsync<ImportPreviewDialog>(
+                languageContainer.Keys["ImportPreviewTitle"],
+                params_,
+                new DialogOptions { MaxWidth = MaxWidth.ExtraExtraLarge, FullWidth = true, CloseOnEscapeKey = true });
+
+            var result = await dialog.Result;
+            if (result == null || result.Canceled) return;
+
+            int inserted = 0, updated = 0;
+            var tasks = objects.Select(async (entry, i) =>
+            {
+                if (!entry.Valid || entry.Obj == null) return;
+                var p = previews[i];
+                if (p.MatchType == ImportMatchType.Update)
+                {
+                    entry.Obj.Id = p.ExistingId!;
+                    await dbDependency.GetDataAccessWorkflowTask().UpdateAsync(entry.Obj);
+                    System.Threading.Interlocked.Increment(ref updated);
+                }
+                else
+                {
+                    entry.Obj.Id = Guid.NewGuid().ToString();
+                    await dbDependency.GetDataAccessWorkflowTask().InsertAsync(entry.Obj);
                     System.Threading.Interlocked.Increment(ref inserted);
                 }
             });

@@ -211,6 +211,98 @@ namespace Workshopmanagement.Utility
                 c.UnitOfMeasurement ?? string.Empty,
             };
         }
+
+        // ── Workflow ─────────────────────────────────────────────────────────
+
+        public static Workflow MapWorkflow(Dictionary<string, string> row, Workflow? existing)
+        {
+            var w = new Workflow
+            {
+                Id                 = existing?.Id ?? string.Empty,
+                Title              = row.GetOr("Title"),
+                Subtitle           = row.GetOr("Subtitle").NullIfEmpty(),
+                Description        = row.GetOr("Description").NullIfEmpty(),
+                Note               = row.GetOr("Note").NullIfEmpty(),
+                RequireDisclaimer  = row.GetOr("RequireDisclaimer").ParseBool(),
+                Color              = row.GetOr("Color").NullIfEmpty() ?? (existing?.Color ?? string.Empty),
+                IsActive           = row.GetOr("IsActive").ParseBoolDefault(true),
+                EstimatedHours     = row.GetOr("EstimatedHours").ParseIntNullable(),
+                EstimatedMinutes   = row.GetOr("EstimatedMinutes").ParseIntNullable(),
+                InsertDate         = existing?.InsertDate ?? DateTime.UtcNow,
+                UpdateDate         = DateTime.UtcNow,
+            };
+            w.Sanitize();
+            return w;
+        }
+
+        public static string[] WorkflowToCells(Workflow w)
+        {
+            return new[]
+            {
+                w.Title                         ?? string.Empty,
+                w.Subtitle                      ?? string.Empty,
+                w.Description                   ?? string.Empty,
+                w.Note                          ?? string.Empty,
+                w.RequireDisclaimer.ToString(),
+                w.Color                         ?? string.Empty,
+                w.IsActive.ToString(),
+                w.EstimatedHours?.ToString()    ?? string.Empty,
+                w.EstimatedMinutes?.ToString()  ?? string.Empty,
+            };
+        }
+
+        // ── WorkflowTask ─────────────────────────────────────────────────────
+
+        public static WorkflowTask MapWorkflowTask(Dictionary<string, string> row, WorkflowTask? existing, string? resolvedWorkflowId)
+        {
+            var t = new WorkflowTask
+            {
+                Id                       = existing?.Id ?? string.Empty,
+                WorkflowId               = resolvedWorkflowId ?? existing?.WorkflowId ?? string.Empty,
+                TaskOrder                = row.GetOr("TaskOrder").ParseInt(),
+                Title                    = row.GetOr("Title"),
+                Subtitle                 = row.GetOr("Subtitle"),
+                TaskSpecification        = row.GetOr("TaskSpecification").NullIfEmpty(),
+                Description              = row.GetOr("Description").NullIfEmpty(),
+                Note                     = row.GetOr("Note").NullIfEmpty(),
+                IsSignTask               = row.GetOr("IsSignTask").ParseBool(),
+                IsStartingTask           = row.GetOr("IsStartingTask").ParseBool(),
+                UserMustUpdateVeichleKm  = row.GetOr("UserMustUpdateVeichleKm").ParseBool(),
+                UserMustUpdateFuelLevel  = row.GetOr("UserMustUpdateFuelLevel").ParseBool(),
+                AllowImageUpload         = row.GetOr("AllowImageUpload").ParseBool(),
+                AllowLoop                = row.GetOr("AllowLoop").ParseBool(),
+                IsComponentRequired      = row.GetOr("IsComponentRequired").ParseBool(),
+                CanBeSkipped             = row.GetOr("CanBeSkipped").ParseBool(),
+                HasOutcome               = row.GetOr("HasOutcome").ParseBool(),
+                IsFinalTask              = row.GetOr("IsFinalTask").ParseBool(),
+            };
+            t.Sanitize();
+            return t;
+        }
+
+        public static string[] WorkflowTaskToCells(WorkflowTask t, string workflowTitle)
+        {
+            return new[]
+            {
+                workflowTitle,
+                t.TaskOrder.ToString(),
+                t.Title                    ?? string.Empty,
+                t.Subtitle                 ?? string.Empty,
+                t.TaskSpecification        ?? string.Empty,
+                t.Description              ?? string.Empty,
+                t.Note                     ?? string.Empty,
+                t.IsSignTask.ToString(),
+                t.IsStartingTask.ToString(),
+                t.UserMustUpdateVeichleKm.ToString(),
+                t.UserMustUpdateFuelLevel.ToString(),
+                t.AllowImageUpload.ToString(),
+                t.AllowLoop.ToString(),
+                t.IsComponentRequired.ToString(),
+                t.CanBeSkipped.ToString(),
+                t.HasOutcome.ToString(),
+                t.IsFinalTask.ToString(),
+            };
+        }
     }
 
     // ── Extension helpers ─────────────────────────────────────────────────────
@@ -231,6 +323,9 @@ namespace Workshopmanagement.Utility
 
         public static bool ParseBoolDefault(this string s, bool defaultVal)
             => string.IsNullOrWhiteSpace(s) ? defaultVal : s.ParseBool();
+
+        public static int ParseInt(this string s)
+            => int.TryParse(s, out var v) ? v : 0;
 
         public static int? ParseIntNullable(this string s)
             => int.TryParse(s, out var v) ? v : null;
