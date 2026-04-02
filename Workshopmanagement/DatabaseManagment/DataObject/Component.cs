@@ -1,4 +1,6 @@
-﻿namespace Workshopmanagement.DatabaseManagment.DataObject
+﻿using MongoDB.Bson.Serialization.Attributes;
+
+namespace Workshopmanagement.DatabaseManagment.DataObject
 {
     public class SearcherComponent
     {
@@ -7,6 +9,7 @@
         public string? Name { get; set; }
     }
 
+    [BsonIgnoreExtraElements]
     public class Component : ISanitizable
     {
         public string Id { get; set; } = null!;

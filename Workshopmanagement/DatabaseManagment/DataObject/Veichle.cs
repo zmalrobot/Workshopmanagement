@@ -20,6 +20,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public string WorkflowExecutionSeriesId { get; set; } = null!;
     }
 
+    [BsonIgnoreExtraElements]
     public class Veichle : ISanitizable
     {
         [BsonId]

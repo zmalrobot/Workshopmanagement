@@ -15,6 +15,7 @@ namespace Workshopmanagement.DatabaseManagment.DataObject
         public DateTime? InsertDateTo { get; set; }
     }
 
+    [BsonIgnoreExtraElements]
     public class Customer : ISanitizable
     {
         [BsonId]
