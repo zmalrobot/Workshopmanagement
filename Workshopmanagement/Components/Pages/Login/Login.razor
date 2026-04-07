@@ -9,7 +9,10 @@
 @inject NavigationManager navigationManager
 @inject IWebHostEnvironment webHostEnvironment
 @inject IAppLogger appLogger
+@inject ThemeService themeService
 
+<div class="login-page-outer @themeService.GetBodyClass()">
+<div class="login-bg"></div>
 <PageTitle>@languageContainer.Keys["ApplicationName"]</PageTitle>
 
 <MudCard Class="pa-4 mx-auto" Style="max-width: 400px;">
@@ -75,6 +78,7 @@
         </MudGrid>        
     </MudCardActions>
 </MudCard>
+</div>
 @code {
     // Model for the login form
     private UserModel userModel = new UserModel()
